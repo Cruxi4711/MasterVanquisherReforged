@@ -548,6 +548,14 @@ Func _Vanquisher_RefreshVanquishBaseline()
     $g_b_Vanquisher_HasRunRoute = False
     $g_b_Vanquisher_RunFinished = False
     $g_b_Vanquisher_AbortRoute = False
+    $g_h_Vanquisher_ConsumablePollTimer = 0
+    For $l_i_Idx = 0 To 6
+        $g_a_Vanquisher_BULastUsed[$l_i_Idx] = 0
+        $g_a_Vanquisher_BUUsedThisZone[$l_i_Idx] = False
+    Next
+    For $l_i_Idx = 0 To 2
+        $g_a_Vanquisher_ConsetLastUsed[$l_i_Idx] = 0
+    Next
     If Not Map_GetInstanceInfo("IsExplorable") Then Return
     If Not GetIsHardMode() Then
         CurrentAction("Not in Hard Mode — enable HM in outpost (party leader).")

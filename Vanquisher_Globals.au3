@@ -115,7 +115,15 @@ Global Const $VANQUISHER_STONE_MODEL_IDS[] = [ _
 		$GC_I_MODELID_SHINING_BLADE_WAR_HORN, _
 		$GC_I_MODELID_LEGIONNAIRE_SUMMONING_STONE _
 ]
-Global Const $VANQUISHER_STONE_INTERVAL = 300000
+Global Const $VANQUISHER_CONSUMABLE_BUFFER_MS = 1800000 ; 30 min between stone summons while pet is alive
+Global Const $VANQUISHER_CONSUMABLE_DEBOUNCE_MS = 5000 ; short anti-spam after use while effect applies
+Global Const $VANQUISHER_CONSUMABLE_POLL_MS = 10000 ; check effects every 10s during movement (not every tick)
+Global Const $VANQUISHER_STONE_INTERVAL = $VANQUISHER_CONSUMABLE_BUFFER_MS
+Global $g_h_Vanquisher_ConsumablePollTimer = 0
+Global $g_h_Vanquisher_StoneTimer = 0
+Global $g_a_Vanquisher_BULastUsed[7]
+Global $g_a_Vanquisher_BUUsedThisZone[7]
+Global $g_a_Vanquisher_ConsetLastUsed[3]
 
 ; Crash-safe file log path (set from GUI.au3 when the Trace file is created)
 Global $g_s_LogFile = @ScriptDir & "\Trace\Vanquisher.log"

@@ -3,12 +3,28 @@ Global Const $REWARD_WAIT_TIME = 1800000 ; 30 minuti
 Global $ActionCounter = 0
 Global $Gui_Legio
 Global $Gui_Bu
-Global $g_h_Vanquisher_StoneTimer = 0
 Global $BlockCount = 20
 Global $RangeLimit = 1450
 
+; All maps use these route helpers — vanquish complete / abort is handled here globally.
+Func _Vanquisher_ExitRouteIfDone($a_s_Phase = "")
+    If $g_b_Vanquisher_AbortRoute Then Return True
+    If _Vanquisher_IsVanquishComplete() Then
+        _Vanquisher_OnVanquishComplete($a_s_Phase)
+        Return True
+    EndIf
+    Return False
+EndFunc
+
+; Standard forward + reverse route (use for any map with both passes).
+Func MoveandAggroVQFullRoute($aWaypoints)
+    MoveandAggroVQ($aWaypoints)
+    If $g_b_Vanquisher_AbortRoute Then Return
+    MoveandAggroVQReverse($aWaypoints)
+EndFunc
+
 Func MoveandAggroVQ($aWaypoints)
-    If _Vanquisher_IsVanquishComplete() Then Return
+    If _Vanquisher_ExitRouteIfDone(" (forward skip)") Then Return
     $g_b_Vanquisher_HasRunRoute = True
     Local $timer = TimerInit()
     $BlockCount = 20
@@ -38,8 +54,11 @@ Func MoveandAggroVQ($aWaypoints)
 EndFunc
 
 Func MoveandAggroVQWurm($aWaypoints)
+    If _Vanquisher_ExitRouteIfDone(" (wurm skip)") Then Return
+    $g_b_Vanquisher_HasRunRoute = True
     Local $timer = TimerInit()
     For $Index = 0 To UBound($aWaypoints) - 1
+        If $g_b_Vanquisher_AbortRoute Then Return
         If _Vanquisher_CheckVanquishDuringRoute($timer, " (wurm)") Then Return
         AggroMoveTo($aWaypoints[$Index][0], $aWaypoints[$Index][1], $aWaypoints[$Index][2] & $ActionCounter, $aWaypoints[$Index][3])
         $ActionCounter += 1
@@ -54,7 +73,7 @@ Func MoveandAggroVQWurm($aWaypoints)
 EndFunc
 
 Func MoveandAggroVQReverse($aWaypoints)
-    If _Vanquisher_IsVanquishComplete() Then Return
+    If _Vanquisher_ExitRouteIfDone(" (reverse skip)") Then Return
     $g_b_Vanquisher_HasRunRoute = True
     Local $timer = TimerInit()
     $ActionCounter = 1
@@ -108,34 +127,86 @@ Func _IsStonesEnabled()
     Return GUICtrlRead($Gui_Legio) = $GUI_CHECKED
 EndFunc
 
-Func _Vanquisher_ApplyConsumables()
-    If _IsConsetEnabled() Then UseConset()
-    If _IsBuEnabled() Then UseBU()
-    If _IsStonesEnabled() Then UseVanquisherStones()
+Func _Vanquisher_ConsumableOnCooldown(ByRef $a_h_LastUsed)
+    If $a_h_LastUsed = 0 Then Return False
+    Return TimerDiff($a_h_LastUsed) < $VANQUISHER_CONSUMABLE_BUFFER_MS
 EndFunc
 
-Func UseBU()
-    If Not _IsBuEnabled() Then Return
+Func _Vanquisher_ConsumableDebounce(ByRef $a_h_LastUsed)
+    If $a_h_LastUsed = 0 Then Return False
+    Return TimerDiff($a_h_LastUsed) < $VANQUISHER_CONSUMABLE_DEBOUNCE_MS
+EndFunc
+
+Func _Vanquisher_ApplyConsumables($a_b_Force = False)
+    If Not $a_b_Force Then
+        If $g_h_Vanquisher_ConsumablePollTimer <> 0 And TimerDiff($g_h_Vanquisher_ConsumablePollTimer) < $VANQUISHER_CONSUMABLE_POLL_MS Then Return
+        $g_h_Vanquisher_ConsumablePollTimer = TimerInit()
+    EndIf
+    If _IsConsetEnabled() Then _Vanquisher_UseConsetBuffered()
+    If _IsBuEnabled() Then _Vanquisher_UseBUBuffered()
+    If _IsStonesEnabled() Then _Vanquisher_UseStonesBuffered()
+EndFunc
+
+Func _Vanquisher_UseConsetBuffered()
+    If GetPartyDead() Then Return
+    Local $l_a_Effects[3] = [$EffectEssence, $EffectArmor, $EffectGrail]
+    For $l_i_Idx = 0 To UBound($Conset) - 1
+        If GetEffectTimeRemainingEx(-2, $l_a_Effects[$l_i_Idx]) > 0 Then ContinueLoop
+        If _Vanquisher_ConsumableDebounce($g_a_Vanquisher_ConsetLastUsed[$l_i_Idx]) Then ContinueLoop
+        For $l_i_Bag = 1 To 4
+            For $l_i_Slot = 1 To Item_GetBagInfo($l_i_Bag, "Slots")
+                Local $l_p_Item = Item_GetItemBySlot($l_i_Bag, $l_i_Slot)
+                If $l_p_Item = 0 Then ContinueLoop
+                If Item_GetItemInfoByPtr($l_p_Item, "ModelID") <> $Conset[$l_i_Idx] Then ContinueLoop
+                Item_UseItem($l_p_Item)
+                $g_a_Vanquisher_ConsetLastUsed[$l_i_Idx] = TimerInit()
+                RndSleep(750)
+                ExitLoop 2
+            Next
+        Next
+    Next
+EndFunc
+
+Func _Vanquisher_UseBUBuffered()
     If GetPartyDead() Then Return
     For $l_i_Idx = 0 To UBound($VANQUISHER_BU_MODEL_IDS) - 1
         Local $l_i_Effect = $VANQUISHER_BU_EFFECT_IDS[$l_i_Idx]
-        If $l_i_Effect > 0 And GetEffectTimeRemainingEx(-2, $l_i_Effect) > 0 Then ContinueLoop
+        If $l_i_Effect > 0 Then
+            If GetEffectTimeRemainingEx(-2, $l_i_Effect) > 0 Then ContinueLoop
+            If _Vanquisher_ConsumableDebounce($g_a_Vanquisher_BULastUsed[$l_i_Idx]) Then ContinueLoop
+        Else
+            If $g_a_Vanquisher_BUUsedThisZone[$l_i_Idx] And _Vanquisher_ConsumableOnCooldown($g_a_Vanquisher_BULastUsed[$l_i_Idx]) Then ContinueLoop
+        EndIf
         If _Vanquisher_UseItemModelID($VANQUISHER_BU_MODEL_IDS[$l_i_Idx]) Then
-            CurrentAction("Used BU item (model " & $VANQUISHER_BU_MODEL_IDS[$l_i_Idx] & ").")
+            $g_a_Vanquisher_BULastUsed[$l_i_Idx] = TimerInit()
+            $g_a_Vanquisher_BUUsedThisZone[$l_i_Idx] = True
         EndIf
     Next
 EndFunc
 
-Func UseVanquisherStones()
-    If Not _IsStonesEnabled() Then Return
-    If $g_h_Vanquisher_StoneTimer <> 0 And TimerDiff($g_h_Vanquisher_StoneTimer) < $VANQUISHER_STONE_INTERVAL Then Return
+Func _Vanquisher_UseStonesBuffered()
+    If GetPartyDead() Then Return
+    If GetEffectTimeRemainingEx(-2, 2886) <> 0 Then Return
+    If HasImp(-2) And _Vanquisher_ConsumableOnCooldown($g_h_Vanquisher_StoneTimer) Then Return
     If UseSummoningStone() Then
         $g_h_Vanquisher_StoneTimer = TimerInit()
-        CurrentAction("Used summoning stone / flare.")
     EndIf
 EndFunc
 
+Func UseBU()
+    _Vanquisher_UseBUBuffered()
+EndFunc
+
+Func UseVanquisherStones()
+    _Vanquisher_UseStonesBuffered()
+EndFunc
+
 Func AggroMoveTo($x, $y, $s = "", $z = 1450)
+	If $g_b_Vanquisher_AbortRoute Then Return
+	If _Vanquisher_IsVanquishComplete() Then
+		_Vanquisher_OnVanquishComplete(" (waypoint)")
+		Return
+	EndIf
 
 	CurrentAction("Moving to Waypoint:" & $s)
 	$random = 50

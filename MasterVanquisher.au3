@@ -474,7 +474,7 @@ While 1
 
 			If GetMapID() = $Map_To_Farm Then
 				_Vanquisher_RefreshVanquishBaseline()
-				_Vanquisher_ApplyConsumables()
+				_Vanquisher_ApplyConsumables(True)
 			Else
 				Sleep(3000)
 			EndIf
@@ -660,7 +660,7 @@ EndFunc
 Func VQ()
 
 	$DeadOnTheRun = 0
-	_Vanquisher_ApplyConsumables()
+	_Vanquisher_ApplyConsumables(True)
 	ReDim $OpenedChestAgentIDs[1]
 	$OpenedChestAgentIDs[0] = 0
 

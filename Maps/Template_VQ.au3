@@ -1,8 +1,14 @@
 ;~ #include <Array.au3>
-Local $vqrange = 1450
+Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQSAMPLE()
+	If GetMapID() <> $ShadowsPassage_Map And GetMapID() <> $ShadowsPassage_Outpost Then TravelTo($ShadowsPassage_Outpost)
+	If GetMapID() = $ShadowsPassage_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		GoOut()
+	EndIf
+
 	If GetMapID() = $ShadowsPassage_Map Then
 
 		Local $aWaypoints[6][4] = [ [3396, 16639, " ", $vqrange] _
@@ -12,9 +18,12 @@ Func VQSAMPLE()
 		, [-3699, 14519, " ", $vqrange] _
 		, [-4255, 16101, " ", $vqrange] ]
 
-		MoveandAggroVQ($aWaypoints)
-		MoveAndAggroVQReverse($aWaypoints)
+		; Forward + reverse: use MoveandAggroVQFullRoute (stops/resigns on 0 remaining).
+		MoveandAggroVQFullRoute($aWaypoints)
 
-    EndIf
+		; Forward only: MoveandAggroVQ($aWaypoints)
+		; Multiple segments: call MoveandAggroVQ($aWaypointsA) then B, etc. — each segment checks abort automatically.
+		; Manual waypoints: AggroMoveTo() — also checks complete/abort at entry and during Fight.
+
+	EndIf
 EndFunc
-

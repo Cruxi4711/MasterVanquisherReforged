@@ -50,7 +50,5 @@ Func VQBukdekByway()
 	, [-1308.34, 16657.90, " ", $vqrange] _
 	, [-9369.35, 11527.43, " ", $vqrange] ]
 
-		MoveandAggroVQ($aWaypoints)
-		If $g_b_Vanquisher_AbortRoute Then Return
-		MoveandAggroVQReverse($aWaypoints)
+		MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
