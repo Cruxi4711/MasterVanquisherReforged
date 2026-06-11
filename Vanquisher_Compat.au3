@@ -88,9 +88,22 @@ Func _Vanquisher_CollectGWClientPids()
         _Vanquisher_AddPid($l_a_Pids, $l_as_ProcessList[$l_i_Idx][1])
     Next
 
+    ; Wine may expose the process as Gw.exe depending on prefix / launcher
+    $l_as_ProcessList = ProcessList("Gw.exe")
+    For $l_i_Idx = 1 To $l_as_ProcessList[0][0]
+        _Vanquisher_AddPid($l_a_Pids, $l_as_ProcessList[$l_i_Idx][1])
+    Next
+
     Local $l_a_Wins = WinList("[CLASS:" & $GC_S_CLASS_DX_WINDOW & "]")
     For $l_i_Idx = 1 To $l_a_Wins[0][0]
         _Vanquisher_AddPid($l_a_Pids, WinGetProcess($l_a_Wins[$l_i_Idx][1]))
+    Next
+
+    $l_a_Wins = WinList("Guild Wars")
+    For $l_i_Idx = 1 To $l_a_Wins[0][0]
+        If $l_a_Wins[$l_i_Idx][0] <> "" And $l_a_Wins[$l_i_Idx][1] <> 0 Then
+            _Vanquisher_AddPid($l_a_Pids, WinGetProcess($l_a_Wins[$l_i_Idx][1]))
+        EndIf
     Next
 
     Return $l_a_Pids

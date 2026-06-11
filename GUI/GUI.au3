@@ -372,8 +372,8 @@ $Tot_Total = GUICtrlCreateLabel("0", 1245, 357, 40, 17, $SS_RIGHT)
 ;CHARACTER NAME
 GUICtrlCreateGroup("", -99, -99, 1, 1)
 GUICtrlCreateLabel("CHARACTER", 1125, 372, 185, 17, $SS_CENTER)
-Global Const $txtName = GUICtrlCreateCombo("", 1125, 388, 160, 25, BitOR($CBS_DROPDOWN, $CBS_AUTOHSCROLL))
-Global $btnRefreshChars = GUICtrlCreateButton("R", 1249, 388, 21, 25)
+Global Const $txtName = GUICtrlCreateCombo("", 1125, 388, 158, 25, BitOR($CBS_DROPDOWN, $CBS_AUTOHSCROLL))
+Global $btnRefreshChars = GUICtrlCreateButton("R", 1289, 388, 21, 25)
 GUICtrlSetTip(-1, "Refresh Guild Wars client list")
 GUICtrlSetOnEvent(-1, "RefreshCharNames")
 
@@ -958,18 +958,18 @@ Func RefreshCharNames()
 	Local $l_s_WineHint = ""
 
 	If _Vanquisher_IsWine() Then
-		$l_s_WineHint = " On Linux/Wine, start Guild Wars in Wine first, then launch Vanquisher with the same WINEPREFIX (Launchers/start_vanquisher.sh auto-detects the running client)."
+		$l_s_WineHint = " Vanquisher must use the same WINEPREFIX as Guild Wars. Close this, then run Launchers/start_vanquisher.sh after GW is open."
 	EndIf
 
 	If $l_i_GWCount = 0 And $l_s_Names = "" Then
 		GUICtrlSetData($txtName, "")
-		CurrentAction("No Guild Wars client found. Start Guild Wars, log in, then click R." & $l_s_WineHint)
+		CurrentAction("No Guild Wars client found. Start GW in Wine, log in, then click R." & $l_s_WineHint)
 		Return
 	EndIf
 
 	If $l_s_Names = "" Then
 		GUICtrlSetData($txtName, "")
-		CurrentAction("Found " & $l_i_GWCount & " client(s) but no character names. Log in fully, use 32-bit AutoIt (AutoIt3.exe), then click R." & $l_s_WineHint)
+		CurrentAction("Found " & $l_i_GWCount & " client(s) but no character names. Log in fully, then click R." & $l_s_WineHint)
 		Return
 	EndIf
 
