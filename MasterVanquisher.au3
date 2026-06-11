@@ -513,12 +513,16 @@ While 1
 			EndSwitch
 
 			If GetMapID() = $Map_To_Farm Or GetMapID() = $Map_To_Zone Then
-				VQ()
+				If _Vanquisher_ShouldRunRoute() Then
+					VQ()
+				Else
+					CurrentAction("Vanquish complete — skipping route.")
+				EndIf
 			Else
 				CurrentAction("Wrong map (id " & GetMapID() & ", need farm " & $Map_To_Farm & " or outpost " & $Map_To_Zone & ").")
 			EndIf
 			UpdateVanquish()
-			If GetAreaVanquished() And Not $g_b_Vanquisher_CounterUnreliable Then
+			If GetAreaVanquished() Then
 				CurrentAction("Area fully vanquished this run.")
 				_Vanquisher_ReturnToOutpost()
 				$boolrun = False
@@ -654,6 +658,8 @@ Func VQ()
 
 	$DeadOnTheRun = 0
 	If $Bool_Conset Then UseConset()
+	If $Bool_Bu Then UseBU()
+	If $Bool_Stones Then UseVanquisherStones()
 	ReDim $OpenedChestAgentIDs[1]
 	$OpenedChestAgentIDs[0] = 0
 

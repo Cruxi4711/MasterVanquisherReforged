@@ -8,6 +8,8 @@ Global $BlockCount = 20
 Global $RangeLimit = 1450
 
 Func MoveandAggroVQ($aWaypoints)
+    If _Vanquisher_IsVanquishComplete() Then Return
+    $g_b_Vanquisher_HasRunRoute = True
     Local $timer = TimerInit()
     $BlockCount = 20
     $ActionCounter = 1
@@ -30,6 +32,7 @@ Func MoveandAggroVQ($aWaypoints)
     Next
     If _Vanquisher_IsVanquishComplete() Then
         _Vanquisher_OnVanquishComplete(" (forward end)")
+        Return
     EndIf
 EndFunc
 
@@ -50,6 +53,8 @@ Func MoveandAggroVQWurm($aWaypoints)
 EndFunc
 
 Func MoveandAggroVQReverse($aWaypoints)
+    If _Vanquisher_IsVanquishComplete() Then Return
+    $g_b_Vanquisher_HasRunRoute = True
     Local $timer = TimerInit()
     $ActionCounter = 1
     CurrentAction("Vanquish route reverse — " & UBound($aWaypoints) & " waypoints.")
@@ -70,9 +75,9 @@ Func MoveandAggroVQReverse($aWaypoints)
     Next
     If _Vanquisher_IsVanquishComplete() Then
         _Vanquisher_OnVanquishComplete(" (reverse end)")
-    Else
-        CurrentAction("Route done — " & GetFoesKilled() & " killed, " & GetFoesToKill() & " remaining.")
+        Return
     EndIf
+    CurrentAction("Route done — " & GetFoesKilled() & " killed, " & GetFoesToKill() & " remaining.")
 EndFunc
 
 Func _Vanquisher_OnVanquishComplete($a_s_Phase = "")
@@ -101,13 +106,18 @@ EndFunc
 
 Func UseBU()
     If Not _IsBuEnabled() Then Return
-    _Vanquisher_UseFirstInventoryItemByModelIDs($VANQUISHER_PCON_MODEL_IDS)
+    If GetPartyDead() Then Return
+    For $l_i_Idx = 0 To UBound($VANQUISHER_BU_MODEL_IDS) - 1
+        Local $l_i_Effect = $VANQUISHER_BU_EFFECT_IDS[$l_i_Idx]
+        If $l_i_Effect > 0 And GetEffectTimeRemainingEx(-2, $l_i_Effect) > 0 Then ContinueLoop
+        _Vanquisher_UseItemModelID($VANQUISHER_BU_MODEL_IDS[$l_i_Idx])
+    Next
 EndFunc
 
 Func UseVanquisherStones()
     If Not _IsStonesEnabled() Then Return
     If $g_h_Vanquisher_StoneTimer <> 0 And TimerDiff($g_h_Vanquisher_StoneTimer) < $VANQUISHER_STONE_INTERVAL Then Return
-    If _Vanquisher_UseFirstInventoryItemByModelIDs($VANQUISHER_STONE_MODEL_IDS) Then
+    If UseSummoningStone() Then
         $g_h_Vanquisher_StoneTimer = TimerInit()
     EndIf
 EndFunc

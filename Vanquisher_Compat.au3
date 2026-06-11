@@ -440,6 +440,22 @@ Func _Vanquisher_ModelInArray($a_i_ModelID, $a_a_ModelIDs)
     Return False
 EndFunc
 
+Func _Vanquisher_UseItemModelID($a_i_ModelID)
+    If GetPartyDead() Then Return False
+    For $l_i_Bag = 1 To 4
+        For $l_i_Slot = 1 To Item_GetBagInfo($l_i_Bag, "Slots")
+            Local $l_p_Item = Item_GetItemBySlot($l_i_Bag, $l_i_Slot)
+            If $l_p_Item = 0 Then ContinueLoop
+            If Item_GetItemInfoByPtr($l_p_Item, "ModelID") = $a_i_ModelID Then
+                Item_UseItem($l_p_Item)
+                RndSleep(750)
+                Return True
+            EndIf
+        Next
+    Next
+    Return False
+EndFunc
+
 Func _Vanquisher_UseFirstInventoryItemByModelIDs($a_a_ModelIDs)
     If GetPartyDead() Then Return False
     For $l_i_Bag = 1 To 4
@@ -529,6 +545,7 @@ Func _Vanquisher_RefreshVanquishBaseline()
     $g_i_Vanquisher_InitialFoesKilled = 0
     $g_b_Vanquisher_CounterUnreliable = False
     $g_i_Vanquisher_SessionStartKilled = 0
+    $g_b_Vanquisher_HasRunRoute = False
     If Not Map_GetInstanceInfo("IsExplorable") Then Return
     If Not GetIsHardMode() Then
         CurrentAction("Not in Hard Mode — enable HM in outpost (party leader).")
@@ -569,9 +586,6 @@ Func _Vanquisher_RefreshVanquishBaseline()
 EndFunc
 
 Func _Vanquisher_ShouldRunRoute()
-    If $g_b_Vanquisher_CounterUnreliable Then Return True
-    If $g_i_Vanquisher_InitialFoesToKill < 0 Then Return True
-    If GetFoesToKill() > 0 Then Return True
     Return Not GetAreaVanquished()
 EndFunc
 
@@ -583,19 +597,26 @@ Func GetAreaVanquished()
     Local $l_i_Killed = GetFoesKilled()
     If $l_i_Remaining < 0 Then Return False
 
-    If $g_i_Vanquisher_InitialFoesToKill < 0 Then
-        If $l_i_Remaining > 0 Then
+    If $l_i_Remaining > 0 Then
+        If $g_i_Vanquisher_InitialFoesToKill < 0 Or $g_b_Vanquisher_CounterUnreliable Then
             $g_i_Vanquisher_InitialFoesToKill = $l_i_Remaining
             $g_i_Vanquisher_InitialFoesKilled = $l_i_Killed
             $g_b_Vanquisher_CounterUnreliable = False
-            Return False
         EndIf
-        Return $l_i_Remaining = 0 And $l_i_Killed > $g_i_Vanquisher_SessionStartKilled
+        Return False
     EndIf
 
-    If $l_i_Remaining > 0 Then Return False
-    Local $l_i_TargetKilled = $g_i_Vanquisher_InitialFoesKilled + $g_i_Vanquisher_InitialFoesToKill
-    Return $l_i_Killed >= $l_i_TargetKilled
+    If $g_i_Vanquisher_InitialFoesToKill >= 0 Then
+        Local $l_i_TargetKilled = $g_i_Vanquisher_InitialFoesKilled + $g_i_Vanquisher_InitialFoesToKill
+        If $l_i_Killed >= $l_i_TargetKilled Then
+            $g_b_Vanquisher_CounterUnreliable = False
+            Return True
+        EndIf
+        If $g_b_Vanquisher_HasRunRoute And $g_i_Vanquisher_InitialFoesToKill > 0 Then Return True
+    EndIf
+
+    If $l_i_Killed > $g_i_Vanquisher_SessionStartKilled Then Return True
+    Return $g_b_Vanquisher_HasRunRoute
 EndFunc
 
 Func _Vanquisher_IsAlreadyVanquishedOnEntry()
@@ -621,7 +642,6 @@ Func _Vanquisher_UseDeathPenaltyItems()
 EndFunc
 
 Func _Vanquisher_IsVanquishComplete()
-    If $g_b_Vanquisher_CounterUnreliable Then Return False
     Return GetAreaVanquished()
 EndFunc
 

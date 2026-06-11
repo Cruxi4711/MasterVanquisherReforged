@@ -71,7 +71,26 @@ $aChestID[23] = 8141 ; Locked Chest
 Global Const $VANQUISHER_FACTION_DONATE_CHUNK = 5000
 Global Const $VANQUISHER_FACTION_DONATE_MIN = 10000
 
-Global Const $VANQUISHER_BU_MODEL_IDS[] = [28432, 22269, 28431, 28436, 17061, 22752, 35121]
+; Harvest/event BUs: candy corn, cupcake, candy apple, pie, golden egg, skalefin soup, war supplies
+Global Const $VANQUISHER_BU_MODEL_IDS[] = [ _
+		$GC_I_MODELID_CANDY_CORN, _
+		$GC_I_MODELID_CUPCAKE, _
+		$GC_I_MODELID_CANDY_APPLE, _
+		$GC_I_MODELID_PUMPKIN_PIE, _
+		$GC_I_MODELID_GOLDEN_EGG, _
+		$GC_I_MODELID_SKALEFIN_SOUP, _
+		$GC_I_MODELID_WAR_SUPPLIES _
+]
+; Parallel effect skill IDs (0 = no effect tracking, use if item present)
+Global Const $VANQUISHER_BU_EFFECT_IDS[] = [ _
+		$GC_I_SKILL_ID_CANDY_CORN_SKILL, _
+		$GC_I_SKILL_ID_BIRTHDAY_CUPCAKE_SKILL, _
+		$GC_I_SKILL_ID_CANDY_APPLE_SKILL, _
+		0, _
+		$GC_I_SKILL_ID_GOLDEN_EGG_SKILL, _
+		0, _
+		0 _
+]
 ; All summoning stones from GwAu3 API ($GC_AI_ALL_SUMMONING_STONES)
 Global Const $VANQUISHER_STONE_MODEL_IDS[] = [ _
 		$GC_I_MODELID_MERCANTILE_SUMMONING_STONE, _
@@ -96,7 +115,7 @@ Global Const $VANQUISHER_STONE_MODEL_IDS[] = [ _
 		$GC_I_MODELID_SHINING_BLADE_WAR_HORN, _
 		$GC_I_MODELID_LEGIONNAIRE_SUMMONING_STONE _
 ]
-Global Const $VANQUISHER_STONE_INTERVAL = 600000
+Global Const $VANQUISHER_STONE_INTERVAL = 300000
 
 ; Crash-safe file log path (set from GUI.au3 when the Trace file is created)
 Global $g_s_LogFile = @ScriptDir & "\Trace\Vanquisher.log"
@@ -107,4 +126,5 @@ Global $g_i_Vanquisher_InitialFoesToKill = -1
 Global $g_i_Vanquisher_InitialFoesKilled = 0
 Global $g_b_Vanquisher_CounterUnreliable = False
 Global $g_i_Vanquisher_SessionStartKilled = 0
+Global $g_b_Vanquisher_HasRunRoute = False
 Global $g_b_Vanquisher_DeathResignPending = False
