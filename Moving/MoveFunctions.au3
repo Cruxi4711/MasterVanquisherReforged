@@ -137,11 +137,16 @@ Func _Vanquisher_ConsumableDebounce(ByRef $a_h_LastUsed)
     Return TimerDiff($a_h_LastUsed) < $VANQUISHER_CONSUMABLE_DEBOUNCE_MS
 EndFunc
 
+Func _Vanquisher_ShouldPollConsumables()
+    If $g_h_Vanquisher_ConsumablePollTimer = 0 Then Return True
+    Return TimerDiff($g_h_Vanquisher_ConsumablePollTimer) >= $VANQUISHER_CONSUMABLE_POLL_MS
+EndFunc
+
 Func _Vanquisher_ApplyConsumables($a_b_Force = False)
     If Not $a_b_Force Then
-        If $g_h_Vanquisher_ConsumablePollTimer <> 0 And TimerDiff($g_h_Vanquisher_ConsumablePollTimer) < $VANQUISHER_CONSUMABLE_POLL_MS Then Return
-        $g_h_Vanquisher_ConsumablePollTimer = TimerInit()
+        If Not _Vanquisher_ShouldPollConsumables() Then Return
     EndIf
+    $g_h_Vanquisher_ConsumablePollTimer = TimerInit()
     If _IsConsetEnabled() Then _Vanquisher_UseConsetBuffered()
     If _IsBuEnabled() Then _Vanquisher_UseBUBuffered()
     If _IsStonesEnabled() Then _Vanquisher_UseStonesBuffered()
@@ -225,7 +230,10 @@ Func AggroMoveTo($x, $y, $s = "", $z = 1450)
 			_Vanquisher_OnVanquishComplete(" (move)")
 			Return
 		EndIf
-		_Vanquisher_ApplyConsumables()
+		If _Vanquisher_ShouldPollConsumables() Then
+			_Vanquisher_ApplyConsumables()
+			Move($x, $y, $random)
+		EndIf
 		RndSleep(250)
 		$oldCoordsX = $coordsX
 		$oldCoordsY = $coordsY
@@ -235,6 +243,7 @@ Func AggroMoveTo($x, $y, $s = "", $z = 1450)
 			If $lDistance < $z And _Vanquisher_AgentID($nearestenemy) <> 0 Then
 				Fight($z, $s)
 				If $g_b_Vanquisher_AbortRoute Then Return
+				_Vanquisher_ApplyConsumables()
 				UpdateVanquish()
 				If _Vanquisher_IsVanquishComplete() Then
 					_Vanquisher_OnVanquishComplete(" (after fight)")

@@ -617,11 +617,12 @@ Func GetAreaVanquished()
     EndIf
 
     If $g_i_Vanquisher_InitialFoesToKill > 0 Then
+        If $l_i_Killed <= $g_i_Vanquisher_InitialFoesKilled Then Return False
         $g_b_Vanquisher_CounterUnreliable = False
         Return True
     EndIf
 
-    If $l_i_Killed > $g_i_Vanquisher_SessionStartKilled Then Return True
+    If $l_i_Killed > $g_i_Vanquisher_SessionStartKilled And $l_i_Killed > 0 Then Return True
     Return False
 EndFunc
 
