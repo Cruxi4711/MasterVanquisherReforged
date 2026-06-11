@@ -450,7 +450,18 @@ While 1
 		CurrentAction("Begin run number " & $NumberRun)
 
 			If GetMapID() == $Map_To_Farm Then
-				CurrentAction("Already in Map, starting Vanquish.")
+				If Death() = 1 Or GetIsDead(-2) Then
+					_Vanquisher_ResignIfDead()
+					$g_b_Vanquisher_DeathResignPending = False
+				Else
+					_Vanquisher_RefreshVanquishBaseline()
+					If GetAreaVanquished() Then
+						CurrentAction("Already in Map — area vanquished, returning to outpost.")
+						If _Vanquisher_ReturnToOutpost() Then $boolrun = False
+					Else
+						CurrentAction("Already in Map, starting Vanquish.")
+					EndIf
+				EndIf
 			ElseIf GetMapID() == $Map_To_Zone Then
 				CurrentAction("Already in Outpost, heading out.")
 				_Vanquisher_ApplyDifficulty()
@@ -467,7 +478,11 @@ While 1
 				GoOut()
 			EndIf
 
-			Sleep(3000)
+			If GetMapID() = $Map_To_Farm Then
+				_Vanquisher_RefreshVanquishBaseline()
+			Else
+				Sleep(3000)
+			EndIf
 			UpdateVanquish()
 
 			Switch $Title
@@ -503,12 +518,17 @@ While 1
 					If FactionCheckLuxon() Then TurnInFactionLuxon()
 			EndSwitch
 
-			VQ()
+			If GetMapID() = $Map_To_Farm And Not GetAreaVanquished() Then
+				VQ()
+			EndIf
 			UpdateVanquish()
 			If GetAreaVanquished() Then
 				CurrentAction("Area fully vanquished this run.")
-				_Vanquisher_ReturnToOutpost()
-			Else
+				If _Vanquisher_ReturnToOutpost() Then
+					$boolrun = False
+					CurrentAction("Vanquish finished — stopping bot.")
+				EndIf
+			ElseIf GetMapID() = $Map_To_Farm Then
 				CurrentAction("Run finished — " & GetFoesToKill() & " foes still remaining.")
 			EndIf
 
@@ -611,9 +631,15 @@ Func status()
 EndFunc    ;==>status
 
 Func CheckDeath()
-	If Death() = 1 Then
-		CurrentAction("We Are Dead")
+	If Map_GetInstanceInfo("IsLoading") Then Return
+	If Death() <> 1 Then
+		If Not Map_GetInstanceInfo("IsExplorable") Then $g_b_Vanquisher_DeathResignPending = False
+		Return
 	EndIf
+	If Not Map_GetInstanceInfo("IsExplorable") Then Return
+	If $g_b_Vanquisher_DeathResignPending Then Return
+	$g_b_Vanquisher_DeathResignPending = True
+	_Vanquisher_ResignIfDead()
 EndFunc   ;==>CheckDeath
 
 Func CheckPartyDead()

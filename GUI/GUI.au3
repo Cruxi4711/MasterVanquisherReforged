@@ -423,13 +423,6 @@ GUICtrlSetState($COMBO_HERO5, $GUI_DISABLE)
 GUICtrlSetState($COMBO_HERO6, $GUI_DISABLE)
 GUICtrlSetState($COMBO_HERO7, $GUI_DISABLE)
 
-GUICtrlCreateGroup("", -99, -99, 1, 1)
-$Group1 = GUICtrlCreateGroup("MINIMUM RARITY", 952, 240, 150, 105)
-
-Global $ITEM_RARITY = GUICtrlCreateCombo("GOLD", 960, 266, 135, 25, BitOR($CBS_DROPDOWN,$CBS_AUTOHSCROLL))
-GUICtrlSetData($ITEM_RARITY, "PURPLE|BLUE|WHITE")
-
-
 Global $GUISaveHeroButton = GUICtrlCreateButton("SAVE HEROES", 1003, 494, 97, 25)
 GUICtrlSetOnEvent($GUISaveHeroButton, "InitSave")
 $RUN = GUICtrlCreateGroup("RUNS", 952, 528, 150, 49)
@@ -952,6 +945,7 @@ func gui_eventHandler()
 			$sGW = "Guild Wars - " & GUICtrlRead($txtName)
 			AdlibRegister("ReduceMemory", 20000)
 			AdlibRegister("UpdateVanquish", 5000)
+			AdlibRegister("CheckDeath", 1000)
 	endswitch
 endfunc
 

@@ -1556,6 +1556,8 @@ Func CanPickUp($aItemPtr)
     Local $lRarity = Item_GetItemInfoByPtr($aItemPtr, "Rarity")
     If (($lModelID == 2511) And (GetGoldCharacter() < 99000)) Then
         Return True	; gold coins (only pick if character has less than 99k in inventory)
+    ElseIf _Vanquisher_ModelInArray($lModelID, $VANQUISHER_DYE_MODEL_IDS) Then
+        Return True
     ElseIf ($lModelID == $GC_I_MODELID_DYE) Then	; Dye items
         If $aExtraID == $GC_I_EXTRAID_DYE_BLACK Then Return $isBlackPickup
         If $aExtraID == $GC_I_EXTRAID_DYE_WHITE Then Return $isWhitePickup ; Only pick White and Black ones
@@ -1566,14 +1568,16 @@ Func CanPickUp($aItemPtr)
         Return $isPurplePickup
     ElseIf $lRarity == $RARITY_Blue Then ; Blue items
         Return $isBluePickup
+    ElseIf $lRarity == $RARITY_White Then ; White items
+        Return $isWhiteRarityPickup
+    ElseIf _Vanquisher_ModelInArray($lModelID, $VANQUISHER_TOME_MODEL_IDS) Then
+        Return True
+    ElseIf _Vanquisher_ModelInArray($lModelID, $VANQUISHER_ALCOHOL_MODEL_IDS) Then
+        Return True
+    ElseIf _Vanquisher_ModelInArray($lModelID, $VANQUISHER_PCON_MODEL_IDS) Then
+        Return True
     ElseIf $lModelID == $ITEM_ID_Lockpicks Then
         Return True
-    ElseIf $lModelID == 22269 Then	; Cupcakes
-        Return True
-   ; ElseIf $lModelID == $GC_I_MODELID_LUNAR_TOKEN Then ; Lunar Tokens
-    ;    Return True
-  ;  ElseIf $lModelID == $GC_I_MODELID_VICTORY_TOKEN Then ; Victory Tokens
-     ;   Return True
    ElseIf IsPreCollectable($aItemPtr) Then
        If $CharrBossFarm Then
           If $lModelID == 423 Then ; Still going to grab those charr carvings
@@ -1586,8 +1590,6 @@ Func CanPickUp($aItemPtr)
         EndIf
     ElseIf $lModelID == $ExpertSalvKit Then
         Return True
-    ElseIf IsPcon($aItemPtr) Then ; ==== Pcons ==== or all event items
-        Return $isPconsPickup
     ElseIf IsRareMaterial($aItemPtr) Then	; Rare Mats
         Return False
     ElseIf $lModelID == $CharrSalvKit Then
@@ -1645,9 +1647,7 @@ Func GetGoldStorage()
 EndFunc   ;==>GetGoldStorage
 
 Func CheckArrayPscon($lModelID)
-    For $p = 0 To (UBound($Array_pscon) -1)
-        If ($lModelID == $Array_pscon[$p]) Then Return True
-    Next
+    Return _Vanquisher_ModelInArray($lModelID, $VANQUISHER_PCON_MODEL_IDS)
 EndFunc   ;==>CheckArrayPscon
 
 Func InventoryPre()
@@ -2986,21 +2986,7 @@ Func IsAnyCampAnniSkin($aItem)
 EndFunc   ;==> IsAnyCampAnniSkin
 
 Func IsPcon($aItem)
-    Local $ModelID = Item_GetItemInfoByPtr($aItem, "ModelID")
-
-    Switch $ModelID
-    Case 910, 2513, 5585, 6049, 6366, 6367, 6375, 15477, 19171, 19172, 19173, 22190, 24593, 28435, 30855, 31145, 31146, 35124, 36682
-       Return True ; Alcohol
-    Case 6376, 21809, 21810, 21813, 36683
-       Return True ; Party
-    Case 18345, 21492, 21812, 22269, 22644, 22752, 28436, 36681
-       Return True ; Sweets
-    Case 6370, 21488, 21489, 22191, 26784, 28433
-       Return True ; DP Removal
-    Case 15837, 21490, 30648, 31020
-       Return True ; Tonic
-    EndSwitch
-    Return False
+    Return _Vanquisher_ModelInArray(Item_GetItemInfoByPtr($aItem, "ModelID"), $VANQUISHER_PCON_MODEL_IDS)
 EndFunc   ;==> IsPcon
 
 Func IsRareMaterial($aItem)
@@ -4193,23 +4179,17 @@ EndFunc   ;==> GetItemMaxReq7
 
 Func IsRegularTome($aItem)
     Local $ModelID = Item_GetItemInfoByPtr($aItem, "ModelID")
-
-    Switch $ModelID
-    Case 21796, 21797, 21798, 21799, 21800, 21801, 21802, 21803, 21804, 21805
-       Return True
-    EndSwitch
-    Return False
+    Return $ModelID >= 21796 And $ModelID <= 21805
 EndFunc   ;==> IsRegularTome
 
 Func IsEliteTome($aItem)
     Local $ModelID = Item_GetItemInfoByPtr($aItem, "ModelID")
-
-    Switch $ModelID
-    Case 21786, 21787, 21788, 21789, 21790, 21791, 21792, 21793, 21794, 21795
-       Return True ; All Elite Tomes
-    EndSwitch
-    Return False
+    Return $ModelID >= 21786 And $ModelID <= 21795
 EndFunc   ;==> IsEliteTome
+
+Func IsTome($aItem)
+    Return _Vanquisher_ModelInArray(Item_GetItemInfoByPtr($aItem, "ModelID"), $VANQUISHER_TOME_MODEL_IDS)
+EndFunc   ;==> IsTome
 
 Func IsFiveE($aItem)
     Local $ModStruct = Item_GetModStruct($aItem)
@@ -4447,28 +4427,8 @@ $RezSkillIDs[14] = 1778 ; Signet of Return
 
 Global $heroNumberWithRez[0]
 
-;~ Summoning Stones
-Global $SummoningStone[20]
-$SummoningStone[0] = 37810	; Legionnaire
-$SummoningStone[1] = 30209	; Tengu
-$SummoningStone[2] = 30210	; Imperial Guard
-$SummoningStone[3] = 35126	; Shining Blade
-$SummoningStone[4] = 31156	; Zaishen
-$SummoningStone[5] = 32557	; Ghastly
-$SummoningStone[6] = 31155	; Mysterious
-$SummoningStone[7] = 30960	; Mystical
-$SummoningStone[8] = 30963	; Demonic
-$SummoningStone[9] = 34176	; Celestial
-$SummoningStone[10] = 30961	; Amber
-$SummoningStone[11] = 30966	; Jadeite
-$SummoningStone[12] = 30846	; Automaton
-$SummoningStone[13] = 30965	; Fossilized
-$SummoningStone[14] = 30959	; Chitinous
-$SummoningStone[15] = 30964	; Gelatinous
-$SummoningStone[16] = 30962	; Arctic
-$SummoningStone[17] = 31022	; Mischievous
-$SummoningStone[18] = 31023	; Frosty
-$SummoningStone[19] = 30847	; Igneous
+;~ Summoning Stones (see $VANQUISHER_STONE_MODEL_IDS / $GC_AI_ALL_SUMMONING_STONES)
+Global $SummoningStone = $VANQUISHER_STONE_MODEL_IDS
 
 ;~ Conset
 Global $Conset[3]
@@ -4564,8 +4524,8 @@ Global $Spam_Sweet_Array[6] = [21492, 21812, 22269, 22644, 22752, 28436]
 ;~ Tonics
 Global $Tonic_Party_Array[4] = [15837, 21490, 30648, 31020]
 
-;~ DR Removal
-Global $DPRemoval_Sweets[6] = [6370, 21488, 21489, 22191, 26784, 28433]
+;~ DR Removal (see $VANQUISHER_DEATH_MODEL_IDS in Vanquisher_Globals.au3)
+Global $DPRemoval_Sweets = $VANQUISHER_DEATH_MODEL_IDS
 
 ;~ Special Drops
 Global $Special_Drops[7] = [5656, 18345, 21491, 37765, 21833, 28433, 28434]
@@ -4582,16 +4542,16 @@ Global $All_Materials_Array[36] = [921, 922, 923, 925, 926, 927, 928, 929, 930, 
 Global $Common_Materials_Array[11] = [921, 925, 929, 933, 934, 940, 946, 948, 953, 954, 955]
 Global $Rare_Materials_Array[25] = [922, 923, 926, 927, 928, 930, 931, 932, 935, 936, 937, 938, 939, 941, 942, 943, 944, 945, 949, 950, 951, 952, 956, 6532, 6533]
 
-;~ Tomes
-Global $All_Tomes_Array[20] = [21796, 21797, 21798, 21799, 21800, 21801, 21802, 21803, 21804, 21805, 21786, 21787, 21788, 21789, 21790, 21791, 21792, 21793, 21794, 21795]
+;~ Tomes (see $VANQUISHER_TOME_MODEL_IDS in Vanquisher_Globals.au3)
+Global $All_Tomes_Array = $VANQUISHER_TOME_MODEL_IDS
 
 ;~ Arrays for the title spamming (Not inside this version of the bot, but at least the arrays are made for you)
-Global $ModelsAlcohol[100] = [910, 2513, 5585, 6049, 6366, 6367, 6375, 15477, 19171, 22190, 24593, 28435, 30855, 31145, 31146, 35124, 36682]
+Global $ModelsAlcohol = $VANQUISHER_ALCOHOL_MODEL_IDS
 Global $ModelSweetOutpost[100] = [15528, 15479, 19170, 21492, 21812, 22644, 31150, 35125, 36681]
 Global $ModelsSweetPve[100] = [22269, 22644, 28431, 28432, 28436]
 Global $ModelsParty[100] = [6368, 6369, 6376, 21809, 21810, 21813]
 
-Global $Array_pscon[39] = [910, 5585, 6366, 6375, 22190, 24593, 28435, 30855, 31145, 35124, 36682, 6376, 21809, 21810, 21813, 36683, 21492, 21812, 22269, 22644, 22752, 28436,15837, 21490, 30648, 31020, 6370, 21488, 21489, 22191, 26784, 28433, 5656, 18345, 21491, 37765, 21833, 28433, 28434]
+Global $Array_pscon = $VANQUISHER_PCON_MODEL_IDS
 
 Global $PIC_MATS[26][2] = [["Fur Square", 941],["Bolt of Linen", 926],["Bolt of Damask", 927],["Bolt of Silk", 928],["Glob of Ectoplasm", 930],["Steel of Ignot", 949],["Deldrimor Steel Ingot", 950],["Monstrous Claws", 923],["Monstrous Eye", 931],["Monstrous Fangs", 932],["Rubies", 937],["Sapphires", 938],["Diamonds", 935],["Onyx Gemstones", 936],["Lumps of Charcoal", 922],["Obsidian Shard", 945],["Tempered Glass Vial", 939],["Leather Squares", 942],["Elonian Leather Square", 943],["Vial of Ink", 944],["Rolls of Parchment", 951],["Rolls of Vellum", 952],["Spiritwood Planks", 956],["Amber Chunk", 6532],["Jadeite Shard", 6533]]
 

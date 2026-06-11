@@ -433,6 +433,13 @@ Func UseItem($a_v_Item)
     Return Item_UseItem($a_v_Item)
 EndFunc
 
+Func _Vanquisher_ModelInArray($a_i_ModelID, $a_a_ModelIDs)
+    For $l_i_Idx = 0 To UBound($a_a_ModelIDs) - 1
+        If $a_i_ModelID = $a_a_ModelIDs[$l_i_Idx] Then Return True
+    Next
+    Return False
+EndFunc
+
 Func _Vanquisher_UseFirstInventoryItemByModelIDs($a_a_ModelIDs)
     If GetPartyDead() Then Return False
     For $l_i_Bag = 1 To 4
@@ -504,12 +511,67 @@ Func GetFoesKilled()
     Return World_GetWorldInfo("FoesKilled")
 EndFunc
 
+Func _Vanquisher_RefreshVanquishBaseline()
+    $g_i_Vanquisher_InitialFoesToKill = -1
+    $g_i_Vanquisher_InitialFoesKilled = 0
+    If Not Map_GetInstanceInfo("IsExplorable") Or Not GetIsHardMode() Then Return
+
+    CurrentAction("Checking vanquish counter...")
+    Local $l_i_StableZeros = 0
+    Local $hTimer = TimerInit()
+    While TimerDiff($hTimer) < 20000
+        Local $l_i_Remaining = GetFoesToKill()
+        Local $l_i_Killed = GetFoesKilled()
+        If $l_i_Remaining < 0 Then
+            Sleep(500)
+            ContinueLoop
+        EndIf
+        If $l_i_Remaining > 0 Then
+            $g_i_Vanquisher_InitialFoesToKill = $l_i_Remaining
+            $g_i_Vanquisher_InitialFoesKilled = $l_i_Killed
+            CurrentAction("Vanquish: " & $l_i_Killed & " killed, " & $l_i_Remaining & " remaining.")
+            Return
+        EndIf
+        $l_i_StableZeros += 1
+        If $l_i_StableZeros >= 3 Then
+            $g_i_Vanquisher_InitialFoesToKill = 0
+            $g_i_Vanquisher_InitialFoesKilled = $l_i_Killed
+            CurrentAction("Vanquish: area already clear (0 foes on entry).")
+            Return
+        EndIf
+        Sleep(750)
+    WEnd
+
+    $g_i_Vanquisher_InitialFoesToKill = GetFoesToKill()
+    If $g_i_Vanquisher_InitialFoesToKill < 0 Then $g_i_Vanquisher_InitialFoesToKill = 0
+    $g_i_Vanquisher_InitialFoesKilled = GetFoesKilled()
+    CurrentAction("Vanquish: " & $g_i_Vanquisher_InitialFoesKilled & " killed, " & $g_i_Vanquisher_InitialFoesToKill & " remaining.")
+EndFunc
+
 Func GetAreaVanquished()
     If Not Map_GetInstanceInfo("IsExplorable") Then Return False
     If Not GetIsHardMode() Then Return False
+    If $g_i_Vanquisher_InitialFoesToKill < 0 Then Return False
     Local $l_i_Remaining = GetFoesToKill()
     If $l_i_Remaining < 0 Then Return False
-    Return $l_i_Remaining = 0
+    If $l_i_Remaining > 0 Then Return False
+    If $g_i_Vanquisher_InitialFoesToKill = 0 Then Return True
+    Local $l_i_TargetKilled = $g_i_Vanquisher_InitialFoesKilled + $g_i_Vanquisher_InitialFoesToKill
+    Return GetFoesKilled() >= $l_i_TargetKilled
+EndFunc
+
+Func _Vanquisher_ResignIfDead()
+    If Death() <> 1 And Not GetIsDead(-2) Then Return False
+    CurrentAction("Dead — resigning to outpost.")
+    Chat_SendChat("resign", "/")
+    Sleep(3000)
+    WaitForLoad()
+    Return True
+EndFunc
+
+Func _Vanquisher_UseDeathPenaltyItems()
+    If Death() = 1 Or GetIsDead(-2) Then Return
+    _Vanquisher_UseFirstInventoryItemByModelIDs($VANQUISHER_DEATH_MODEL_IDS)
 EndFunc
 
 Func _Vanquisher_IsVanquishComplete()
@@ -539,14 +601,25 @@ Func _Vanquisher_ReturnToOutpost()
     If Not Map_GetInstanceInfo("IsExplorable") Then Return True
 
     CurrentAction("Returning to outpost after vanquish.")
-    Map_ReturnToOutpost()
-    WaitForLoad()
+    If Death() = 1 Or GetIsDead(-2) Then
+        _Vanquisher_ResignIfDead()
+        $g_b_Vanquisher_DeathResignPending = False
+        If Not Map_GetInstanceInfo("IsExplorable") Then
+            _Vanquisher_UseDeathPenaltyItems()
+            CurrentAction("Back in outpost.")
+            Return True
+        EndIf
+    EndIf
+
+    If Map_GetInstanceInfo("IsExplorable") And Not GetIsDead(-2) And Death() <> 1 Then
+        Map_ReturnToOutpost()
+        WaitForLoad()
+    EndIf
 
     Local $l_i_Tries = 0
     While Map_GetInstanceInfo("IsExplorable") And $l_i_Tries < 3
-        Chat_SendChat("resign", "/")
-        Sleep(3000)
-        WaitForLoad()
+        _Vanquisher_ResignIfDead()
+        $g_b_Vanquisher_DeathResignPending = False
         $l_i_Tries += 1
     WEnd
 
@@ -555,6 +628,7 @@ Func _Vanquisher_ReturnToOutpost()
         Return False
     EndIf
 
+    _Vanquisher_UseDeathPenaltyItems()
     CurrentAction("Back in outpost.")
     Return True
 EndFunc

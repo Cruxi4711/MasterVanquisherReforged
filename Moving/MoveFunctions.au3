@@ -74,7 +74,11 @@ EndFunc
 
 Func _Vanquisher_OnVanquishComplete($a_s_Phase = "")
     UpdateVanquish()
-    CurrentAction("Vanquish complete" & $a_s_Phase & " — 0 foes remaining.")
+    If $g_i_Vanquisher_InitialFoesToKill = 0 And GetFoesKilled() = 0 Then
+        CurrentAction("Area already vanquished on entry" & $a_s_Phase & ".")
+    Else
+        CurrentAction("Vanquish complete" & $a_s_Phase & " — 0 foes remaining.")
+    EndIf
     Return True
 EndFunc
 
@@ -98,7 +102,7 @@ EndFunc
 
 Func UseBU()
     If Not _IsBuEnabled() Then Return
-    _Vanquisher_UseFirstInventoryItemByModelIDs($VANQUISHER_BU_MODEL_IDS)
+    _Vanquisher_UseFirstInventoryItemByModelIDs($VANQUISHER_PCON_MODEL_IDS)
 EndFunc
 
 Func UseVanquisherStones()

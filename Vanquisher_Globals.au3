@@ -18,15 +18,27 @@ Global Enum $HERO_MercenaryHero1 = 28, $HERO_MercenaryHero2 = 29, $HERO_Mercenar
 
 ; Standard loot pickup defaults (used by GwAu3_AddOns CanPickUp)
 Global $isGoldPickup = True
-Global $isPurplePickup = True
-Global $isBluePickup = True
-Global $isWhitePickup = False
+Global $isPurplePickup = False
+Global $isBluePickup = False
+Global $isWhiteRarityPickup = False
+Global $isWhitePickup = True
 Global $isBlackPickup = True
 Global $isOtherPickup = False
-Global $isCollPickup = True
-Global $isPconsPickup = True
-Global $isCSalvPickup = True
-Global $isCBagPickup = True
+Global $isCollPickup = False
+Global $isCSalvPickup = False
+Global $isCBagPickup = False
+
+; Dyes to pickup: black (1670), white (1678)
+Global Const $VANQUISHER_DYE_MODEL_IDS[] = [1670, 1678]
+
+; Tomes to pickup [20]
+Global Const $VANQUISHER_TOME_MODEL_IDS[] = [21796, 21797, 21798, 21799, 21800, 21801, 21802, 21803, 21804, 21805, 21786, 21787, 21788, 21789, 21790, 21791, 21792, 21793, 21794, 21795]
+; Alcohol to pickup [17]
+Global Const $VANQUISHER_ALCOHOL_MODEL_IDS[] = [910, 2513, 5585, 6049, 6366, 6367, 6375, 15477, 19171, 22190, 24593, 28435, 30855, 31145, 31146, 35124, 36682]
+; Pcons to pickup or use [39]
+Global Const $VANQUISHER_PCON_MODEL_IDS[] = [910, 5585, 6366, 6375, 22190, 24593, 28435, 30855, 31145, 35124, 36682, 6376, 21809, 21810, 21813, 36683, 21492, 21812, 22269, 22644, 22752, 28436, 15837, 21490, 30648, 31020, 6370, 21488, 21489, 22191, 26784, 28433, 5656, 18345, 21491, 37765, 21833, 28433, 28434]
+; If death occurs use model IDs [6]
+Global Const $VANQUISHER_DEATH_MODEL_IDS[] = [6370, 21488, 21489, 22191, 26784, 28433]
 
 Global $OpenedChestAgentIDs[1] = [0]
 Global $aChestID[24]
@@ -60,9 +72,37 @@ Global Const $VANQUISHER_FACTION_DONATE_CHUNK = 5000
 Global Const $VANQUISHER_FACTION_DONATE_MIN = 10000
 
 Global Const $VANQUISHER_BU_MODEL_IDS[] = [28432, 22269, 28431, 28436, 17061, 22752, 35121]
-Global Const $VANQUISHER_STONE_MODEL_IDS[] = [30209, 37810]
+; All summoning stones from GwAu3 API ($GC_AI_ALL_SUMMONING_STONES)
+Global Const $VANQUISHER_STONE_MODEL_IDS[] = [ _
+		$GC_I_MODELID_MERCANTILE_SUMMONING_STONE, _
+		$GC_I_MODELID_TENGU_SUPPORT_FLARE, _
+		$GC_I_MODELID_IMPERIAL_GUARD_REINFORCEMENT_ORDER, _
+		$GC_I_MODELID_AUTOMATON_SUMMONING_STONE, _
+		$GC_I_MODELID_IGNEOUS_SUMMONING_STONE, _
+		$GC_I_MODELID_CHITINOUS_SUMMONING_STONE, _
+		$GC_I_MODELID_MYSTICAL_SUMMONING_STONE, _
+		$GC_I_MODELID_AMBER_SUMMONING_STONE, _
+		$GC_I_MODELID_ARTIC_SUMMONING_STONE, _
+		$GC_I_MODELID_DEMONIC_SUMMONING_STONE, _
+		$GC_I_MODELID_GELATINOUS_SUMMONING_STONE, _
+		$GC_I_MODELID_FOSSILIZED_SUMMONING_STONE, _
+		$GC_I_MODELID_JADEITE_SUMMONING_STONE, _
+		$GC_I_MODELID_MISCHIEVOUS_SUMMONING_STONE, _
+		$GC_I_MODELID_FROSTY_SUMMONING_STONE, _
+		$GC_I_MODELID_MYSTERIOUS_SUMMONING_STONE, _
+		$GC_I_MODELID_ZAISHEN_SUMMONING_STONE, _
+		$GC_I_MODELID_GHASTLY_SUMMONING_STONE, _
+		$GC_I_MODELID_CELESTIAL_SUMMONING_STONE, _
+		$GC_I_MODELID_SHINING_BLADE_WAR_HORN, _
+		$GC_I_MODELID_LEGIONNAIRE_SUMMONING_STONE _
+]
 Global Const $VANQUISHER_STONE_INTERVAL = 600000
 
 ; Crash-safe file log path (set from GUI.au3 when the Trace file is created)
 Global $g_s_LogFile = @ScriptDir & "\Trace\Vanquisher.log"
 Global $g_h_EditText = 0
+
+; Vanquish baseline on zone-in (foes remaining/killed when entering the explorable)
+Global $g_i_Vanquisher_InitialFoesToKill = -1
+Global $g_i_Vanquisher_InitialFoesKilled = 0
+Global $g_b_Vanquisher_DeathResignPending = False
