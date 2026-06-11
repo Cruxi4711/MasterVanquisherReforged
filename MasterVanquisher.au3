@@ -449,9 +449,6 @@ While 1
 
 		CurrentAction("Begin run number " & $NumberRun)
 
-			If CheckIfInventoryIsFull() then SellItemToMerchant()
-
-
 			If GetMapID() == $Map_To_Farm Then
 				CurrentAction("Already in Map, starting Vanquish.")
 			ElseIf GetMapID() == $Map_To_Zone Then
@@ -510,9 +507,7 @@ While 1
 			UpdateVanquish()
 			If GetAreaVanquished() Then
 				CurrentAction("Area fully vanquished this run.")
-				If GUICtrlRead($Gui_CartoMode) <> $GUI_CHECKED Then
-					_Vanquisher_ReturnToOutpost()
-				EndIf
+				_Vanquisher_ReturnToOutpost()
 			Else
 				CurrentAction("Run finished — " & GetFoesToKill() & " foes still remaining.")
 			EndIf

@@ -1,10 +1,9 @@
 Global Const $CHECK_INTERVAL = 5000
 Global Const $REWARD_WAIT_TIME = 1800000 ; 30 minuti
-Global Const $CARTO_MODE_SLEEP = 3600000 ; 1 ora
 Global $ActionCounter = 0
-Global $Gui_CartoMode ; Inizializzare opportunamente
-Global $LEGIONARY_STONE_ID = 37810
 Global $Gui_Legio
+Global $Gui_Bu
+Global $g_h_Vanquisher_StoneTimer = 0
 Global $BlockCount = 20
 Global $RangeLimit = 1450
 
@@ -76,10 +75,6 @@ EndFunc
 Func _Vanquisher_OnVanquishComplete($a_s_Phase = "")
     UpdateVanquish()
     CurrentAction("Vanquish complete" & $a_s_Phase & " — 0 foes remaining.")
-    If _IsCartoModeEnabled() Then
-        Sleep($CARTO_MODE_SLEEP)
-        Return False
-    EndIf
     Return True
 EndFunc
 
@@ -91,17 +86,27 @@ Func _Vanquisher_CheckVanquishDuringRoute(ByRef $a_h_Timer, $a_s_Phase)
     Return _Vanquisher_OnVanquishComplete($a_s_Phase)
 EndFunc
 
-Func _IsCartoModeEnabled()
-    Return GUICtrlRead($Gui_CartoMode) = $GUI_CHECKED
+Func _IsBuEnabled()
+    If $Bool_Bu Then Return True
+    Return GUICtrlRead($Gui_Bu) = $GUI_CHECKED
 EndFunc
 
-Func UseLegionaryStone()
-    While GUICtrlRead($Gui_Legio) = $GUI_CHECKED
+Func _IsStonesEnabled()
+    If $Bool_Stones Then Return True
+    Return GUICtrlRead($Gui_Legio) = $GUI_CHECKED
+EndFunc
 
-        UseItem($LEGIONARY_STONE_ID)
+Func UseBU()
+    If Not _IsBuEnabled() Then Return
+    _Vanquisher_UseFirstInventoryItemByModelIDs($VANQUISHER_BU_MODEL_IDS)
+EndFunc
 
-        Sleep(600000)
-    WEnd
+Func UseVanquisherStones()
+    If Not _IsStonesEnabled() Then Return
+    If $g_h_Vanquisher_StoneTimer <> 0 And TimerDiff($g_h_Vanquisher_StoneTimer) < $VANQUISHER_STONE_INTERVAL Then Return
+    If _Vanquisher_UseFirstInventoryItemByModelIDs($VANQUISHER_STONE_MODEL_IDS) Then
+        $g_h_Vanquisher_StoneTimer = TimerInit()
+    EndIf
 EndFunc
 
 Func AggroMoveTo($x, $y, $s = "", $z = 1450)
@@ -125,6 +130,8 @@ Func AggroMoveTo($x, $y, $s = "", $z = 1450)
 			Return
 		EndIf
 		If $boolUseConset Then UseConset()
+		If _IsBuEnabled() Then UseBU()
+		If _IsStonesEnabled() Then UseVanquisherStones()
 		RndSleep(250)
 		$oldCoordsX = $coordsX
 		$oldCoordsY = $coordsY

@@ -1,6 +1,3 @@
-* Store Identification
-* Identify and Sell Items
-* Cartography Mode
-* Use Passage Scrolls / Stones
-* Use BU Items
-* Additional Inventory Management
+* Add More Stones
+* Add More BU Items
+

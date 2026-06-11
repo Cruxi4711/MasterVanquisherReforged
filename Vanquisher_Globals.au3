@@ -59,6 +59,10 @@ $aChestID[23] = 8141 ; Locked Chest
 Global Const $VANQUISHER_FACTION_DONATE_CHUNK = 5000
 Global Const $VANQUISHER_FACTION_DONATE_MIN = 10000
 
+Global Const $VANQUISHER_BU_MODEL_IDS[] = [28432, 22269, 28431, 28436, 17061, 22752, 35121]
+Global Const $VANQUISHER_STONE_MODEL_IDS[] = [30209, 37810]
+Global Const $VANQUISHER_STONE_INTERVAL = 600000
+
 ; Crash-safe file log path (set from GUI.au3 when the Trace file is created)
 Global $g_s_LogFile = @ScriptDir & "\Trace\Vanquisher.log"
 Global $g_h_EditText = 0
