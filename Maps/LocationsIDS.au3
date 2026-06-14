@@ -106,8 +106,8 @@ Global $SpearheadPeak_Map
 Global $SpearheadPeak_Outpost
 Global $TalusChute_Map = 26
 Global $TalusChute_Outpost = 20
-Global $TascasDemise_Map
-Global $TascasDemise_Outpost
+Global $TascasDemise_Map = 92; Granite Citadel
+Global $TascasDemise_Outpost =156
 Global $WitmansFolly_Map = 95
 Global $WitmansFolly_Outpost = 20
 ;RingOfFireIsland IDs

@@ -281,8 +281,8 @@ Func GoOut()
 					Move(-25.37, 10672.75)
 					WaitForLoad()
 				Case "TascasDemise"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
+					MoveTo(-10522, 17976)
+					Move(-9858, 18917)
 					WaitForLoad()
 				Case "WitmansFolly"
 					MoveTo(4869, 3423)
