@@ -16,6 +16,21 @@ Func _Vanquisher_ExitRouteIfDone($a_s_Phase = "")
     Return False
 EndFunc
 
+; Move through path with combat; last point is a portal (AggroMoveTo then Move + WaitForLoad).
+Func _Vanquisher_RunAggroPortalPath($a_a_Points, $a_i_AggroRange = 1450, $a_s_Label = "")
+    Local $l_i_Count = UBound($a_a_Points)
+    If $l_i_Count < 1 Then Return
+    Local $l_i_Last = $l_i_Count - 1
+    For $l_i_Idx = 0 To $l_i_Last - 1
+        If $g_b_Vanquisher_AbortRoute Then Return
+        AggroMoveTo($a_a_Points[$l_i_Idx][0], $a_a_Points[$l_i_Idx][1], $a_s_Label & ($l_i_Idx + 1), $a_i_AggroRange)
+    Next
+    If $g_b_Vanquisher_AbortRoute Then Return
+    AggroMoveTo($a_a_Points[$l_i_Last][0], $a_a_Points[$l_i_Last][1], $a_s_Label & " portal", $a_i_AggroRange)
+    Move($a_a_Points[$l_i_Last][0], $a_a_Points[$l_i_Last][1])
+    WaitForLoad()
+EndFunc
+
 ; Standard forward + reverse route (use for any map with both passes).
 Func MoveandAggroVQFullRoute($aWaypoints)
     MoveandAggroVQ($aWaypoints)

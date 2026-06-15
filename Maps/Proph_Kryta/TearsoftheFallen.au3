@@ -2,28 +2,35 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
+Local $aTearsOutpostPath[2][2] = [ _
+	[2043, 11028], _
+	[1795, 11698] _
+]
+
+Local $aTearsTransitPath[7][2] = [ _
+	[1606, 13394], _
+	[-4298, 17149], _
+	[-5176, 20570], _
+	[-9688, 20389], _
+	[-11232, 18965], _
+	[-12577, 21055], _
+	[-13618, 20788] _
+]
+
 ; Outpost 137 -> transit 63 (Stingray Strand) -> farm 53 (Tears of the Fallen). Two portals.
 Func GoOutTearsoftheFallen()
 	Local $l_i_Map = GetMapID()
 
 	If $l_i_Map = $TearsoftheFallen_Outpost Then
 		CurrentAction("Tears of the Fallen — outpost to transit.")
-		MoveTo(2043, 11028)
-		Move(1795, 11698)
-		WaitForLoad()
+		_Vanquisher_RunAggroPortalPath($aTearsOutpostPath, $vqrange, "outpost ")
 		Return
 	EndIf
 
 	If $l_i_Map = $TearsoftheFallen_Transit Then
 		CurrentAction("Tears of the Fallen — transit to farm.")
-		MoveTo(1606, 13394)
-		MoveTo(-4298, 17149)
-		MoveTo(-5176, 20570)
-		MoveTo(-9688, 20389)
-		MoveTo(-11232, 18965)
-		MoveTo(-12577, 21055)
-		Move(-13618, 20788)
-		WaitForLoad()
+		_Vanquisher_InitCombatAI()
+		_Vanquisher_RunAggroPortalPath($aTearsTransitPath, $vqrange, "transit ")
 	EndIf
 EndFunc
 
