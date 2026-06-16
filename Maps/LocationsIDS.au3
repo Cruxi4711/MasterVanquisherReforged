@@ -1,14 +1,20 @@
-;Ascalon IDs
+﻿;Ascalon IDs
 Global $AscalonFoothills_Map = 103
 Global $AscalonFoothills_Outpost = 134         ;Yak's Bend to have a 6 man party
+Global $AscalonFoothills_Transit = 99          ;Traveler's Vale
 Global $DiessaLowlands_Map = 13
-Global $DiessaLowlands_Outpost = 32            ;Nolani's Academy
+Global $DiessaLowlands_Outpost = 134           ;Yak's Bend
+Global $DiessaLowlands_Transit = 99            ;Traveler's Vale
+Global $DiessaLowlands_Transit2 = 103          ;Ascalon Foothills
 Global $DragonsGullet_Map = 105
 Global $DragonsGullet_Outpost = 36             ;Grendich Courthouse
+Global $DragonsGullet_Transit = 13             ;Diessa Lowlands
+Global $DragonsGullet_Transit2 = 106           ;Flame Temple Corridor
 Global $EasternFrontier_Map = 107
 Global $EasternFrontier_Outpost = 30           ;Ruins of Surmia
 Global $FlameTempleCorridor_Map = 106
 Global $FlameTempleCorridor_Outpost = 36       ;Grendich Courthouse
+Global $FlameTempleCorridor_Transit = 13       ;Diessa Lowlands
 Global $OldAscalon_Map = 33
 Global $OldAscalon_Outpost = 81                ;Ascalon City
 Global $PockmarkFlats_Map = 104

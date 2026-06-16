@@ -1,4 +1,4 @@
-
+﻿
 Func GoOut()
 	RndSleep(250)
 
@@ -63,28 +63,28 @@ Func GoOut()
 				TakeQuestDeldrimor()
 				WaitForLoad()
 				Case "DiessaLowlands"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
+					MoveTo(9342, 4942)
+					Move(9240, 3985)
 					WaitForLoad()
 				Case "DragonsGullet"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
+					MoveTo(945, 14173)
+					Move(2341, 13416)
 					WaitForLoad()
 				Case "EasternFrontier"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
+					MoveTo(-2300, -13836)
+					Move(-1593, -13669)
 					WaitForLoad()
 				Case "FlameTempleCorridor"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
+					MoveTo(945, 14173)
+					Move(2341, 13416)
 					WaitForLoad()
 				Case "OldAscalon"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
+					MoveTo(625, 1883)
+					Move(-426, 1874)
 					WaitForLoad()
 				Case "PockmarkFlats"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
+					MoveTo(-6218, 22736)
+					Move(-6197, 22280)
 					WaitForLoad()
 				Case "RegentValley"
 					MoveTo(7936, -28412)
@@ -93,8 +93,9 @@ Func GoOut()
 					Move(7208, -32863)
 					WaitForLoad()
 				Case "TheBreach"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
+					MoveTo(20252, 8439)
+					MoveTo(20242, 7929)
+					Move(20246, 7491)
 					WaitForLoad()
 
 		;NorthernShiverpeaks
