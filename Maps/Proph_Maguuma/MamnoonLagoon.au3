@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aMamnoonLagoonOutpostPath[2][2] = [ _
 	[1691, -2667], _
-	[1950, -2315], _
+	[1950, -2315] _
 ]
 
 Local $aMamnoonLagoonTransitPath[11][2] = [ _
@@ -18,7 +18,7 @@ Local $aMamnoonLagoonTransitPath[11][2] = [ _
 	[14292, 16691], _
 	[15887, 13608], _
 	[17008, 13261], _
-	[18066, 13453], _
+	[18066, 13453] _
 ]
 
 Func GoOutMamnoonLagoon()

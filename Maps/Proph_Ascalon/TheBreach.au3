@@ -5,7 +5,7 @@ Global $ActionCounter = 1
 Local $aTheBreachOutpostPath[3][2] = [ _
 	[20252, 8439], _
 	[20242, 7929], _
-	[20246, 7491], _
+	[20246, 7491] _
 ]
 
 Func GoOutTheBreach()

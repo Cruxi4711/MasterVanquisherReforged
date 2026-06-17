@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aPockmarkFlatsOutpostPath[2][2] = [ _
 	[-6218, 22736], _
-	[-6197, 22280], _
+	[-6197, 22280] _
 ]
 
 Func GoOutPockmarkFlats()

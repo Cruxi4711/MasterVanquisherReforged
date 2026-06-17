@@ -6,7 +6,7 @@ Local $aNorthKrytaProvinceOutpostPath[4][2] = [ _
 	[810, 7749], _
 	[1458, 9940], _
 	[361, 12256], _
-	[169, 12479], _
+	[169, 12479] _
 ]
 
 Func GoOutNorthKrytaProvince()

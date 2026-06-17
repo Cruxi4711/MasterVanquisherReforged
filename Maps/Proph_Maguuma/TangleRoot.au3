@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aTangleRootOutpostPath[2][2] = [ _
 	[6418.01, -10500.90], _
-	[6212.98, -10712.02], _
+	[6212.98, -10712.02] _
 ]
 
 Func GoOutTangleRoot()

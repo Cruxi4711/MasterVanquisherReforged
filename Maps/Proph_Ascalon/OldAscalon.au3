@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aOldAscalonOutpostPath[2][2] = [ _
 	[625, 1883], _
-	[-426, 1874], _
+	[-426, 1874] _
 ]
 
 Func GoOutOldAscalon()

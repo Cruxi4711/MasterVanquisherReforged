@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aMajestysRestOutpostPath[2][2] = [ _
 	[-5199, 16327], _
-	[-5252, 15997], _
+	[-5252, 15997] _
 ]
 
 Local $aMajestysRestTransitPath[7][2] = [ _
@@ -14,7 +14,7 @@ Local $aMajestysRestTransitPath[7][2] = [ _
 	[-17978, 10435], _
 	[-18374, 7235], _
 	[-20108, 2457], _
-	[-20274, 1812], _
+	[-20274, 1812] _
 ]
 
 Local $aMajestysRestTransit2Path[11][2] = [ _
@@ -28,7 +28,7 @@ Local $aMajestysRestTransit2Path[11][2] = [ _
 	[-17071, 7303], _
 	[-18812, 5631], _
 	[-19523, 3658], _
-	[-20190, 3714], _
+	[-20190, 3714] _
 ]
 
 Func GoOutMajestysRest()

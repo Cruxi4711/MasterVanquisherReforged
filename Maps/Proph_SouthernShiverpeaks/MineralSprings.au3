@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aMineralSpringsOutpostPath[2][2] = [ _
 	[-10030, 18833], _
-	[-9797, 19027], _
+	[-9797, 19027] _
 ]
 
 Local $aMineralSpringsTransitPath[11][2] = [ _
@@ -18,7 +18,7 @@ Local $aMineralSpringsTransitPath[11][2] = [ _
 	[4675, 25495], _
 	[5365, 28339], _
 	[7667, 29462], _
-	[8091, 29696], _
+	[8091, 29696] _
 ]
 
 Func GoOutMineralSprings()

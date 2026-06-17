@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aAnvilRockOutpostPath[2][2] = [ _
 	[-11688, 11666], _
-	[-12281, 11654], _
+	[-12281, 11654] _
 ]
 
 Func GoOutAnvilRock()

@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aEasternFrontierOutpostPath[2][2] = [ _
 	[-2300, -13836], _
-	[-1593, -13669], _
+	[-1593, -13669] _
 ]
 
 Func GoOutEasternFrontier()

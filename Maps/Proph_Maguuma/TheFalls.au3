@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aTheFallsOutpostPath[2][2] = [ _
 	[-14913, 578], _
-	[-15169, 426], _
+	[-15169, 426] _
 ]
 
 Local $aTheFallsTransitPath[9][2] = [ _
@@ -16,7 +16,7 @@ Local $aTheFallsTransitPath[9][2] = [ _
 	[-19351, -8594], _
 	[-20909, -11218], _
 	[-22657, -11462], _
-	[-23270, -11426], _
+	[-23270, -11426] _
 ]
 
 Local $aTheFallsTransit2Path[11][2] = [ _
@@ -30,7 +30,7 @@ Local $aTheFallsTransit2Path[11][2] = [ _
 	[-2550, -6849], _
 	[-5626, -6814], _
 	[-6340, -7661], _
-	[-6489, -8107], _
+	[-6489, -8107] _
 ]
 
 Func GoOutTheFalls()

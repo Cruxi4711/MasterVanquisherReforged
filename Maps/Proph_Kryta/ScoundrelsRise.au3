@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aScoundrelsRiseOutpostPath[2][2] = [ _
 	[-1453.60, 24938.46], _
-	[-4334.29, 26859.33], _
+	[-4334.29, 26859.33] _
 ]
 
 Func GoOutScoundrelsRise()

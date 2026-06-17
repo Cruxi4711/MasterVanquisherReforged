@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aIcedomeOutpostPath[2][2] = [ _
 	[-22815, -5378], _
-	[-23091, -5492], _
+	[-23091, -5492] _
 ]
 
 Local $aIcedomeTransitPath[15][2] = [ _
@@ -22,7 +22,7 @@ Local $aIcedomeTransitPath[15][2] = [ _
 	[23218, 11371], _
 	[22197, 16324], _
 	[23438, 16609], _
-	[24083, 16716], _
+	[24083, 16716] _
 ]
 
 Func GoOutIcedome()

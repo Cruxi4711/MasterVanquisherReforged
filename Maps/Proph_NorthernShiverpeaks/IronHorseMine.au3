@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aIronHorseMineOutpostPath[2][2] = [ _
 	[-11688, 11666], _
-	[-12281, 11654], _
+	[-12281, 11654] _
 ]
 
 Local $aIronHorseMineTransitPath[10][2] = [ _
@@ -17,7 +17,7 @@ Local $aIronHorseMineTransitPath[10][2] = [ _
 	[16305, 19985], _
 	[18238, 17604], _
 	[20070, 20046], _
-	[20520, 20584], _
+	[20520, 20584] _
 ]
 
 Func GoOutIronHorseMine()

@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aTheAridSeaOutpostPath[2][2] = [ _
 	[10795, 6556], _
-	[10556, 5908], _
+	[10556, 5908] _
 ]
 
 Local $aTheAridSeaTransitPath[11][2] = [ _
@@ -18,7 +18,7 @@ Local $aTheAridSeaTransitPath[11][2] = [ _
 	[13232, -5778], _
 	[16850, 4402], _
 	[18984, 3739], _
-	[20707, 6478], _
+	[20707, 6478] _
 ]
 
 Func GoOutTheAridSea()

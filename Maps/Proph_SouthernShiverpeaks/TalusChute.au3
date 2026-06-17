@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aTalusChuteOutpostPath[2][2] = [ _
 	[-22877, -5419], _
-	[-23133, -5519], _
+	[-23133, -5519] _
 ]
 
 Func GoOutTalusChute()

@@ -5,7 +5,7 @@ Global $ActionCounter = 1
 Local $aWatchtowerCoastOutpostPath[3][2] = [ _
 	[18349, -10465], _
 	[17407, -10077], _
-	[17324, -9489], _
+	[17324, -9489] _
 ]
 
 Func GoOutWatchtowerCoast()

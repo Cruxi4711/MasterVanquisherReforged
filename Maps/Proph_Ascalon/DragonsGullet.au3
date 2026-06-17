@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aDragonsGulletOutpostPath[2][2] = [ _
 	[945, 14173], _
-	[2341, 13416], _
+	[2341, 13416] _
 ]
 
 Local $aDragonsGulletTransitPath[13][2] = [ _
@@ -20,7 +20,7 @@ Local $aDragonsGulletTransitPath[13][2] = [ _
 	[19976, 15169], _
 	[21502, 16356], _
 	[21436, 17268], _
-	[21431, 17396], _
+	[21431, 17396] _
 ]
 
 Local $aDragonsGulletTransit2Path[19][2] = [ _
@@ -42,7 +42,7 @@ Local $aDragonsGulletTransit2Path[19][2] = [ _
 	[-8221, -2061], _
 	[-7238, -1008], _
 	[-4682, -1082], _
-	[-4577, -978], _
+	[-4577, -978] _
 ]
 
 Func GoOutDragonsGullet()

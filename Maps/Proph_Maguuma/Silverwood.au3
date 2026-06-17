@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aSilverwoodOutpostPath[2][2] = [ _
 	[1550.63, -2982.15], _
-	[2013, -2216], _
+	[2013, -2216] _
 ]
 
 Func GoOutSilverwood()

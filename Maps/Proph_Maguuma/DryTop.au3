@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aDryTopOutpostPath[2][2] = [ _
 	[852, -10457], _
-	[409, -9585], _
+	[409, -9585] _
 ]
 
 Local $aDryTopTransitPath[14][2] = [ _
@@ -21,7 +21,7 @@ Local $aDryTopTransitPath[14][2] = [ _
 	[-21582, 2107], _
 	[-18948, 3362], _
 	[-19327, 4362], _
-	[-19513, 4863], _
+	[-19513, 4863] _
 ]
 
 Func GoOutDryTop()

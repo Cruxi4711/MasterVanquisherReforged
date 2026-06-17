@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aSageLandsOutpostPath[2][2] = [ _
 	[3592, -9535], _
-	[3000, -9480], _
+	[3000, -9480] _
 ]
 
 Func GoOutSageLands()

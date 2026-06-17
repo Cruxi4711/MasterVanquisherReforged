@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aTheScarOutpostPath[2][2] = [ _
 	[12727, 12865], _
-	[12985, 13488], _
+	[12985, 13488] _
 ]
 
 Func GoOutTheScar()

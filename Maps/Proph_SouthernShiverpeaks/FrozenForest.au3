@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aFrozenForestOutpostPath[2][2] = [ _
 	[-7081, -31932], _
-	[-7584, -31736], _
+	[-7584, -31736] _
 ]
 
 Func GoOutFrozenForest()

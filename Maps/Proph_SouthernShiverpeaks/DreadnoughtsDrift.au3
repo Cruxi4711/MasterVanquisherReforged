@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aDreadnoughtsDriftOutpostPath[2][2] = [ _
 	[6647, -41652], _
-	[5831, -41296], _
+	[5831, -41296] _
 ]
 
 Local $aDreadnoughtsDriftTransitPath[38][2] = [ _
@@ -45,7 +45,7 @@ Local $aDreadnoughtsDriftTransitPath[38][2] = [ _
 	[-2023, 40926], _
 	[-5916, 41977], _
 	[-7311, 44525], _
-	[-7091, 45561], _
+	[-7091, 45561] _
 ]
 
 Func GoOutDreadnoughtsDrift()

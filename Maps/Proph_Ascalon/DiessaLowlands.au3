@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aDiessaLowlandsOutpostPath[2][2] = [ _
 	[9342, 4942], _
-	[9240, 3985], _
+	[9240, 3985] _
 ]
 
 Local $aDiessaLowlandsTransitPath[6][2] = [ _
@@ -13,7 +13,7 @@ Local $aDiessaLowlandsTransitPath[6][2] = [ _
 	[10274, -11684], _
 	[9741, -16900], _
 	[10615, -17054], _
-	[11056, -17139], _
+	[11056, -17139] _
 ]
 
 Local $aDiessaLowlandsTransit2Path[12][2] = [ _
@@ -28,7 +28,7 @@ Local $aDiessaLowlandsTransit2Path[12][2] = [ _
 	[3114, -3013], _
 	[7324, -4933], _
 	[7382, -6759], _
-	[7399, -7005], _
+	[7399, -7005] _
 ]
 
 Func GoOutDiessaLowlands()

@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aSaltFlatsOutpostPath[2][2] = [ _
 	[-17139.62, 8813.30], _
-	[-16591.81, 8238.59], _
+	[-16591.81, 8238.59] _
 ]
 
 Func GoOutSaltFlats()

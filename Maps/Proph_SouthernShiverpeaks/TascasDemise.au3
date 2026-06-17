@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aTascasDemiseOutpostPath[2][2] = [ _
 	[-10030, 18833], _
-	[-9797, 19027], _
+	[-9797, 19027] _
 ]
 
 Func GoOutTascasDemise()

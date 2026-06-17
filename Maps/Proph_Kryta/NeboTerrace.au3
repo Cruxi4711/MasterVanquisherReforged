@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aNeboTerraceOutpostPath[2][2] = [ _
 	[-5199, 16327], _
-	[-5252, 15997], _
+	[-5252, 15997] _
 ]
 
 Local $aNeboTerraceTransitPath[14][2] = [ _
@@ -21,7 +21,7 @@ Local $aNeboTerraceTransitPath[14][2] = [ _
 	[17389, 7018], _
 	[18966, 4149], _
 	[19900, 4564], _
-	[20398, 5311], _
+	[20398, 5311] _
 ]
 
 Local $aNeboTerraceTransit2Path[11][2] = [ _
@@ -35,7 +35,7 @@ Local $aNeboTerraceTransit2Path[11][2] = [ _
 	[-4612, -7341], _
 	[-4560, -10437], _
 	[-4436, -11552], _
-	[-3911, -11679], _
+	[-3911, -11679] _
 ]
 
 Func GoOutNeboTerrace()

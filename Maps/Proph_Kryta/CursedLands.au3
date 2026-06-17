@@ -12,7 +12,7 @@ Local $aCursedLandsTransitPath[10][2] = [ _
 	[16343, 15691], _
 	[17767, 15777], _
 	[19161, 18064], _
-	[20018, 18317], _
+	[20018, 18317] _
 ]
 
 Func GoOutCursedLands()

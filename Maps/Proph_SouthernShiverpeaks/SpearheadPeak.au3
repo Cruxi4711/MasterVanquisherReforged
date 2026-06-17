@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aSpearheadPeakOutpostPath[2][2] = [ _
 	[-21052.03, 13106.16], _
-	[-22899, 13360], _
+	[-22899, 13360] _
 ]
 
 Func GoOutSpearheadPeak()

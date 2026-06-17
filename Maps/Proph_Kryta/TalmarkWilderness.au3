@@ -11,7 +11,7 @@ Local $aTalmarkWildernessTransitPath[9][2] = [ _
 	[-17978, 10435], _
 	[-18374, 7235], _
 	[-20108, 2457], _
-	[-20274, 1812], _
+	[-20274, 1812] _
 ]
 
 Func GoOutTalmarkWilderness()

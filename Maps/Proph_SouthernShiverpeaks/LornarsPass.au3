@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aLornarsPassOutpostPath[2][2] = [ _
 	[6647, -41652], _
-	[5831, -41296], _
+	[5831, -41296] _
 ]
 
 Local $aLornarsPassTransitPath[38][2] = [ _
@@ -45,7 +45,7 @@ Local $aLornarsPassTransitPath[38][2] = [ _
 	[-2023, 40926], _
 	[-5916, 41977], _
 	[-7311, 44525], _
-	[-7091, 45561], _
+	[-7091, 45561] _
 ]
 
 Local $aLornarsPassTransit2Path[11][2] = [ _
@@ -59,7 +59,7 @@ Local $aLornarsPassTransit2Path[11][2] = [ _
 	[-2386, 7708], _
 	[-4783, 7055], _
 	[-5363, 7789], _
-	[-5705, 8493], _
+	[-5705, 8493] _
 ]
 
 Func GoOutLornarsPass()

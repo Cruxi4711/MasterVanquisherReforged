@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aGriffonsMouthOutpostPath[2][2] = [ _
 	[-1453.60, 24938.46], _
-	[-4334.29, 26859.33], _
+	[-4334.29, 26859.33] _
 ]
 
 Local $aGriffonsMouthTransitPath[8][2] = [ _
@@ -15,7 +15,7 @@ Local $aGriffonsMouthTransitPath[8][2] = [ _
 	[7698, 5400], _
 	[7355, 6838], _
 	[7504, 7406], _
-	[7660, 8001], _
+	[7660, 8001] _
 ]
 
 Func GoOutGriffonsMouth()

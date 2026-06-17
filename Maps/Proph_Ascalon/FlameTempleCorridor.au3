@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aFlameTempleCorridorOutpostPath[2][2] = [ _
 	[945, 14173], _
-	[2341, 13416], _
+	[2341, 13416] _
 ]
 
 Local $aFlameTempleCorridorTransitPath[13][2] = [ _
@@ -20,7 +20,7 @@ Local $aFlameTempleCorridorTransitPath[13][2] = [ _
 	[19976, 15169], _
 	[21502, 16356], _
 	[21419, 17256], _
-	[21411, 17437], _
+	[21411, 17437] _
 ]
 
 Func GoOutFlameTempleCorridor()

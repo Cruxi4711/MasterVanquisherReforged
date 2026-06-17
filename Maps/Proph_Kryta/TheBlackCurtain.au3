@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aTheBlackCurtainOutpostPath[2][2] = [ _
 	[-5057.52, 17188.52], _
-	[-5205, 15562], _
+	[-5205, 15562] _
 ]
 
 Func GoOutTheBlackCurtain()

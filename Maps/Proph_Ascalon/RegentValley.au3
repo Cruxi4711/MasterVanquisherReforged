@@ -6,7 +6,7 @@ Local $aRegentValleyOutpostPath[4][2] = [ _
 	[7936, -28412], _
 	[7194, -31058], _
 	[7208, -32163], _
-	[7208, -32863], _
+	[7208, -32863] _
 ]
 
 Func GoOutRegentValley()

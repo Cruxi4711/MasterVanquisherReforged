@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aAscalonFoothillsOutpostPath[2][2] = [ _
 	[9342, 4942], _
-	[9240, 3985], _
+	[9240, 3985] _
 ]
 
 Local $aAscalonFoothillsTransitPath[6][2] = [ _
@@ -13,7 +13,7 @@ Local $aAscalonFoothillsTransitPath[6][2] = [ _
 	[10274, -11684], _
 	[9741, -16900], _
 	[10668, -17113], _
-	[11056, -17139], _
+	[11056, -17139] _
 ]
 
 Func GoOutAscalonFoothills()

@@ -5,7 +5,7 @@ Global $ActionCounter = 1
 Local $aProphetsPathOutpostPath[3][2] = [ _
 	[-17562, -1143], _
 	[-18791, -310], _
-	[-20099, -320], _
+	[-20099, -320] _
 ]
 
 Func GoOutProphetsPath()

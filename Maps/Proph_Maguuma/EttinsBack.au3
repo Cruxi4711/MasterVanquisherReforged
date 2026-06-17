@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aEttinsBackOutpostPath[2][2] = [ _
 	[-14497.57, 835.94], _
-	[-15074.91, 437.85], _
+	[-15074.91, 437.85] _
 ]
 
 Func GoOutEttinsBack()

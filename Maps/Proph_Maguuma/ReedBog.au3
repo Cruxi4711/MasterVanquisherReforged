@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aReedBogOutpostPath[2][2] = [ _
 	[-14913, 578], _
-	[-15169, 426], _
+	[-15169, 426] _
 ]
 
 Local $aReedBogTransitPath[9][2] = [ _
@@ -16,7 +16,7 @@ Local $aReedBogTransitPath[9][2] = [ _
 	[-19351, -8594], _
 	[-20909, -11218], _
 	[-22657, -11462], _
-	[-23270, -11426], _
+	[-23270, -11426] _
 ]
 
 Func GoOutReedBog()

@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aDivinersAscentOutpostPath[2][2] = [ _
 	[16763, 6828], _
-	[17024, 6837], _
+	[17024, 6837] _
 ]
 
 Func GoOutDivinersAscent()

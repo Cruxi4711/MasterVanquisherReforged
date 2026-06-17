@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aPerditionRockOutpostPath[2][2] = [ _
 	[3603, -10090], _
-	[3800, -8600], _
+	[3800, -8600] _
 ]
 
 Func GoOutPerditionRock()

@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aDeldrimorBowlOutpostPath[2][2] = [ _
 	[-9681, 34559], _
-	[-11100, 35350], _
+	[-11100, 35350] _
 ]
 
 Func GoOutDeldrimorBowl()

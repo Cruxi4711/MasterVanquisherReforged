@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aWitmansFollyOutpostPath[2][2] = [ _
 	[4869, 3423], _
-	[5800, 1400], _
+	[5800, 1400] _
 ]
 
 Func GoOutWitmansFolly()

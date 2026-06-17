@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aSkywardReachOutpostPath[2][2] = [ _
 	[-15225.14, 1966.78], _
-	[-15233.08, 2352.49], _
+	[-15233.08, 2352.49] _
 ]
 
 Func GoOutSkywardReach()

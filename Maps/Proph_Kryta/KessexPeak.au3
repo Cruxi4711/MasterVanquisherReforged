@@ -4,7 +4,7 @@ Global $ActionCounter = 1
 
 Local $aKessexPeakOutpostPath[2][2] = [ _
 	[-5199, 16327], _
-	[-5252, 15997], _
+	[-5252, 15997] _
 ]
 
 Local $aKessexPeakTransitPath[12][2] = [ _
@@ -19,7 +19,7 @@ Local $aKessexPeakTransitPath[12][2] = [ _
 	[7797, -13034], _
 	[8548, -17166], _
 	[7834, -18238], _
-	[6093, -18015], _
+	[6093, -18015] _
 ]
 
 Func GoOutKessexPeak()

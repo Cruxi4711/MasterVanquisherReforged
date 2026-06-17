@@ -6,7 +6,7 @@ Local $aTwinSerpentLakesOutpostPath[4][2] = [ _
 	[-20183, 10506], _
 	[-18896, 12390], _
 	[-16812, 13585], _
-	[-16612, 13585], _
+	[-16612, 13585] _
 ]
 
 Func GoOutTwinSerpentLakes()
