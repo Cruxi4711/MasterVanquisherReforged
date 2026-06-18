@@ -170,6 +170,11 @@ EndFunc
 #EndRegion
 
 #Region Core connection
+Func _Vanquisher_SyncLegacyHandles()
+    $nHandle = $g_h_GWProcess
+    $nPID = $g_i_GWProcessId
+EndFunc
+
 Func Initialize($a_s_GW, $a_b_ChangeTitle = True, $a_b_Unused = True)
     If Not _Vanquisher_GWIsRunning() Then Return False
 
@@ -183,15 +188,28 @@ Func Initialize($a_s_GW, $a_b_ChangeTitle = True, $a_b_Unused = True)
         Core_Initialize($a_s_GW, $a_b_ChangeTitle)
     EndIf
 
-    If Not $g_h_GWProcess Then Return False
-    If $g_p_BasePointer = 0 Then Return False
+    If Not $g_h_GWProcess Then
+        _Vanquisher_SyncLegacyHandles()
+        Return False
+    EndIf
+    If $g_p_BasePointer = 0 Then
+        _Vanquisher_SyncLegacyHandles()
+        Return False
+    EndIf
 
     If IsString($a_s_GW) And $a_s_GW <> "" Then
         Local $l_s_Char = Player_GetCharname()
-        If $l_s_Char = "" Then Return False
-        If StringCompare(StringStripWS($l_s_Char, 3), StringStripWS($a_s_GW, 3)) <> 0 Then Return False
+        If $l_s_Char = "" Then
+            _Vanquisher_SyncLegacyHandles()
+            Return False
+        EndIf
+        If StringCompare(StringStripWS($l_s_Char, 3), StringStripWS($a_s_GW, 3)) <> 0 Then
+            _Vanquisher_SyncLegacyHandles()
+            Return False
+        EndIf
     EndIf
 
+    _Vanquisher_SyncLegacyHandles()
     Return True
 EndFunc
 
@@ -551,6 +569,10 @@ Func _Vanquisher_InitCombatAI()
     CurrentAction("Utility AI skill bar cached.")
 EndFunc
 
+Func _Vanquisher_ResetGoOutRouteProgress()
+    $g_i_Vanquisher_GoOutLastMapHandled = -1
+EndFunc
+
 Func _Vanquisher_RefreshVanquishBaseline()
     $g_i_Vanquisher_InitialFoesToKill = -1
     $g_i_Vanquisher_InitialFoesKilled = 0
@@ -561,6 +583,7 @@ Func _Vanquisher_RefreshVanquishBaseline()
     $g_b_Vanquisher_AbortRoute = False
     $g_b_Vanquisher_CombatAIReady = False
     $g_b_Vanquisher_TransitOnly = False
+    $g_i_Vanquisher_GoOutLastMapHandled = -1
     $g_i_TearsRoute_LastMapHandled = -1
     $g_i_StingrayRoute_LastMapHandled = -1
     $g_h_Vanquisher_ConsumablePollTimer = 0

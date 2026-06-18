@@ -123,6 +123,10 @@ Global $g_a_Vanquisher_ConsetLastUsed[3]
 
 Global $g_h_EditText = 0
 
+; Legacy GWA/GWAPI names still referenced by some launcher builds (e.g. Gw2Auto_Reforged.au3)
+Global $nHandle = 0
+Global $nPID = 0
+
 ; Vanquish baseline on zone-in (foes remaining/killed when entering the explorable)
 Global $g_i_Vanquisher_InitialFoesToKill = -1
 Global $g_i_Vanquisher_InitialFoesKilled = 0
@@ -134,5 +138,6 @@ Global $g_b_Vanquisher_AbortRoute = False
 Global $g_b_Vanquisher_DeathResignPending = False
 Global $g_b_Vanquisher_CombatAIReady = False
 Global $g_b_Vanquisher_TransitOnly = False
+Global $g_i_Vanquisher_GoOutLastMapHandled = -1
 Global $g_i_TearsRoute_LastMapHandled = -1
 Global $g_i_StingrayRoute_LastMapHandled = -1
