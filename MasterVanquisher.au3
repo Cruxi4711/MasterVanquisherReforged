@@ -1,6 +1,6 @@
 #RequireAdmin
 #NoTrayIcon
-#include "_LINKER.au3"
+#include "app\Core\Linker.au3"
 
 global $DeadOnTheRun = 0
 Global $GWA_CONST_UnyieldingAura=268

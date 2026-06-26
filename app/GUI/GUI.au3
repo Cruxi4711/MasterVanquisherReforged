@@ -10,7 +10,7 @@ Global $coords[2]
 Global $Title, $sGW
 Global $Bool_Donate = False, $Bool_HM = False, $Bool_AddHeroes = False, $Bool_Bu = False, $Bool_Stones = False
 Global $Bool_OpenChests = False, $Bool_Conset = False
-Global $iniHero = @ScriptDir & "\Hero.ini"
+Global $iniHero = $VANQUISHER_HERO_INI
 
 ; Blue dashboard palette (AutoIt uses 0xRRGGBB colors)
 Global Const $GUI_CLR_BG = 0x0B0F14       ; Version 5.0a near-black navy background
@@ -56,8 +56,8 @@ Global $btnRefreshChars = GUICtrlCreateButton("Refresh", 310, 118, 76, 25)
 GUICtrlSetTip(-1, "Refresh Guild Wars client list")
 GUICtrlSetOnEvent(-1, "RefreshCharNames")
 Global $btnAttach = GUICtrlCreateButton("Attach", 394, 118, 70, 25)
-GUICtrlSetTip(-1, "Refresh character list from running clients")
-GUICtrlSetOnEvent(-1, "RefreshCharNames")
+GUICtrlSetTip(-1, "Connect to the selected Guild Wars character")
+GUICtrlSetOnEvent(-1, "AttachToGuildWars")
 Global $chkOnTop = GUICtrlCreateCheckbox("On Top", 484, 122, 75, 18)
 GUICtrlSetOnEvent(-1, "gui_eventHandler")
 Global $chkDebug = GUICtrlCreateCheckbox("Debug", 570, 122, 65, 18)
@@ -287,15 +287,23 @@ _Vanquisher_UpdateDonateCheckbox()
 _Vanquisher_UpdateStatusBar()
 _Vanquisher_ShowPage("Main")
 
+_Vanquisher_HandleWrongWinePrefix()
+
 GUISetState(@SW_SHOW)
 Local $l_s_StartupNames = Gwen_GetCharNamesFromWindowsOnly()
+If $l_s_StartupNames = "" Then $l_s_StartupNames = GetLoggedCharNames()
 If $l_s_StartupNames <> "" Then
-	GUICtrlSetData($txtName, $l_s_StartupNames)
+	_Vanquisher_SetCharacterCombo($l_s_StartupNames)
 	CurrentAction("Characters: " & StringReplace($l_s_StartupNames, "|", ", "))
+	_Vanquisher_SetConnectionStatus("READY")
 ElseIf _Vanquisher_CountGWClients() > 0 Then
-	CurrentAction("Guild Wars detected — click Refresh to load characters." & _Vanquisher_PrefixHint())
+	If Not _Vanquisher_WinePrefixIsCorrect() And _Vanquisher_CountGWClientsInPrefix() = 0 Then
+		CurrentAction(_Vanquisher_WineAttachBlockedMsg() & _Vanquisher_PrefixHint())
+	Else
+		CurrentAction("Guild Wars detected — click Refresh to load characters." & _Vanquisher_PrefixHint())
+	EndIf
 Else
-	CurrentAction("Start Guild Wars, log in, then click Refresh." & _Vanquisher_PrefixHint())
+	CurrentAction("Start Guild Wars, log in, then click Refresh. On Linux, launch with ./run_vanquisher.sh." & _Vanquisher_PrefixHint())
 EndIf
 CurrentAction("Dashboard initialized.")
 CurrentAction("Ready.")
@@ -653,8 +661,16 @@ Func gui_eventHandler()
 			If GUICtrlRead($txtName) = "" Then
 				MsgBox(48, "Master Vanquisher Reforged", "Please select your character.")
 				Return
-			Else
-				If Initialize(GUICtrlRead($txtName), True) = False Then
+			EndIf
+
+			Local $l_s_Block = _Vanquisher_WineAttachBlockedMsg()
+			If $l_s_Block <> "" Then
+				MsgBox(48, "Master Vanquisher Reforged", $l_s_Block)
+				Return
+			EndIf
+
+			If _Vanquisher_IsAttached() = False Then
+				If _Vanquisher_AttachToCharacter(GUICtrlRead($txtName)) = False Then
 					MsgBox(48, "Master Vanquisher Reforged", "Can't find a Guild Wars client with that character name.")
 					Return
 				EndIf
@@ -682,8 +698,7 @@ Func gui_eventHandler()
 			GUICtrlSetState($Start, $GUI_DISABLE)
 			GUICtrlSetState($txtName, $GUI_DISABLE)
 
-			GUICtrlSetData($lblStatusValue, "RUNNING")
-			GUICtrlSetColor($lblStatusValue, $GUI_CLR_ACCENT)
+			_Vanquisher_SetConnectionStatus("RUNNING")
 			GUICtrlSetData($lblCharName, "Name: " & GUICtrlRead($txtName))
 
 			$NumberRun = 0
@@ -697,28 +712,105 @@ Func gui_eventHandler()
 	EndSwitch
 EndFunc
 
+Func _Vanquisher_SetCharacterCombo($a_s_Names, $a_s_Preferred = "")
+	$a_s_Names = StringStripWS($a_s_Names, 3)
+	GUICtrlSetData($txtName, $a_s_Names)
+
+	Local $l_s_Select = StringStripWS($a_s_Preferred, 3)
+	If $l_s_Select = "" Then $l_s_Select = _Vanquisher_LoadLastCharacter()
+	If $l_s_Select <> "" And $a_s_Names <> "" Then
+		Local $aParts = StringSplit($a_s_Names, "|")
+		Local $l_b_Found = False
+		For $i = 1 To $aParts[0]
+			If StringCompare($aParts[$i], $l_s_Select, 0) = 0 Then
+				$l_b_Found = True
+				ExitLoop
+			EndIf
+		Next
+		If Not $l_b_Found Then $l_s_Select = $aParts[1]
+	ElseIf $a_s_Names <> "" Then
+		Local $aParts = StringSplit($a_s_Names, "|")
+		If $aParts[0] >= 1 Then $l_s_Select = $aParts[1]
+	EndIf
+
+	If $l_s_Select <> "" Then
+		If Not ControlCommand($Master_Vanquisher, "", $txtName, "SelectString", $l_s_Select) Then
+			ControlSetText($Master_Vanquisher, "", $txtName, $l_s_Select)
+		EndIf
+	EndIf
+
+	_Vanquisher_UpdateStatusBar()
+EndFunc
+
+Func _Vanquisher_SetConnectionStatus($a_s_Status)
+	GUICtrlSetData($lblStatusValue, $a_s_Status)
+	Switch StringUpper($a_s_Status)
+		Case "RUNNING"
+			GUICtrlSetColor($lblStatusValue, $GUI_CLR_ACCENT)
+		Case "ATTACHED", "READY"
+			GUICtrlSetColor($lblStatusValue, $GUI_CLR_TEXT)
+		Case Else
+			GUICtrlSetColor($lblStatusValue, $GUI_CLR_MUTED)
+	EndSwitch
+EndFunc
+
+Func AttachToGuildWars()
+	Local $l_s_Char = GUICtrlRead($txtName)
+	If $l_s_Char = "" Then
+		MsgBox(48, "Master Vanquisher Reforged", "Select or type your character name first, then click Attach.")
+		Return
+	EndIf
+
+	If _Vanquisher_AttachToCharacter($l_s_Char) Then
+		_Vanquisher_SetConnectionStatus("ATTACHED")
+		GUICtrlSetData($lblCharName, "Name: " & $l_s_Char)
+		$sGW = "Guild Wars - " & $l_s_Char
+		CurrentAction("Attached to " & $l_s_Char & ". Select zones on Routes, then click Start Vanquishing.")
+		Return
+	EndIf
+
+	_Vanquisher_SetConnectionStatus("WAITING FOR ATTACH")
+	Local $l_s_MemoryNames = _Vanquisher_GetMemoryCharNames()
+	Local $l_s_Msg = "Could not attach to '" & $l_s_Char & "'."
+	If $l_s_MemoryNames <> "" Then
+		$l_s_Msg &= @CRLF & @CRLF & "Characters found in Guild Wars memory:" & @CRLF & StringReplace($l_s_MemoryNames, "|", @CRLF)
+		$l_s_Msg &= @CRLF & @CRLF & "Select one of those names and click Attach again."
+	Else
+		$l_s_Msg &= @CRLF & @CRLF & "No character name could be read from memory." & @CRLF & "Log fully into a character in-game, click Refresh, then Attach."
+	EndIf
+	CurrentAction("Could not attach to '" & $l_s_Char & "'. See live log for details.")
+	MsgBox(48, "Master Vanquisher Reforged", $l_s_Msg)
+EndFunc
+
 Func RefreshCharNames()
 	Local $l_s_Hint = _Vanquisher_PrefixHint()
+	Local $l_s_Block = _Vanquisher_WineAttachBlockedMsg()
+
+	If $l_s_Block <> "" And _Vanquisher_CountGWClients() > 0 And _Vanquisher_CountGWClientsInPrefix() = 0 Then
+		GUICtrlSetData($txtName, "")
+		CurrentAction($l_s_Block & $l_s_Hint)
+		Return
+	EndIf
+
 	Local $l_s_Names = GetLoggedCharNames()
 
 	If $l_s_Names <> "" Then
-		GUICtrlSetData($txtName, "")
-		GUICtrlSetData($txtName, $l_s_Names)
+		_Vanquisher_SetCharacterCombo($l_s_Names)
 		CurrentAction("Characters: " & StringReplace($l_s_Names, "|", ", "))
-		_Vanquisher_UpdateStatusBar()
+		If Not _Vanquisher_IsAttached() Then _Vanquisher_SetConnectionStatus("READY")
 		Return
 	EndIf
 
 	Local $l_i_GWCount = _Vanquisher_CountGWClients()
 
 	If $l_i_GWCount = 0 Then
-		GUICtrlSetData($txtName, "")
-		CurrentAction("No Guild Wars client found. Use the Master Vanquisher desktop icon (gw4)." & $l_s_Hint)
+		_Vanquisher_SetCharacterCombo("")
+		CurrentAction("No Guild Wars client found. Start Guild Wars, log in, then click Refresh. On Linux, launch Vanquisher with ./run_vanquisher.sh." & $l_s_Hint)
 		Return
 	EndIf
 
-	GUICtrlSetData($txtName, "")
-	CurrentAction("Found " & $l_i_GWCount & " Guild Wars client(s), but could not read character names. Type the name manually, or reach character select / in-game and click Refresh. Window: " & _Vanquisher_GetGwWindowTitles() & $l_s_Hint)
+	_Vanquisher_SetCharacterCombo("")
+	CurrentAction("Found " & $l_i_GWCount & " Guild Wars client(s), but could not read a character name from memory. Log fully in-game on a character, then click Refresh. Window: " & _Vanquisher_GetGwWindowTitles() & $l_s_Hint)
 EndFunc
 
 Func UpdateVanquish()

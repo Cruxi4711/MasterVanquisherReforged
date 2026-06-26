@@ -723,7 +723,7 @@ Func GoOut()
 	Switch (@GUI_CtrlId)
 		Case $GUISaveHeroButton
     $workingdir = @WorkingDir
-    $ini_file = FileSaveDialog('Save', @ScriptDir & "\Build_Team", 'Ini (*.ini)|All (*.*)', 10, 'Hero.ini', $Master_Vanquisher)
+    $ini_file = FileSaveDialog('Save', $VANQUISHER_CONFIG_DIR, 'Ini (*.ini)|All (*.*)', 10, 'Hero.ini', $Master_Vanquisher)
     If @error Or $ini_file == '' Then
         FileChangeDir($workingdir)
         Return SetError(1, 0, '')

@@ -7,7 +7,7 @@ Func _Vanquisher_InitZones()
     If $bDone Then Return
     $bDone = True
     Global $g_a_VanquisherZones, $g_i_VanquisherZoneCount
-    ; Zone order follows _LINKER.au3 / Maps folder order: Prophecies, Factions, Nightfall, EotN.
+    ; Zone order follows Core/Linker.au3 / Maps folder order: Prophecies, Factions, Nightfall, EotN.
     Local $sData = _
         "AscalonFoothills|ASCALON FOOTHILLS|Prophecies|0" & @CRLF & _
         "DiessaLowlands|DIESSA LOWLANDS|Prophecies|0" & @CRLF & _

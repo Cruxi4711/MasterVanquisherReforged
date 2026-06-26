@@ -1,6 +1,11 @@
 #include-once
 ; Master Vanquisher globals loaded before GwAu3_AddOns.au3 (avoid duplicate constant errors)
 
+Global Const $VANQUISHER_APP_DIR = @ScriptDir & "\app"
+Global Const $VANQUISHER_CONFIG_DIR = $VANQUISHER_APP_DIR & "\Config"
+Global Const $VANQUISHER_HERO_INI = $VANQUISHER_CONFIG_DIR & "\Hero.ini"
+Global Const $VANQUISHER_CHAR_INI = $VANQUISHER_CONFIG_DIR & "\Vanquisher.ini"
+
 Global Enum $INSTANCETYPE_OUTPOST = 0, $INSTANCETYPE_EXPLORABLE, $INSTANCETYPE_LOADING
 
 Global Enum $BAG_Backpack = 1, $BAG_BeltPouch, $BAG_Bag1, $BAG_Bag2, $BAG_EquipmentPack, $BAG_UnclaimedItems = 7, $BAG_Storage1, $BAG_Storage2, _
