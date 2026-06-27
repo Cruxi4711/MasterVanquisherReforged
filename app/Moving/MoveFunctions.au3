@@ -142,21 +142,11 @@ Func _Vanquisher_IsDuplicateShrineStep($aWaypoints, $a_i_Index, $a_b_Reverse = F
 	Return $aWaypoints[$a_i_Index][0] = $aWaypoints[$a_i_Index - 1][0] And $aWaypoints[$a_i_Index][1] = $aWaypoints[$a_i_Index - 1][1]
 EndFunc
 
-; ============================================================
-; Part B — Junundu / Wurm Spoor helpers
-; ============================================================
-
-;~ Returns True if the player is currently transformed into a Junundu wurm.
-;~ Checks skill slot 1 against the Junundu skill ID range (1438–1443).
 Func _Vanquisher_IsJunundutransformed()
 	Local $l_i_SkillID = Skill_GetSkillbarInfo(1, "SkillID", 0)
 	Return $l_i_SkillID >= $GC_I_SKILL_ID_JUNUNDU_FEAST And $l_i_SkillID <= $GC_I_SKILL_ID_LEAVE_JUNUNDU
 EndFunc
 
-;~ Locates the nearest Wurm Spoor gadget and interacts with it to mount a Junundu.
-;~ Uses GetNearestGadgetToAgent + Agent_GoSignpost (same pattern as CheckForChest).
-;~ Retries up to $a_i_MaxRetries times with a small reposition on each failure.
-;~ Returns True on confirmed transformation.
 Func _Vanquisher_MountJununduAtWaypoint($a_f_X, $a_f_Y, $a_i_MaxRetries = 3)
 	If _Vanquisher_IsJunundutransformed() Then
 		LogInfo("[Junundu] Already transformed — skipping mount.")
@@ -190,12 +180,6 @@ Func _Vanquisher_MountJununduAtWaypoint($a_f_X, $a_f_Y, $a_i_MaxRetries = 3)
 	Return False
 EndFunc
 
-; ============================================================
-; Part A — Death / wipe recovery helpers
-; ============================================================
-
-;~ Waits for the party to respawn at a shrine after a full wipe.
-;~ Returns True when the player is confirmed alive, False on timeout or stop signal.
 Func _Vanquisher_WipeRespawnWait($a_i_TimeoutMs = 120000)
 	CurrentAction("[Wipe] Awaiting shrine respawn...")
 	LogStatus("[Wipe] Party wipe detected — waiting for shrine respawn.")
@@ -217,7 +201,6 @@ Func _Vanquisher_WipeRespawnWait($a_i_TimeoutMs = 120000)
 	Return False
 EndFunc
 
-;~ Returns the index of the waypoint nearest to the player's current position.
 Func _Vanquisher_FindNearestWaypointIndex($aWaypoints)
 	Local $l_v_Me = GetAgentByID(-2)
 	If Not IsDllStruct($l_v_Me) Then Return 0
@@ -236,14 +219,6 @@ Func _Vanquisher_FindNearestWaypointIndex($aWaypoints)
 	Return $l_i_BestIdx
 EndFunc
 
-;~ Walks from the waypoint nearest to the current player position up to
-;~ $a_i_TargetIndex (inclusive) using forward index order and AggroMoveTo for
-;~ each segment.  Provides:
-;~   - per-segment bounded retries ($a_i_MaxRetryPerSeg)
-;~   - movement progress watchdog (nudge on <100 GW units of movement)
-;~   - 10-minute hard timeout with abort log
-;~ If the player is already at/past the target index, moves directly to the
-;~ target waypoint in one step.
 Func _Vanquisher_SegmentedRecovery($aWaypoints, $a_i_TargetIndex, $a_i_MaxRetryPerSeg = 2)
 	Local $l_i_Count = UBound($aWaypoints)
 	If $a_i_TargetIndex < 0 Then $a_i_TargetIndex = 0
