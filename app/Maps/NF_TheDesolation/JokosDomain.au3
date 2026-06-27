@@ -1,4 +1,3 @@
-; Mapped by Crux
 #RequireAdmin
 #NoTrayIcon
 
