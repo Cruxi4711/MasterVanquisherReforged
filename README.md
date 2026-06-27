@@ -51,6 +51,10 @@ Recommended environment:
 * GWAu3 Library
 * GWToolbox++ (Optional)
 
+To Run: Log fully in-game on your character (not login screen or character select)
+Click Refresh — your real character name should appear (not "Reforged")
+Click Attach: If Refresh shows no character, type your exact in-game name manually, then Attach.
+
 ---
 
 # Installation
