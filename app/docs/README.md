@@ -1,6 +1,6 @@
 # Master Vanquisher Reforged
 
-Master Vanquisher Reforged is a modernized version of the original GWA2 **MASTER VANQUISHER** project, updated and expanded for **GWAu3**. The project is designed to automate Guild Wars vanquishing across all campaigns while maintaining compatibility with modern systems.
+Master Vanquisher Reforged is a modernized version of the original GWA2 **MASTER VANQUISHER** project, updated and expanded for **GWAu3**. The project automates Guild Wars vanquishing across all campaigns on **Windows**.
 
 Originally based on the work of the GWA2 community, many maps and systems have been updated and rewritten by **Mr. Obvious (incognito-ghroot)**.
 
@@ -30,24 +30,9 @@ Originally based on the work of the GWA2 community, many maps and systems have b
 
 # Requirements
 
-## Windows
-
 * Windows 10 or Windows 11
 * Guild Wars
 * AutoIt3 v3.3.16.1 (32-bit) or newer
-* GWAu3 Library
-* GWToolbox++ (Optional)
-
-## Linux
-
-**Actively developed and tested under Linux.**
-
-Recommended environment:
-
-* Linux Kernel 6.12+
-* Wine 10+
-* Guild Wars
-* AutoIt3 running under Wine
 * GWAu3 Library
 * GWToolbox++ (Optional)
 
@@ -57,7 +42,7 @@ Recommended environment:
 
 ## Clone the Repository
 
-```bash
+```text
 git clone https://github.com/incognito-ghroot/MasterVanquisherReforged.git
 ```
 
@@ -66,10 +51,22 @@ Or download the ZIP and extract it.
 ## Required Setup
 
 1. Install Guild Wars.
-2. Install AutoIt3.
-3. Install the GWAu3 library.
-4. Configure any desired options.
-5. Launch the main script through AutoIt3.
+2. Install AutoIt3 (32-bit).
+3. Install the GWAu3 library alongside this project.
+4. Configure any desired options in `app\Config\`.
+5. Run `MasterVanquisher.au3` with AutoIt3 (right-click → Run Script, or open in SciTE and press F5).
+
+**Run as Administrator** if Guild Wars is elevated.
+
+---
+
+# Quick Start
+
+1. Start Guild Wars and log in on your character.
+2. Launch `MasterVanquisher.au3`.
+3. Click **Refresh**, select your character, then **Attach**.
+4. Check zones on the **Routes** tab.
+5. Click **Start Vanquishing**.
 
 ---
 
@@ -105,7 +102,6 @@ The goal is to provide a streamlined and maintainable vanquishing framework for 
 
 * Preserve the original MASTER VANQUISHER project.
 * Modernize the codebase for GWAu3.
-* Maintain compatibility with Windows and Linux.
 * Continue expanding map and feature support.
 
 ---

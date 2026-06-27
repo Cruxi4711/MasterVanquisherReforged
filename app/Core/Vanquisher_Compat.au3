@@ -159,7 +159,7 @@ Func _Vanquisher_SaveLastCharacter($a_s_Name)
     IniWrite(_Vanquisher_CharIniPath(), "Character", "LastName", $a_s_Name)
 EndFunc
 
-Func _Vanquisher_CountGWClientsInPrefix()
+Func _Vanquisher_CountGWClients()
     Local $l_i_Count = ProcessList("gw.exe")[0][0]
     Local $l_i_GwExe = ProcessList("Gw.exe")[0][0]
     If $l_i_GwExe > $l_i_Count Then $l_i_Count = $l_i_GwExe
@@ -168,259 +168,22 @@ Func _Vanquisher_CountGWClientsInPrefix()
     Return $l_i_Count
 EndFunc
 
-Func _Vanquisher_ProcCmdlineIsGw($a_s_Cmdline)
-    Return StringRegExp($a_s_Cmdline, "(?i)Gw\.exe")
-EndFunc
-
-Func _Vanquisher_ReadProcEnvironVar($a_i_Pid, $a_s_Name)
-    Local $l_a_Roots[2] = ["Z:\proc\" & $a_i_Pid & "\environ", "Y:\proc\" & $a_i_Pid & "\environ"]
-    For $l_i_RootIdx = 0 To 1
-        Local $l_s_Blob = FileRead($l_a_Roots[$l_i_RootIdx], 1)
-        If @error Then ContinueLoop
-
-        Local $l_as_Pairs = StringSplit($l_s_Blob, Chr(0), $STR_ENTIRESPLIT)
-        For $l_i_Pair = 1 To $l_as_Pairs[0]
-            Local $l_i_Eq = StringInStr($l_as_Pairs[$l_i_Pair], "=")
-            If $l_i_Eq <= 1 Then ContinueLoop
-            If StringCompare(StringLeft($l_as_Pairs[$l_i_Pair], $l_i_Eq - 1), $a_s_Name, 0) = 0 Then
-                Return StringMid($l_as_Pairs[$l_i_Pair], $l_i_Eq + 1)
-            EndIf
-        Next
-    Next
-    Return ""
-EndFunc
-
-Func _Vanquisher_RunUnixCommand($a_s_Command)
-    If Not _Vanquisher_IsWine() Then Return ""
-
-    Local $l_s_OutFile = @TempDir & "\vanquisher_cmd_out.txt"
-    FileDelete($l_s_OutFile)
-    Local $l_s_UnixOut = _Vanquisher_ShellQuote(_Vanquisher_UnixPath($l_s_OutFile))
-    Local $l_s_Cmd = 'start /unix /usr/bin/bash -lc ' & _Vanquisher_ShellQuote($a_s_Command & " > " & $l_s_UnixOut & " 2>/dev/null")
-    RunWait(@ComSpec & ' /c ' & $l_s_Cmd, @TempDir, @SW_HIDE)
-    If Not FileExists($l_s_OutFile) Then Return ""
-    Local $l_s_Result = StringStripWS(FileRead($l_s_OutFile), 3)
-    FileDelete($l_s_OutFile)
-    Return $l_s_Result
-EndFunc
-
-Func _Vanquisher_GetRunningGwWinePrefix()
-    Local $l_a_Roots[2] = ["Z:\proc", "Y:\proc"]
-    For $l_i_RootIdx = 0 To 1
-        Local $l_s_Root = $l_a_Roots[$l_i_RootIdx]
-        Local $l_s_Search = FileFindFirstFile($l_s_Root & "\*")
-        If $l_s_Search = -1 Then ContinueLoop
-
-        While 1
-            Local $l_s_Entry = FileFindNextFile($l_s_Search)
-            If @error Then ExitLoop
-            If Not StringRegExp($l_s_Entry, "^\d+$") Then ContinueLoop
-
-            Local $l_s_Cmdline = FileRead($l_s_Root & "\" & $l_s_Entry & "\cmdline", 1)
-            If @error Or Not _Vanquisher_ProcCmdlineIsGw($l_s_Cmdline) Then ContinueLoop
-
-            Local $l_s_Prefix = _Vanquisher_ReadProcEnvironVar(Number($l_s_Entry), "WINEPREFIX")
-            FileClose($l_s_Search)
-            If $l_s_Prefix <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_Prefix)
-
-            Local $l_s_Home = _Vanquisher_ReadProcEnvironVar(Number($l_s_Entry), "HOME")
-            If $l_s_Home <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_Home & "/.wine")
-        WEnd
-        FileClose($l_s_Search)
-    Next
-
-    Local $l_s_FromShell = _Vanquisher_RunUnixCommand('for pid in $(pgrep -x Gw.exe 2>/dev/null); do tr "\0" "\n" < /proc/$pid/environ | sed -n "s/^WINEPREFIX=//p" | head -1; break; done')
-    If $l_s_FromShell <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_FromShell)
-    Return ""
-EndFunc
-
-Func _Vanquisher_CountGWClientsViaProc()
-    If Not _Vanquisher_IsWine() Then Return 0
-
-    Local $l_i_Count = 0
-    Local $l_a_ProcRoots[2] = ["Z:\proc", "Y:\proc"]
-    For $l_i_RootIdx = 0 To 1
-        Local $l_s_Root = $l_a_ProcRoots[$l_i_RootIdx]
-        Local $l_s_Search = FileFindFirstFile($l_s_Root & "\*")
-        If $l_s_Search = -1 Then ContinueLoop
-
-        While 1
-            Local $l_s_Entry = FileFindNextFile($l_s_Search)
-            If @error Then ExitLoop
-            If Not StringRegExp($l_s_Entry, "^\d+$") Then ContinueLoop
-
-            Local $l_s_Cmdline = FileRead($l_s_Root & "\" & $l_s_Entry & "\cmdline", 1)
-            If Not @error And _Vanquisher_ProcCmdlineIsGw($l_s_Cmdline) Then $l_i_Count += 1
-        WEnd
-        FileClose($l_s_Search)
-        If $l_i_Count > 0 Then Return $l_i_Count
-    Next
-
-    Local $l_s_Count = _Vanquisher_RunUnixCommand("pgrep -x Gw.exe >/dev/null && pgrep -xc Gw.exe || pgrep -xc gw.exe || echo 0")
-    If $l_s_Count <> "" And StringIsInt($l_s_Count) Then Return Number($l_s_Count)
-    Return 0
-EndFunc
-
-Func _Vanquisher_CountGWClients()
-    Local $l_i_Count = _Vanquisher_CountGWClientsInPrefix()
-    If $l_i_Count > 0 Then Return $l_i_Count
-    Return _Vanquisher_CountGWClientsViaProc()
-EndFunc
-
 Func _Vanquisher_GWIsRunning()
     Return _Vanquisher_CountGWClients() > 0
 EndFunc
 
-Func _Vanquisher_IsWine()
-    Local $l_a_Wine = DllCall("ntdll.dll", "str", "wine_get_version")
-    Return Not @error And IsArray($l_a_Wine) And $l_a_Wine[0] <> ""
-EndFunc
-
-Func _Vanquisher_ReadUnixEnvironVar($a_s_Name)
-    Local $l_a_Roots[2] = ["Z:\proc\self\environ", "Y:\proc\self\environ"]
-    For $l_i_RootIdx = 0 To 1
-        Local $l_s_Blob = FileRead($l_a_Roots[$l_i_RootIdx], 1)
-        If @error Then ContinueLoop
-
-        Local $l_as_Pairs = StringSplit($l_s_Blob, Chr(0), $STR_ENTIRESPLIT)
-        For $l_i_Pair = 1 To $l_as_Pairs[0]
-            Local $l_i_Eq = StringInStr($l_as_Pairs[$l_i_Pair], "=")
-            If $l_i_Eq <= 1 Then ContinueLoop
-            If StringCompare(StringLeft($l_as_Pairs[$l_i_Pair], $l_i_Eq - 1), $a_s_Name, 0) = 0 Then
-                Return StringMid($l_as_Pairs[$l_i_Pair], $l_i_Eq + 1)
-            EndIf
-        Next
-    Next
-    Return ""
-EndFunc
-
-Func _Vanquisher_NormalizeUnixPath($a_s_Path)
-    Local $l_s_Path = StringReplace(StringStripWS($a_s_Path, 3), "\", "/")
-    While StringLen($l_s_Path) > 1 And StringRight($l_s_Path, 1) = "/"
-        $l_s_Path = StringLeft($l_s_Path, StringLen($l_s_Path) - 1)
-    WEnd
-    Return $l_s_Path
-EndFunc
-
-Func _Vanquisher_GetWinePrefix()
-    Local $l_s_Prefix = _Vanquisher_ReadUnixEnvironVar("WINEPREFIX")
-    If $l_s_Prefix <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_Prefix)
-
-    $l_s_Prefix = EnvGet("WINEPREFIX")
-    If $l_s_Prefix <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_Prefix)
-
-    Local $l_s_Home = _Vanquisher_ReadUnixEnvironVar("HOME")
-    If $l_s_Home <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_Home & "/.wine")
-
-    Return "unknown"
-EndFunc
-
-Func _Vanquisher_GetConfiguredWinePrefix()
-    Local $l_s_Prefix = IniRead($VANQUISHER_CHAR_INI, "Wine", "Prefix", "")
-    Return _Vanquisher_NormalizeUnixPath($l_s_Prefix)
-EndFunc
-
-Func _Vanquisher_WinePrefixIsCorrect()
-    If Not _Vanquisher_IsWine() Then Return True
-
-    Local $l_s_Current = _Vanquisher_GetWinePrefix()
-    Local $l_s_RunningGw = _Vanquisher_GetRunningGwWinePrefix()
-
-    If $l_s_RunningGw <> "" Then
-        If $l_s_Current = "unknown" Then Return False
-        Return StringCompare($l_s_Current, $l_s_RunningGw, 0) = 0
-    EndIf
-
-    Local $l_s_Configured = _Vanquisher_GetConfiguredWinePrefix()
-    If $l_s_Configured = "" Then Return True
-    If $l_s_Current = "unknown" Then Return False
-    Return StringCompare($l_s_Current, $l_s_Configured, 0) = 0
-EndFunc
-
-Func _Vanquisher_ExpectedWinePrefix()
-    Local $l_s_RunningGw = _Vanquisher_GetRunningGwWinePrefix()
-    If $l_s_RunningGw <> "" Then Return $l_s_RunningGw
-    Return _Vanquisher_GetConfiguredWinePrefix()
-EndFunc
-
-Func _Vanquisher_ShellQuote($a_s_Value)
-    Return "'" & StringReplace($a_s_Value, "'", "'\\''") & "'"
-EndFunc
-
-Func _Vanquisher_UnixPath($a_s_WinPath)
-    Local $l_s_Path = StringReplace($a_s_WinPath, "\", "/")
-    If StringLeft(StringLower($l_s_Path), 2) = "z:" Then $l_s_Path = StringMid($l_s_Path, 3)
-    Return $l_s_Path
-EndFunc
-
-Func _Vanquisher_RelaunchViaLauncher($a_s_Prefix = "")
-    Local $l_s_Launcher = @ScriptDir & "\run_vanquisher.sh"
-    If Not FileExists($l_s_Launcher) Then Return False
-
-    Local $l_s_Dir = _Vanquisher_UnixPath(@ScriptDir)
-    Local $l_s_Prefix = $a_s_Prefix
-    If $l_s_Prefix = "" Then $l_s_Prefix = _Vanquisher_ExpectedWinePrefix()
-    If $l_s_Prefix = "" Then Return False
-
-    Local $l_s_Cmd = 'start /unix /usr/bin/bash -lc "export WINEPREFIX=' & _Vanquisher_ShellQuote($l_s_Prefix) & '; cd ' & _Vanquisher_ShellQuote($l_s_Dir) & '; exec ./run_vanquisher.sh"'
-    Run(@ComSpec & ' /c ' & $l_s_Cmd, @ScriptDir, @SW_HIDE)
-    Return Not @error
-EndFunc
-
-Func _Vanquisher_HandleWrongWinePrefix()
-    If Not _Vanquisher_IsWine() Then Return
-    If _Vanquisher_WinePrefixIsCorrect() Then Return
-
-    Local $l_s_Expected = _Vanquisher_ExpectedWinePrefix()
-    If $l_s_Expected = "" Then Return
-
-    Local $l_s_RunningGw = _Vanquisher_GetRunningGwWinePrefix()
-    Local $l_s_Reason = "Vanquisher is running in the wrong Wine prefix."
-    If $l_s_RunningGw <> "" Then
-        $l_s_Reason = "Guild Wars is running in a different Wine prefix than Vanquisher."
-    EndIf
-
-    Local $l_i_Answer = MsgBox(36, "Wrong Wine Prefix", _
-        $l_s_Reason & @CRLF & @CRLF & _
-        "Vanquisher: " & _Vanquisher_GetWinePrefix() & @CRLF & _
-        "Required:   " & $l_s_Expected & @CRLF & @CRLF & _
-        "Do not open MasterVanquisher.au3 directly from AutoIt." & @CRLF & @CRLF & _
-        "Click Yes to relaunch in the same prefix as Guild Wars.")
-
-    If $l_i_Answer = $IDYES Then
-        If _Vanquisher_RelaunchViaLauncher($l_s_Expected) Then Exit
-        MsgBox(16, "Master Vanquisher Reforged", "Could not relaunch automatically. Close this window and run ./run_vanquisher.sh from the project folder.")
-    EndIf
-EndFunc
-
-Func _Vanquisher_PrefixHint()
-    If Not _Vanquisher_IsWine() Then Return ""
-
-    Local $l_s_Current = _Vanquisher_GetWinePrefix()
-    Local $l_s_Expected = _Vanquisher_ExpectedWinePrefix()
-    Local $l_s_Msg = " Wine prefix: " & $l_s_Current & "."
-
-    If $l_s_Expected <> "" And Not _Vanquisher_WinePrefixIsCorrect() Then
-        $l_s_Msg &= " Required: " & $l_s_Expected & ". Close and relaunch with ./run_vanquisher.sh"
-    EndIf
-    Return $l_s_Msg
-EndFunc
-
-Func _Vanquisher_WineAttachBlockedMsg()
-    If _Vanquisher_WinePrefixIsCorrect() Then Return ""
-
-    Local $l_s_Expected = _Vanquisher_ExpectedWinePrefix()
-    If $l_s_Expected = "" Then Return ""
-
-    Return "Guild Wars is running in " & $l_s_Expected & " but Vanquisher is in " & _Vanquisher_GetWinePrefix() & ". Close Vanquisher and relaunch with ./run_vanquisher.sh"
-EndFunc
-
 Func Gwen_GetLoggedCharNames()
-    Return _Vanquisher_GetMemoryCharNames()
+    Local $l_s_Names = _Vanquisher_GetMemoryCharNames()
+    If $l_s_Names <> "" Then Return $l_s_Names
+
+    _Gwen_AppendNamesFromWindows($l_s_Names)
+    Return $l_s_Names
 EndFunc
 
 Func Gwen_GetCharNamesFromWindowsOnly()
-    Return Gwen_GetLoggedCharNames()
+    Local $l_s_Names = ""
+    _Gwen_AppendNamesFromWindows($l_s_Names)
+    Return $l_s_Names
 EndFunc
 
 Func _Vanquisher_GetMemoryCharNames()
@@ -515,20 +278,12 @@ Func _Vanquisher_AttachToCharacter($a_s_CharName)
     $a_s_CharName = StringStripWS($a_s_CharName, 3)
     If $a_s_CharName = "" Then Return False
 
-    Local $l_s_Block = _Vanquisher_WineAttachBlockedMsg()
-    If $l_s_Block <> "" Then
-        CurrentAction($l_s_Block)
-        Return False
-    EndIf
-
     If Not Initialize($a_s_CharName, True) Then
         Local $l_s_MemoryNames = _Vanquisher_GetMemoryCharNames()
         If $l_s_MemoryNames <> "" Then
-            CurrentAction("Attach failed for '" & $a_s_CharName & "'. Memory sees: " & StringReplace($l_s_MemoryNames, "|", ", "))
-        ElseIf Not _Vanquisher_WinePrefixIsCorrect() Then
-            CurrentAction("Attach failed. Vanquisher and Guild Wars must use the same Wine prefix.")
+            CurrentAction("Attach failed for '" & $a_s_CharName & "'. Found: " & StringReplace($l_s_MemoryNames, "|", ", "))
         Else
-            CurrentAction("Attach failed. Log fully into a character in-game, click Refresh, then Attach.")
+            CurrentAction("Attach failed. Start Guild Wars, log in on that character, click Refresh, then Attach.")
         EndIf
         Return False
     EndIf

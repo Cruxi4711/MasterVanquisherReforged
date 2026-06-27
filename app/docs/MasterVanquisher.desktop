@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Master Vanquisher Reforged
-Comment=Guild Wars vanquishing bot (Linux/Wine)
-Exec=bash -lc "cd '/home/incognito/GAME/Scripts/GitHub/GwAu3-main/Scripts/MasterVanquisherReforged-main' && ./run_vanquisher.sh"
-Icon=applications-games
-Terminal=false
-Categories=Game;

@@ -102,7 +102,7 @@ GUICtrlSetColor(-1, $GUI_CLR_MUTED)
 $lblStatusTitle = GUICtrlCreateLabel("0%", 1030, 166, 45, 16)
 GUICtrlSetColor(-1, $GUI_CLR_ACCENT)
 
-; --- Custom navigation buttons (replaces native tabs so Wine/Windows does not draw white tab panels) ---
+; --- Custom navigation buttons (replaces native tabs for consistent Windows styling) ---
 Global $btnPageMain = GUICtrlCreateButton("Main", 610, 28, 86, 32)
 GUICtrlSetOnEvent(-1, "_Vanquisher_TabClick")
 Global $btnPageStats = GUICtrlCreateButton("Stats", 702, 28, 86, 32)
@@ -287,8 +287,6 @@ _Vanquisher_UpdateDonateCheckbox()
 _Vanquisher_UpdateStatusBar()
 _Vanquisher_ShowPage("Main")
 
-_Vanquisher_HandleWrongWinePrefix()
-
 GUISetState(@SW_SHOW)
 Local $l_s_StartupNames = Gwen_GetCharNamesFromWindowsOnly()
 If $l_s_StartupNames = "" Then $l_s_StartupNames = GetLoggedCharNames()
@@ -297,13 +295,9 @@ If $l_s_StartupNames <> "" Then
 	CurrentAction("Characters: " & StringReplace($l_s_StartupNames, "|", ", "))
 	_Vanquisher_SetConnectionStatus("READY")
 ElseIf _Vanquisher_CountGWClients() > 0 Then
-	If Not _Vanquisher_WinePrefixIsCorrect() And _Vanquisher_CountGWClientsInPrefix() = 0 Then
-		CurrentAction(_Vanquisher_WineAttachBlockedMsg() & _Vanquisher_PrefixHint())
-	Else
-		CurrentAction("Guild Wars detected — click Refresh to load characters." & _Vanquisher_PrefixHint())
-	EndIf
+	CurrentAction("Guild Wars detected — click Refresh to load characters.")
 Else
-	CurrentAction("Start Guild Wars, log in, then click Refresh. On Linux, launch with ./run_vanquisher.sh." & _Vanquisher_PrefixHint())
+	CurrentAction("Start Guild Wars, log in, then click Refresh.")
 EndIf
 CurrentAction("Dashboard initialized.")
 CurrentAction("Ready.")
@@ -390,7 +384,7 @@ EndFunc
 Func _Vanquisher_ApplyBlueTheme()
 	GUISetBkColor($GUI_CLR_BG, $Master_Vanquisher)
 
-	; Paint every legacy/static control first so Wine/Windows does not leave
+	; Paint every legacy/static control first so Windows does not leave
 	; white default label rectangles behind the dashboard. Known inputs, groups,
 	; buttons, and panels are styled again below.
 	For $iCtrl = 1 To 1200
@@ -663,12 +657,6 @@ Func gui_eventHandler()
 				Return
 			EndIf
 
-			Local $l_s_Block = _Vanquisher_WineAttachBlockedMsg()
-			If $l_s_Block <> "" Then
-				MsgBox(48, "Master Vanquisher Reforged", $l_s_Block)
-				Return
-			EndIf
-
 			If _Vanquisher_IsAttached() = False Then
 				If _Vanquisher_AttachToCharacter(GUICtrlRead($txtName)) = False Then
 					MsgBox(48, "Master Vanquisher Reforged", "Can't find a Guild Wars client with that character name.")
@@ -783,15 +771,6 @@ Func AttachToGuildWars()
 EndFunc
 
 Func RefreshCharNames()
-	Local $l_s_Hint = _Vanquisher_PrefixHint()
-	Local $l_s_Block = _Vanquisher_WineAttachBlockedMsg()
-
-	If $l_s_Block <> "" And _Vanquisher_CountGWClients() > 0 And _Vanquisher_CountGWClientsInPrefix() = 0 Then
-		GUICtrlSetData($txtName, "")
-		CurrentAction($l_s_Block & $l_s_Hint)
-		Return
-	EndIf
-
 	Local $l_s_Names = GetLoggedCharNames()
 
 	If $l_s_Names <> "" Then
@@ -805,12 +784,12 @@ Func RefreshCharNames()
 
 	If $l_i_GWCount = 0 Then
 		_Vanquisher_SetCharacterCombo("")
-		CurrentAction("No Guild Wars client found. Start Guild Wars, log in, then click Refresh. On Linux, launch Vanquisher with ./run_vanquisher.sh." & $l_s_Hint)
+		CurrentAction("No Guild Wars client found. Start Guild Wars, log in, then click Refresh.")
 		Return
 	EndIf
 
 	_Vanquisher_SetCharacterCombo("")
-	CurrentAction("Found " & $l_i_GWCount & " Guild Wars client(s), but could not read a character name from memory. Log fully in-game on a character, then click Refresh. Window: " & _Vanquisher_GetGwWindowTitles() & $l_s_Hint)
+	CurrentAction("Found " & $l_i_GWCount & " Guild Wars client(s), but could not read character names. Type the name manually, or reach character select / in-game and click Refresh. Window: " & _Vanquisher_GetGwWindowTitles())
 EndFunc
 
 Func UpdateVanquish()
