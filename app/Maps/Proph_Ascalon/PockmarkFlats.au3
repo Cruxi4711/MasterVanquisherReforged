@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aPockmarkFlatsOutpostPath[2][2] = [ _
+Local $aPockmarkFlatsOutpostPath[2][2] = [ _
 	[-6218, 22736], _
 	[-6197, 22280] _
 ]
@@ -17,7 +17,7 @@ Func GoOutPockmarkFlats()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> PockmarkFlats (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aPockmarkFlatsOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQPockmarkFlats()
 		If GetMapID() <> $PockmarkFlats_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need PockmarkFlats (" & $PockmarkFlats_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $PockmarkFlats_Map Then
@@ -47,7 +47,7 @@ Func VQPockmarkFlats()
 
 	CurrentAction("Starting PockmarkFlats vanquish route.")
 
-	Local $aWaypoints[129][4] = [ _
+	Local $aWaypoints[130][4] = [ _
 		[-7392, 21465, " ", $vqrange], _
 		[-7315, 18630, " ", $vqrange], _
 		[-4508, 18501, " ", $vqrange], _
@@ -172,6 +172,7 @@ Func VQPockmarkFlats()
 		[-6244, -13748, " ", $vqrange], _
 		[-6161, -15114, " ", $vqrange], _
 		[-7182, -21004, " ", $vqrange], _
+		[-8193, -21313, " ", $vqrange], _
 		[-7263, -21058, " ", $vqrange], _
 		[-7586, -16919, " ", $vqrange], _
 		[-6301, -15101, " ", $vqrange], _

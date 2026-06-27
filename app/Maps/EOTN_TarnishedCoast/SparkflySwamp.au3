@@ -1,27 +1,31 @@
-;Mapped by Crux
 #include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQSparkflySwamp()
 	If GetMapID() <> $SparkflySwamp_Map And GetMapID() <> $SparkflySwamp_Outpost Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for SparkflySwamp.")
+		CurrentAction("Traveling to outpost for Sparkfly Swamp.")
 		TravelTo($SparkflySwamp_Outpost)
 	EndIf
+
 	If GetMapID() = $SparkflySwamp_Outpost Then
 		_Vanquisher_ApplyDifficulty()
 		GoOut()
 		If GetMapID() <> $SparkflySwamp_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need SparkflySwamp (" & $SparkflySwamp_Map & ").")
+			CurrentAction("Routing - on map " & GetMapID() & ", need Sparkfly Swamp (" & $SparkflySwamp_Map & ").")
 			Return
+		EndIf
 	EndIf
-	EndIf
+
 	If GetMapID() <> $SparkflySwamp_Map Then
-		CurrentAction("SparkflySwamp route waiting - on map " & GetMapID() & ", need " & $SparkflySwamp_Map & ".")
+		CurrentAction("Sparkfly Swamp route waiting - on map " & GetMapID() & ", need " & $SparkflySwamp_Map & ".")
 		Return
 	EndIf
-	CurrentAction("Starting SparkflySwamp vanquish route.")
+
+	CurrentAction("Starting Sparkfly Swamp vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
 	Local $aWaypoints[211][4] = [ _
 		[-9451, -19766, "shrine", $vqrange], _
 		[-11712, -18545, " ", $vqrange], _
@@ -233,7 +237,7 @@ Func VQSparkflySwamp()
 		[-659, -20472, " ", $vqrange], _
 		[-3151, -20137, " ", $vqrange], _
 		[-5704, -19833, " ", $vqrange], _
-		[-8234, -19342, " ", $vqrange]
-	]
+		[-8234, -19342, " ", $vqrange] ]
+
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

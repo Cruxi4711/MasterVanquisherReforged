@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aStingrayOutpostPath[2][2] = [ _
+Local $aStingrayOutpostPath[2][2] = [ _
 	[-21997, 6159], _
 	[-23033, 7201] _
 ]
@@ -22,7 +22,7 @@ Func GoOutStingrayStrand()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Riverside Province -> Stingray Strand.")
 		_Vanquisher_RunAggroPortalPath($aStingrayOutpostPath, $vqrange, "riverside ")
-		$g_i_StingrayRoute_LastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_StingrayRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 	EndIf
 EndFunc

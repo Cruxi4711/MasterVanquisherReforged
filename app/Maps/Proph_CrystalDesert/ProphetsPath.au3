@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aProphetsPathOutpostPath[3][2] = [ _
+Local $aProphetsPathOutpostPath[3][2] = [ _
 	[-17562, -1143], _
 	[-18791, -310], _
 	[-20099, -320] _
@@ -18,7 +18,7 @@ Func GoOutProphetsPath()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> ProphetsPath (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aProphetsPathOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -38,7 +38,7 @@ Func VQProphetsPath()
 		If GetMapID() <> $ProphetsPath_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need ProphetsPath (" & $ProphetsPath_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $ProphetsPath_Map Then

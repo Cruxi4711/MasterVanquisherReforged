@@ -2,6 +2,11 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
+Local $aDeldrimorBowlOutpostPath[2][2] = [ _
+	[-9681, 34559], _
+	[-11100, 35350] _
+]
+
 Func GoOutDeldrimorBowl()
 	Local $l_i_Map = GetMapID()
 
@@ -12,7 +17,7 @@ Func GoOutDeldrimorBowl()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> DeldrimorBowl (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aDeldrimorBowlOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -32,7 +37,7 @@ Func VQDeldrimorBowl()
 		If GetMapID() <> $DeldrimorBowl_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need DeldrimorBowl (" & $DeldrimorBowl_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $DeldrimorBowl_Map Then
@@ -42,49 +47,68 @@ Func VQDeldrimorBowl()
 
 	CurrentAction("Starting DeldrimorBowl vanquish route.")
 
-	Local $aWaypoints[42][4] = [ _
-		[12342, -21414, " ", $vqrange], _
-		[15627, -15210, " ", $vqrange], _
-		[12342, -13124, " ", $vqrange], _
-		[12632, -5901, " ", $vqrange], _
-		[12882, -2022, " ", $vqrange], _
-		[8294, -7736, " ", $vqrange], _
-		[6037, -13151, " ", $vqrange], _
-		[6334, -16162, " ", $vqrange], _
-		[4450, -20112, " ", $vqrange], _
-		[620, -20291, " ", $vqrange], _
-		[-5595, -16954, " ", $vqrange], _
-		[-12127, -20917, " ", $vqrange], _
-		[-6821, -16846, " ", $vqrange], _
-		[-7695, -13637, " ", $vqrange], _
-		[-6173, -11667, " ", $vqrange], _
-		[-5321, -8053, " ", $vqrange], _
-		[-6821, -2898, " ", $vqrange], _
-		[-8319, 3838, " ", $vqrange], _
-		[-4109, 6145, " ", $vqrange], _
-		[-2545, 215, " ", $vqrange], _
-		[-2323, 7592, " ", $vqrange], _
-		[2682, 1649, " ", $vqrange], _
-		[7954, 6, " ", $vqrange], _
-		[10920, 5402, " ", $vqrange], _
-		[7329, 10057, " ", $vqrange], _
-		[12998, 7398, " ", $vqrange], _
-		[15051, 9684, " ", $vqrange], _
-		[13566, 13974, " ", $vqrange], _
-		[11773, 11587, " ", $vqrange], _
-		[8388, 14252, " ", $vqrange], _
-		[13110, 17968, " ", $vqrange], _
-		[14830, 21878, " ", $vqrange], _
-		[6801, 26727, " ", $vqrange], _
-		[1952, 23338, " ", $vqrange], _
-		[-5712, 24068, " ", $vqrange], _
-		[-8319, 22347, " ", $vqrange], _
-		[-5816, 20053, " ", $vqrange], _
-		[649, 21096, " ", $vqrange], _
-		[-133, 18645, " ", $vqrange], _
-		[-4826, 17811, " ", $vqrange], _
-		[-7015, 10564, " ", $vqrange], _
-		[-7276, 7227, " ", $vqrange] ]
+	Local $aWaypoints[61][4] = [ _
+		[13532, -22187, " ", $vqrange], _
+		[14813.50, -18389.10, " ", $vqrange], _
+		[15334.20, -14363.50, " ", $vqrange], _
+		[12634.30, -11395.60, " ", $vqrange], _
+		[14332.50, -7755.90, " ", $vqrange], _
+		[10803.10, -5785.10, " ", $vqrange], _
+		[7960.50, -8684.70, " ", $vqrange], _
+		[9973.10, -12205.40, " ", $vqrange], _
+		[7228.30, -15155.70, " ", $vqrange], _
+		[5234.70, -11644.70, " ", $vqrange], _
+		[6123.50, -15585.80, " ", $vqrange], _
+		[4792.40, -19427.00, " ", $vqrange], _
+		[893.80, -20580.40, " ", $vqrange], _
+		[-2452.30, -18291.20, " ", $vqrange], _
+		[-6341.80, -17221.50, " ", $vqrange], _
+		[-7183.10, -21194.70, " ", $vqrange], _
+		[-11159.60, -21888.20, " ", $vqrange], _
+		[-7236.10, -21047.80, " ", $vqrange], _
+		[-7091.00, -17010.80, " ", $vqrange], _
+		[-7414.80, -13001.30, " ", $vqrange], _
+		[-5176.60, -9617.60, " ", $vqrange], _
+		[-6558.80, -5855.60, " ", $vqrange], _
+		[-6696.20, -1821.00, " ", $vqrange], _
+		[-7718.30, 2114.90, " ", $vqrange], _
+		[-7083.90, 6073.80, " ", $vqrange], _
+		[-3202.20, 7239.50, " ", $vqrange], _
+		[-2289.70, 3298.00, " ", $vqrange], _
+		[-5533.40, 917.10, " ", $vqrange], _
+		[-3837.50, -2713.20, " ", $vqrange], _
+		[-200.20, -948.30, " ", $vqrange], _
+		[2985.30, 1479.00, " ", $vqrange], _
+		[1159.80, 5040.60, " ", $vqrange], _
+		[-2250.60, 7176.90, " ", $vqrange], _
+		[-6243.30, 7600.50, " ", $vqrange], _
+		[-6374.40, 11627.60, " ", $vqrange], _
+		[-5088.70, 15430.40, " ", $vqrange], _
+		[-2607.10, 18571.30, " ", $vqrange], _
+		[355.34, 16827.62, " ", $vqrange], _
+		[-6372.80, 20039.20, " ", $vqrange], _
+		[-9472.50, 22570.40, " ", $vqrange], _
+		[-5550.40, 23576.00, " ", $vqrange], _
+		[-1542.40, 22970.10, " ", $vqrange], _
+		[2302.40, 24146.20, " ", $vqrange], _
+		[5535.70, 26562.80, " ", $vqrange], _
+		[9000.10, 24521.00, " ", $vqrange], _
+		[12639.00, 22805.90, " ", $vqrange], _
+		[16052.90, 20718.40, " ", $vqrange], _
+		[13033.50, 18030.60, " ", $vqrange], _
+		[13589.96, 13846.08, " ", $vqrange], _
+		[9360.50, 16373.70, " ", $vqrange], _
+		[8070.00, 12550.30, " ", $vqrange], _
+		[8086.90, 8514.60, " ", $vqrange], _
+		[9903.90, 4897.80, " ", $vqrange], _
+		[13247.80, 7163.70, " ", $vqrange], _
+		[15213.10, 10679.10, " ", $vqrange], _
+		[11830.30, 8475.10, " ", $vqrange], _
+		[10389.50, 4710.20, " ", $vqrange], _
+		[8552.30, 1116.10, " ", $vqrange], _
+		[4498.40, 1058.90, " ", $vqrange], _
+		[1873.90, 4133.90, " ", $vqrange], _
+		[-2169.80, 3959.70, " ", $vqrange] ]
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

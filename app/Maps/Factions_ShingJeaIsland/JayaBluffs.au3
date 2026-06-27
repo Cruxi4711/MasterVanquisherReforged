@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQJayaBluffs()
-    If GetMapID() <> $JayaBluffs_Map And GetMapID() <> $JayaBluffs_Outpost  Then TravelTo($JayaBluffs_Outpost)   
-    If  GetMapID() = $JayaBluffs_Outpost then
-        GoOut() 
-      
-    EndIf
+	If GetMapID() <> $JayaBluffs_Map And GetMapID() <> $JayaBluffs_Outpost Then
+		CurrentAction("Traveling to outpost for Jaya Bluffs.")
+		TravelTo($JayaBluffs_Outpost)
+	EndIf
 
-	If GetMapID() = $JayaBluffs_Map Then    
+	If GetMapID() = $JayaBluffs_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[152][4] = [ [10051, -12873, " ", $vqrange] _				
+	If GetMapID() <> $JayaBluffs_Map Then
+		CurrentAction("Jaya Bluffs route waiting - on map " & GetMapID() & ", need " & $JayaBluffs_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Jaya Bluffs vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[152][4] = [ [10051, -12873, " ", $vqrange] _				
 		, [9083, -12615, " ", $vqrange] _
 		, [8525, -11781, " ", $vqrange] _
 		, [8014, -10915, " ", $vqrange] _
@@ -163,10 +174,8 @@ Func VQJayaBluffs()
 		, [16791, -7366, " ", $vqrange] _
 		, [15873, -7769, " ", $vqrange] _
 		, [12904.44, -8213.71, " ", $vqrange] ]
-		
-		MoveandAggroVQ($aWaypoints)
-		MoveAndAggroVQReverse($aWaypoints)
 
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc
 

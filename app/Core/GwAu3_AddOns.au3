@@ -421,7 +421,11 @@ Func AggroMoveSmartFilter($aX, $aY, $AggroRange = 1320, $maxdistance = 3500, $fi
                 If $sFilter <> "EnemyFilter" Or $KO Then
                     FightExFilter($AggroRange, $sFilter)
                 Else
-                    _UAI_Fight($CurX, $CurY, $AggroRange, $maxdistance, $g_i_FinisherMode)
+                    _Vanquisher_InitCombatAI()
+                    If Not $g_b_Vanquisher_CombatAIReady Then Return
+                    $g_h_Vanquisher_FightTimer = TimerInit()
+                    UAI_UpdateCache($AggroRange)
+                    UAI_Fight($CurX, $CurY, $AggroRange, $maxdistance, $g_i_FinisherMode, True, 0, False, "_Vanquisher_FightExitCallback")
                 EndIf
 
                 If SurvivorMode() Then Return
@@ -458,149 +462,7 @@ Func AggroMoveSmartFilter($aX, $aY, $AggroRange = 1320, $maxdistance = 3500, $fi
     Until ComputeDistance($coords[0], $coords[1], $aX, $aY) < 250 Or $iBlocked > 20 Or GetPartyDead() Or TimerDiff($TimerToKill) > 180000
 EndFunc   ;==>AggroMoveSmartFilter
 
-Func _UAI_Fight($a_f_x, $a_f_y, $a_f_AggroRange = 1320, $a_f_MaxDistanceToXY = 3500, $a_i_FightMode = $g_i_FinisherMode, $a_b_UseSwitchSet = False, $a_v_PlayerNumber = 0, $a_b_KillOnly = False)
-    $g_i_BestTarget = 0
-    $g_i_ForceTarget = 0
-    $g_i_FightMode = $a_i_FightMode
-    $a_b_UseSwitchSet = $g_b_CacheWeaponSet
-    $g_v_AvoidPlayerNumbers = -1
 
-    Local $l_i_MyOldMap = Map_GetMapID(), $l_i_MapLoadingOld = Map_GetInstanceInfo("Type")
-    Local $l_v_PriorityTargets = 0
-
-    If IsArray($a_v_PlayerNumber) Then
-        Local $l_a_Prio[UBound($a_v_PlayerNumber)]
-        Local $l_a_Avoid[UBound($a_v_PlayerNumber)]
-        Local $l_i_PC = 0, $l_i_AC = 0
-        For $j = 0 To UBound($a_v_PlayerNumber) - 1
-            If $a_v_PlayerNumber[$j] > 0 Then
-                $l_a_Prio[$l_i_PC] = $a_v_PlayerNumber[$j]
-                $l_i_PC += 1
-            ElseIf $a_v_PlayerNumber[$j] < 0 Then
-                $l_a_Avoid[$l_i_AC] = Abs($a_v_PlayerNumber[$j])
-                $l_i_AC += 1
-            EndIf
-        Next
-        If $l_i_PC > 0 Then
-            ReDim $l_a_Prio[$l_i_PC]
-            $l_v_PriorityTargets = $l_a_Prio
-        EndIf
-        If $l_i_AC > 0 Then
-            ReDim $l_a_Avoid[$l_i_AC]
-            $g_v_AvoidPlayerNumbers = $l_a_Avoid
-        EndIf
-    ElseIf $a_v_PlayerNumber > 0 Then
-        $l_v_PriorityTargets = $a_v_PlayerNumber
-    ElseIf $a_v_PlayerNumber < 0 Then
-        $g_v_AvoidPlayerNumbers = Abs($a_v_PlayerNumber)
-    EndIf
-
-    Local $l_b_HasPriority = IsArray($l_v_PriorityTargets) Or $l_v_PriorityTargets <> 0
-
-    If $l_b_HasPriority Then
-        UAI_UpdateCache($a_f_AggroRange)
-        $g_i_ForceTarget = UAI_FindAgentByPlayerNumber($l_v_PriorityTargets, -2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy")
-        If $g_i_ForceTarget = 0 And $a_b_KillOnly Then Return True
-    EndIf
-
-    If $g_b_CacheWeaponSet Then UAI_DeterminateWeaponSets()
-
-    Do
-        If SurvivorMode() Then Return
-        If $g_i_ForceTarget <> 0 And UAI_GetAgentInfoByID($g_i_ForceTarget, $GC_UAI_AGENT_IsDead) Then
-            $g_i_ForceTarget = UAI_FindAgentByPlayerNumber($l_v_PriorityTargets, -2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy")
-            If $g_i_ForceTarget = 0 And $a_b_KillOnly Then ExitLoop
-        EndIf
-        _UAI_UseSkills($a_f_x, $a_f_y, $a_f_AggroRange, $a_f_MaxDistanceToXY)
-        Sleep(128)
-    Until UAI_CountEnemyInPartyAggroRange($a_f_AggroRange) = 0 Or Agent_GetAgentInfo(-2, "IsDead") Or Party_IsWiped() Or Map_GetMapID() <> $l_i_MyOldMap Or Map_GetInstanceInfo("Type") <> $l_i_MapLoadingOld
-EndFunc   ;==>_UAI_Fight
-
-Func _UAI_UseSkills($a_f_x, $a_f_y, $a_f_AggroRange = 1320, $a_f_MaxDistanceToXY = 3500)
-    Static $ls_i_LowPrioSkill = 6
-    For $i = 1 To 6
-        Local $l_i_Slot = $i
-
-        if $l_i_Slot = 6 Then
-            $l_i_Slot = $ls_i_LowPrioSkill
-            $ls_i_LowPrioSkill += 1
-            If $ls_i_LowPrioSkill > 8 Then $ls_i_LowPrioSkill = 6
-        EndIf
-
-        If UAI_GetStaticSkillInfo($l_i_Slot, $GC_UAI_STATIC_SKILL_SkillID) = 0 Then ContinueLoop
-
-        If SurvivorMode() Then Return
-
-        UAI_UpdateCache($a_f_AggroRange)
-        If UAI_CountEnemyInPartyAggroRange($a_f_AggroRange) = 0 Then ExitLoop
-        If $g_b_CacheWeaponSet Then UAI_ShouldSwitchWeaponSet()
-
-        If UAI_GetPlayerInfo($GC_UAI_AGENT_IsDead) Or SurvivorMode() Or Party_IsWiped() = 1 Or Map_GetInstanceInfo("Type") <> $GC_I_MAP_TYPE_EXPLORABLE Or UAI_GetPlayerInfo($GC_UAI_AGENT_IsKnockedDown) Then Return
-
-        If $g_b_SkillChanged = True Then
-            If Cache_EndFormChangeBuild($l_i_Slot) Then
-                $g_b_SkillChanged = False
-            EndIf
-        EndIf
-
-        Local $l_i_PlayerRangeEnemy = UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsNotAvoided")
-        If $l_i_PlayerRangeEnemy = 0 Then
-            Local $l_i_PartyRangeEnemy = UAI_GetNearestEnemyInPartyRange($a_f_AggroRange)
-            If $l_i_PartyRangeEnemy <> 0 Then
-                Local $l_f_EnemyX = UAI_GetAgentInfoByID($l_i_PartyRangeEnemy, $GC_UAI_AGENT_X)
-                Local $l_f_EnemyY = UAI_GetAgentInfoByID($l_i_PartyRangeEnemy, $GC_UAI_AGENT_Y)
-                Map_Move($l_f_EnemyX, $l_f_EnemyY, 0)
-                Sleep(500)
-                Return
-            EndIf
-        EndIf
-
-        If SurvivorMode() Then Return
-
-        If UAI_CanAutoAttack() Then
-            If $g_i_ForceTarget <> 0 Then
-                Agent_Attack($g_i_ForceTarget)
-            Else
-                Agent_Attack(UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsNotAvoided"), False)
-            EndIf
-        Else
-            If UAI_GetPlayerInfo($GC_UAI_AGENT_IsAttacking) Then Core_ControlAction($GC_I_CONTROL_ACTION_CANCEL_ACTION)
-        EndIf
-
-        UAI_PrioritySkills($a_f_AggroRange)
-        If SurvivorMode() Then Return
-
-        UAI_DropBundle($a_f_AggroRange)
-        If SurvivorMode() Then Return
-
-        If UAI_CanCast($l_i_Slot) Then
-            $g_i_BestTarget = Call($g_as_BestTargetCache[$l_i_Slot], $a_f_AggroRange)
-            If $g_i_ForceTarget <> 0 And UAI_GetAgentInfoByID($g_i_BestTarget, $GC_UAI_AGENT_Allegiance) = $GC_I_ALLEGIANCE_ENEMY Then
-                $g_i_BestTarget = $g_i_ForceTarget
-            EndIf
-            If $g_i_BestTarget = 0 Then ContinueLoop
-            If Not UAI_Filter_IsNotAvoided($g_i_BestTarget) Then ContinueLoop
-
-            $g_b_CanUseSkill = Call($g_as_CanUseCache[$l_i_Slot])
-
-            If $g_b_CanUseSkill = True And Agent_GetDistance($g_i_BestTarget) < $a_f_AggroRange Then
-                UAI_UseSkillEX($l_i_Slot, $g_i_BestTarget)
-                If Cache_FormChangeBuild($l_i_Slot) Then $g_b_SkillChanged = True
-            Else
-                ContinueLoop
-            EndIf
-        EndIf
-
-        If SurvivorMode() Then Return
-
-        If $a_f_MaxDistanceToXY <> 0 Then
-            If $a_f_x <> 0 Or $a_f_y <> 0 Then
-                If Agent_GetDistanceToXY($a_f_x, $a_f_y) > $a_f_MaxDistanceToXY Then ExitLoop
-            EndIf
-        EndIf
-    Next
-    Return True
-EndFunc   ;==>_UAI_UseSkills
 
 Func AggroMoveToExFilter($aX, $aY, $range = 1700, $filterFunc = "EnemyFilter")
 
@@ -655,167 +517,52 @@ Func AggroMoveToExFilter($aX, $aY, $range = 1700, $filterFunc = "EnemyFilter")
     Until ComputeDistance($coords[0], $coords[1], $aX, $aY) < 250 Or $iBlocked > 20 Or GetPartyDead() Or TimerDiff($TimerToKill) > 180000
 EndFunc   ;==>AggroMoveToExFilter
 
+
 Func FightExFilter($AggroRange, $filterFunc = "EnemyFilter")
     If GetPartyDead() Then Return
     If SurvivorMode() Then Return
 
-    Local $target
-    Local $distance
-    Local $useSkill
-    Local $energy
-    Local $lastId = 99999, $coordinate[2], $timer
+    _Vanquisher_InitCombatAI()
+    If Not $g_b_Vanquisher_CombatAIReady Then Return
 
-        Do
-            If GetNumberOfFoesInRangeOfAgent(-2, 1700) = 0 Then Exitloop
-            If TimerDiff($TimerToKill) > 180000 Then Exitloop
-            If GetPartyDead() Then Exitloop
-            If SurvivorMode() Then Return
+    If Not IsDeclared("TimerToKill") Then $TimerToKill = TimerInit()
 
-            ; Check for healing before engaging target
-            If NeedHeal(70) Then UseHeal()
+    Do
+        If GetPartyDead() Then ExitLoop
+        If SurvivorMode() Then Return
+        If TimerDiff($TimerToKill) > 180000 Then ExitLoop
 
-            $target = GetNearestEnemyToAgent(-2, 1700, $GC_I_AGENT_TYPE_LIVING, 1, $filterFunc)
-            If GetPartyDead() Then Exitloop
-            If SurvivorMode() Then Return
-            $distance = ComputeDistance(Agent_GetAgentInfo($target, 'X'), Agent_GetAgentInfo($target, 'Y'), Agent_GetAgentInfo(-2, 'X'), Agent_GetAgentInfo(-2, 'Y'))
+        Local $l_i_Target = GetNearestEnemyToAgent(-2, 1700, $GC_I_AGENT_TYPE_LIVING, 1, $filterFunc)
+        If $l_i_Target = 0 Then ExitLoop
 
-            If $target <> 0 AND $distance < $AggroRange And Not GetPartyDead() Then
-                If TimerDiff($TimerToKill) > 180000 Then Exitloop
+        Local $l_f_Distance = GetDistance($l_i_Target, -2)
+        If $l_f_Distance > $AggroRange Then ExitLoop
 
-                If Agent_GetAgentInfo($target, 'ID') <> $lastId Then
-                    If GetPartyDead() Then Exitloop
-                    If SurvivorMode() Then Return
+        Agent_ChangeTarget($l_i_Target)
+        Other_RndSleep(150)
+        Agent_CallTarget($l_i_Target)
+        Other_RndSleep(150)
 
-                    Agent_ChangeTarget($target)
-                    Other_RndSleep(150)
-                    Agent_CallTarget($target)
-                    Other_RndSleep(150)
+        Local $l_f_AnchorX = Agent_GetAgentInfo(-2, "X")
+        Local $l_f_AnchorY = Agent_GetAgentInfo(-2, "Y")
+        Local $l_i_PlayerNumber = Agent_GetAgentInfo($l_i_Target, "PlayerNumber")
 
-                    ; Check for healing after we've called them stupid
-                    If NeedHeal(70) Then UseHeal()
+        $g_h_Vanquisher_FightTimer = TimerInit()
+        UAI_UpdateCache($AggroRange)
 
-                    If GetPartyDead() Then Exitloop
-                    If SurvivorMode() Then Return
-                    Agent_Attack($target)
-                    $lastId = Agent_GetAgentInfo($target, 'ID')
-                    $coordinate[0] = Agent_GetAgentInfo($target, 'X')
-                    $coordinate[1] = Agent_GetAgentInfo($target, 'Y')
-                    $timer = TimerInit()
-                    $distance = ComputeDistance($coordinate[0], $coordinate[1], Agent_GetAgentInfo(-2, 'X'), Agent_GetAgentInfo(-2, 'Y'))
-                    If GetPartyDead() Then Exitloop
-                    If SurvivorMode() Then Return
-                    If $distance > 1100 Then
-
-                        Do
-                            If GetNumberOfFoesInRangeOfAgent(-2, 1700) = 0 Then Exitloop
-                            If TimerDiff($TimerToKill) > 180000 Then Exitloop
-                            If GetPartyDead() Then Exitloop
-                            If SurvivorMode() Then Return
-
-                            ; I didn't mean it, I'm sorry..
-                            If NeedHeal(70) Then UseHeal()
-
-                            Map_Move($coordinate[0], $coordinate[1])
-                            Other_RndSleep(50)
-                            If GetPartyDead() Then Exitloop
-                            If SurvivorMode() Then Return
-                            $distance = ComputeDistance($coordinate[0], $coordinate[1], Agent_GetAgentInfo(-2, 'X'), Agent_GetAgentInfo(-2, 'Y'))
-                        Until $distance < 1100 Or TimerDiff($timer) > 10000 Or GetPartyDead() Or TimerDiff($TimerToKill) > 180000
-
-                    EndIf
-                EndIf
-
-                If TimerDiff($TimerToKill) > 180000 Then Exitloop
-                Other_RndSleep(150)
-                $timer = TimerInit()
-                If GetPartyDead() Then Exitloop
-                If SurvivorMode() Then Return
-
-                    Do
-                        If GetNumberOfFoesInRangeOfAgent(-2, 1700) = 0 Then Exitloop
-                        If TimerDiff($TimerToKill) > 180000 Then Exitloop
-                        If GetPartyDead() Then Exitloop
-                        If SurvivorMode() Then Return
-
-                        ; Check for healing before engaging
-                        If NeedHeal(70) Then UseHeal()
-
-                        $target = GetNearestEnemyToAgent(-2, 1700, $GC_I_AGENT_TYPE_LIVING, 1, $filterFunc)
-                        If GetPartyDead() Then Exitloop
-                        If SurvivorMode() Then Return
-                        $distance = GetDistance($target, -2)
-
-                        If $distance < 1250 And Not GetPartyDead() Then
-                            If GetNumberOfFoesInRangeOfAgent(-2, 1700) = 0 Then Exitloop
-                            If TimerDiff($TimerToKill) > 180000 Then Exitloop
-
-                            For $i = 0 To 7
-                                If GetNumberOfFoesInRangeOfAgent(-2, 1700) = 0 Then Exitloop
-                                If TimerDiff($TimerToKill) > 180000 Then Exitloop
-                                If GetPartyDead() Then Exitloop
-                                If SurvivorMode() Then Return
-                                If Agent_GetAgentInfo($target, 'IsDead') Then ExitLoop
-
-                                ; Get skill ID for current slot
-                                Local $currentSkillID = Skill_GetSkillbarInfo($i+1, "SkillID")
-
-                                ; Skip healing skills - they're handled separately
-                                If IsHealingSkill($currentSkillID) Then ContinueLoop
-
-                                $distance = GetDistance($target, -2)
-                                If $distance > $AggroRange Then ExitLoop
-
-                                $energy = GetEnergy(-2)
-
-                                ; Deal with adrenaline skills
-                                If IsAdrenal($currentSkillID) Then
-                                    If Skill_GetSkillbarInfo($i+1, "Adrenaline") < Skill_GetSkillInfo($currentSkillID, "Adrenaline") Then ContinueLoop
-                                EndIf
-
-                                If IsRecharged($i+1) And $energy >= Skill_GetSkillInfo(Skill_GetSkillbarInfo($i+1, "SkillID"), "EnergyCost") And Not GetPartyDead() Then
-                                    If GetNumberOfFoesInRangeOfAgent(-2, 1700) = 0 Then Exitloop
-                                    If TimerDiff($TimerToKill) > 180000 Then Exitloop
-                                    $useSkill = $i + 1
-
-                                    UseSkillEx($useSkill, $target)
-                                    Other_RndSleep(150)
-                                    If GetPartyDead() Then Exitloop
-                                    If SurvivorMode() Then Return
-                                    Agent_Attack($target)
-                                    Other_RndSleep(150)
-                                EndIf
-
-                                If NeedHeal(95) Then UseHeal()
-
-                                If TimerDiff($TimerToKill) > 180000 Then Exitloop
-                                If $i = 7 Then $i = -1 ; change -1
-                                If GetPartyDead() Then Exitloop
-                                If SurvivorMode() Then Return
-                            Next
-                        EndIf
-
-                        If TimerDiff($TimerToKill) > 180000 Then Exitloop
-                        If GetPartyDead() Then Exitloop
-                        If SurvivorMode() Then Return
-                        Agent_Attack($target)
-                        $distance = GetDistance($target, -2)
-                    Until Agent_GetAgentInfo($target, 'HP') < 0.005 Or $distance > $AggroRange Or TimerDiff($timer) > 20000 Or GetPartyDead() Or TimerDiff($TimerToKill) > 180000
-            EndIf
-
-            If GetNumberOfFoesInRangeOfAgent(-2, 1700) = 0 Then Exitloop
-            If TimerDiff($TimerToKill) > 180000 Then Exitloop
-            If GetPartyDead() Then Exitloop
-            If SurvivorMode() Then Return
-            $target = GetNearestEnemyToAgent(-2, 1700, $GC_I_AGENT_TYPE_LIVING, 1, $filterFunc)
-            If GetPartyDead() Then Exitloop
-            If SurvivorMode() Then Return
-            $distance = GetDistance($target, -2)
-        Until Agent_GetAgentInfo($target, 'ID') = 0 Or $distance > $AggroRange Or GetPartyDead() Or TimerDiff($TimerToKill) > 180000
-
-        If CountSlots() <> 0 And Not GetPartyDead() Then
-            If TimerDiff($TimerToKill) > 180000 Then Return
-            PickUpLoot()
+        If $l_i_PlayerNumber > 0 Then
+            UAI_Fight($l_f_AnchorX, $l_f_AnchorY, $AggroRange, 3500, $g_i_FinisherMode, True, $l_i_PlayerNumber, True, "_Vanquisher_FightExitCallback")
+        Else
+            UAI_Fight($l_f_AnchorX, $l_f_AnchorY, $AggroRange, 3500, $g_i_FinisherMode, True, 0, False, "_Vanquisher_FightExitCallback")
         EndIf
+
+        Other_RndSleep(150)
+    Until GetNumberOfFoesInRangeOfAgent(-2, 1700, $GC_I_AGENT_TYPE_LIVING, 1, $filterFunc) = 0 Or GetPartyDead() Or TimerDiff($TimerToKill) > 180000
+
+    If CountSlots() <> 0 And Not GetPartyDead() Then
+        If TimerDiff($TimerToKill) > 180000 Then Return
+        PickUpLoot()
+    EndIf
 EndFunc   ;==>FightExFilter
 
 Func GetPartyDead()
@@ -4773,4 +4520,21 @@ Func GoNearestNPCToCoords($a_f_X, $a_f_Y)
     Until GetDistance($lNPC, -2) < 250
     RndSleep(500)
 EndFunc
+
+Func _Vanquisher_GateBeforeCombat($a_i_AggroRange = 1320, $a_i_ScanRange = 0)
+    If $a_i_ScanRange = 0 Then $a_i_ScanRange = $a_i_AggroRange
+    If GetNumberOfFoesInRangeOfAgent(-2, $a_i_ScanRange, $GC_I_AGENT_TYPE_LIVING, 0, "EnemyFilter") > 0 Then
+        Other_RndSleep(50)
+        Return
+    EndIf
+    Agent_CancelAction()
+    Other_WaitPingStabilized(750)
+    Sleep(Other_GetPing() + 250)
+EndFunc   ;==>_Vanquisher_GateBeforeCombat
+
+Func _Vanquisher_GateBeforeMovement()
+    Agent_CancelAction()
+    Other_WaitPingStabilized(750)
+    Sleep(Other_GetPing() + 250)
+EndFunc   ;==>_Vanquisher_GateBeforeMovement
 #EndRegion

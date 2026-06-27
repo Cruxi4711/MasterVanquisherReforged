@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQSilentSurf()
-    If GetMapID() <> $SilentSurf_Map And GetMapID() <> $SilentSurf_Outpost  Then TravelTo($SilentSurf_Outpost)   
-    If GetMapID() = $SilentSurf_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $SilentSurf_Map And GetMapID() <> $SilentSurf_Outpost Then
+		CurrentAction("Traveling to outpost for Silent Surf.")
+		TravelTo($SilentSurf_Outpost)
+	EndIf
 
-	If GetMapID() = $SilentSurf_Map Then    
-		
-		Local $aWaypoints[67][4] = [ [12805, 20193, " ", $vqrange] _ 
+	If GetMapID() = $SilentSurf_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
+
+	If GetMapID() <> $SilentSurf_Map Then
+		CurrentAction("Silent Surf route waiting - on map " & GetMapID() & ", need " & $SilentSurf_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Silent Surf vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[67][4] = [ [12805, 20193, " ", $vqrange] _ 
 		, [11341, 16798, " ", $vqrange] _
 		, [11087, 13991, " ", $vqrange] _
 		, [11080, 9097, " ", $vqrange] _
@@ -78,26 +89,26 @@ Func VQSilentSurf()
 		, [1837, -6615, " ", $vqrange] _
 		, [5287, -9242, " ", $vqrange] _
 		, [3288, -3142, " ", $vqrange] ]
-	
-		GoNearestNPCToCoords(11303, 24406)
-	If GetKurzickFaction() > GetLuxonFaction() Then
-                Dialog(0x81)
-                Sleep(1000)
-                Dialog(0x2)
-                Sleep(1000)
-                Dialog(0x84)
-	        Sleep(1000)
-	        Dialog(0x86)
-	        Sleep(1000)
-        Else
-                Dialog(0x85)
-                Sleep(1000)
-                Dialog(0x86)
-                Sleep(1000)
-        EndIf
 
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	If Not _Vanquisher_ShouldSkipMapEntrySetup() Then
+		GoNearestNPCToCoords(11303, 24406)
+		If GetKurzickFaction() > GetLuxonFaction() Then
+			Dialog(0x81)
+			Sleep(1000)
+			Dialog(0x2)
+			Sleep(1000)
+			Dialog(0x84)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		Else
+			Dialog(0x85)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		EndIf
+	EndIf
+
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

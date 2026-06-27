@@ -4,41 +4,55 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Local $aDaladaUplandsOutpostPath[1][2] = [ _
-	[-15789, 14108]]
+	[-15789, 14108] _
+]
+
+; Doomlore Shrine (648) -> Dalada Uplands (647).
+Local Const $DALADAUPLANDS_OUTPOST_PORTAL_X = -15360
+Local Const $DALADAUPLANDS_OUTPOST_PORTAL_Y = 13408
 
 Func GoOutDaladaUplands()
 	Local $l_i_Map = GetMapID()
+
 	If $l_i_Map = $DaladaUplands_Map Then Return
+
 	If $l_i_Map = $DaladaUplands_Outpost Then
 		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Doomlore Shrine -> Dalada Uplands (portal).")
-		_Vanquisher_RunAggroPortalPath($aDaladaUplandsOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		_Vanquisher_RunAggroApproachPath($aDaladaUplandsOutpostPath, $vqrange, "doomlore ")
+		_Vanquisher_RunPortalStep($DALADAUPLANDS_OUTPOST_PORTAL_X, $DALADAUPLANDS_OUTPOST_PORTAL_Y, $vqrange, "doomlore portal")
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
+
 EndFunc
 
 Func VQDaladaUplands()
 	If GetMapID() <> $DaladaUplands_Map And GetMapID() <> $DaladaUplands_Outpost Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for DaladaUplands.")
+		CurrentAction("Traveling to outpost for Dalada Uplands.")
 		TravelTo($DaladaUplands_Outpost)
 	EndIf
+
 	If GetMapID() = $DaladaUplands_Outpost Then
 		_Vanquisher_ApplyDifficulty()
-		GoOutDaladaUplands()
+		GoOut()
 		If GetMapID() <> $DaladaUplands_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need DaladaUplands (" & $DaladaUplands_Map & ").")
+			CurrentAction("Routing - on map " & GetMapID() & ", need Dalada Uplands (" & $DaladaUplands_Map & ").")
 			Return
+		EndIf
 	EndIf
-	EndIf
+
 	If GetMapID() <> $DaladaUplands_Map Then
-		CurrentAction("DaladaUplands route waiting - on map " & GetMapID() & ", need " & $DaladaUplands_Map & ".")
+		CurrentAction("Dalada Uplands route waiting - on map " & GetMapID() & ", need " & $DaladaUplands_Map & ".")
 		Return
 	EndIf
-	CurrentAction("Starting DaladaUplands vanquish route.")
+
+	CurrentAction("Starting Dalada Uplands vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
 	Local $aWaypoints[199][4] = [ _
 		[-14310, 12724, " ", $vqrange], _
 		[-14971, 11013, "shrine", $vqrange], _
@@ -238,6 +252,7 @@ Func VQDaladaUplands()
 		[-6375, 8767, " ", $vqrange], _
 		[-8997, 8865, " ", $vqrange], _
 		[-11537, 9008, " ", $vqrange], _
-		[-13870, 10072, " ", $vqrange]]
+		[-13870, 10072, " ", $vqrange] ]
+
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

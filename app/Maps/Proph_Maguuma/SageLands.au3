@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aSageLandsOutpostPath[2][2] = [ _
+Local $aSageLandsOutpostPath[2][2] = [ _
 	[3592, -9535], _
 	[3000, -9480] _
 ]
@@ -17,7 +17,7 @@ Func GoOutSageLands()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> SageLands (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aSageLandsOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQSageLands()
 		If GetMapID() <> $SageLands_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need SageLands (" & $SageLands_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $SageLands_Map Then

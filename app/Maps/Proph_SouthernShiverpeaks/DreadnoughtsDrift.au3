@@ -2,12 +2,16 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aDreadnoughtsDriftOutpostPath[2][2] = [ _
-	[6647, -41652], _
-	[5831, -41296] _
+Local $aDreadnoughtsDriftOutpostPath[2][2] = [ _
+	[-10030, 18833], _
+	[-9797, 19027] _
 ]
 
-Global $aDreadnoughtsDriftTransitPath[38][2] = [ _
+; Snake Dance (91) -> Dreadnought's Drift (97). Last path point is approach; portal is separate.
+Local Const $DREADNOUGHTSDRIFT_SNAKEDANCE_PORTAL_X = -7418
+Local Const $DREADNOUGHTSDRIFT_SNAKEDANCE_PORTAL_Y = 45039
+
+Local $aDreadnoughtsDriftTransitPath[38][2] = [ _
 	[4361, -40986], _
 	[2911, -39264], _
 	[2133, -33852], _
@@ -54,23 +58,26 @@ Func GoOutDreadnoughtsDrift()
 	If $l_i_Map = $DreadnoughtsDrift_Map Then Return
 
 	If $l_i_Map = $DreadnoughtsDrift_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_DreadnoughtsDriftRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> DreadnoughtsDrift (portal 1)")
+		CurrentAction("Camp Rankor -> Snake Dance (portal 1).")
 		_Vanquisher_RunAggroPortalPath($aDreadnoughtsDriftOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_DreadnoughtsDriftRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $DreadnoughtsDrift_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_DreadnoughtsDriftRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> DreadnoughtsDrift (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aDreadnoughtsDriftTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Snake Dance (transit) -> Dreadnought's Drift (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitLeg($aDreadnoughtsDriftTransitPath, $DREADNOUGHTSDRIFT_SNAKEDANCE_PORTAL_X, $DREADNOUGHTSDRIFT_SNAKEDANCE_PORTAL_Y, $vqrange, "snakedance ") Then
+			CurrentAction("Transit map not ready yet ? retrying Dreadnought's Drift portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		If GetMapID() = $DreadnoughtsDrift_Map Then $g_i_DreadnoughtsDriftRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
-		Return
 	EndIf
 
 EndFunc
@@ -88,7 +95,7 @@ Func VQDreadnoughtsDrift()
 		If GetMapID() <> $DreadnoughtsDrift_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need DreadnoughtsDrift (" & $DreadnoughtsDrift_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $DreadnoughtsDrift_Map Then
@@ -147,4 +154,3 @@ Func VQDreadnoughtsDrift()
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
-

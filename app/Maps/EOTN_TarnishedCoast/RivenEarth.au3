@@ -1,11 +1,9 @@
-;Mapped by Crux
 #include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQRivenEarth()
 	If GetMapID() <> $RivenEarth_Map And GetMapID() <> $RivenEarth_Outpost Then
-		_Vanquisher_ResetGoOutRouteProgress()
 		CurrentAction("Traveling to outpost for Riven Earth.")
 		TravelTo($RivenEarth_Outpost)
 	EndIf
@@ -25,6 +23,8 @@ Func VQRivenEarth()
 	EndIf
 
 	CurrentAction("Starting Riven Earth vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
 
 	Local $aWaypoints[159][4] = [ _
 		[-25000, -3996, " ", $vqrange], _
@@ -186,13 +186,6 @@ Func VQRivenEarth()
 		[10712, 2503, " ", $vqrange], _
 		[10572, 4495, " ", $vqrange], _
 		[11692, 6790, " ", $vqrange] ]
-
-	GoNearestNPCToCoords(18766, 15933)
-	Sleep(1000)
-	Dialog(0x83)
-	Sleep(1000)
-	Dialog(0x84)
-	Sleep(1000)
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

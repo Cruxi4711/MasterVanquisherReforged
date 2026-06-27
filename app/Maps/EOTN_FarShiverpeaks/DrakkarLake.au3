@@ -1,11 +1,12 @@
-;Mapped by Crux
+; Mapped by Crux
+#RequireAdmin
+#NoTrayIcon
 #include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQDrakkarLake()
 	If GetMapID() <> $DrakkarLake_Map And GetMapID() <> $DrakkarLake_Outpost Then
-		_Vanquisher_ResetGoOutRouteProgress()
 		CurrentAction("Traveling to outpost for Drakkar Lake.")
 		TravelTo($DrakkarLake_Outpost)
 	EndIf
@@ -25,6 +26,8 @@ Func VQDrakkarLake()
 	EndIf
 
 	CurrentAction("Starting Drakkar Lake vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
 	Local $aWaypoints[247][4] = [ _
 		[8872, 23295, " ", $vqrange], _
 		[7417, 23727, "shrine", $vqrange], _

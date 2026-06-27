@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aTascasDemiseOutpostPath[2][2] = [ _
+Local $aTascasDemiseOutpostPath[2][2] = [ _
 	[-10030, 18833], _
 	[-9797, 19027] _
 ]
@@ -17,7 +17,7 @@ Func GoOutTascasDemise()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> TascasDemise (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aTascasDemiseOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQTascasDemise()
 		If GetMapID() <> $TascasDemise_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need TascasDemise (" & $TascasDemise_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $TascasDemise_Map Then

@@ -2,12 +2,16 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aKessexPeakOutpostPath[2][2] = [ _
+Local $aKessexPeakOutpostPath[2][2] = [ _
 	[-5199, 16327], _
 	[-5252, 15997] _
 ]
 
-Global $aKessexPeakTransitPath[12][2] = [ _
+; The Black Curtain (18) -> Kessex Peak (64). Last path point is approach; portal is separate.
+Local Const $KESSEXPEAK_TRANSIT_PORTAL_X = 6093
+Local Const $KESSEXPEAK_TRANSIT_PORTAL_Y = -18015
+
+Local $aKessexPeakTransitPath[11][2] = [ _
 	[-5241, 15182], _
 	[-6837, 11715], _
 	[-7152, 7351], _
@@ -18,9 +22,12 @@ Global $aKessexPeakTransitPath[12][2] = [ _
 	[-753, -10986], _
 	[7797, -13034], _
 	[8548, -17166], _
-	[7834, -18238], _
-	[6093, -18015] _
+	[7834, -18238] _
 ]
+
+Func _Vanquisher_ResetKessexPeakRouteProgress()
+	$g_i_KessexPeakRoute_LastMapHandled = -1
+EndFunc
 
 Func GoOutKessexPeak()
 	Local $l_i_Map = GetMapID()
@@ -28,25 +35,24 @@ Func GoOutKessexPeak()
 	If $l_i_Map = $KessexPeak_Map Then Return
 
 	If $l_i_Map = $KessexPeak_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_KessexPeakRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> KessexPeak (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aKessexPeakOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Temple of the Ages -> The Black Curtain (portal 1).")
+		_Vanquisher_RunAggroPortalPath($aKessexPeakOutpostPath, $vqrange, "temple ")
+		If GetMapID() <> $l_i_Map Then $g_i_KessexPeakRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $KessexPeak_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> KessexPeak (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aKessexPeakTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
-		Return
+		If $g_i_KessexPeakRoute_LastMapHandled = $l_i_Map Then Return
+		CurrentAction("The Black Curtain (transit) -> Kessex Peak (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitLeg($aKessexPeakTransitPath, $KESSEXPEAK_TRANSIT_PORTAL_X, $KESSEXPEAK_TRANSIT_PORTAL_Y, $vqrange, "blackcurtain ") Then
+			CurrentAction("Transit map not ready yet — retrying Kessex Peak portal path.")
+			Return
+		EndIf
+		If GetMapID() = $KessexPeak_Map Then $g_i_KessexPeakRoute_LastMapHandled = $l_i_Map
 	EndIf
-
 EndFunc
 
 Func VQKessexPeak()
@@ -62,7 +68,7 @@ Func VQKessexPeak()
 		If GetMapID() <> $KessexPeak_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need KessexPeak (" & $KessexPeak_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $KessexPeak_Map Then

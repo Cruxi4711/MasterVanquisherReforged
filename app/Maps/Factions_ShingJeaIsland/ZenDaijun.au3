@@ -1,17 +1,28 @@
-#include <Array.au3>
+﻿#include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQZenDaijun()
-    If GetMapID() <> $ZenDaijun_Map And GetMapID() <> $ZenDaijun_Outpost  Then TravelTo($ZenDaijun_Outpost)   
-    If GetMapID() = $ZenDaijun_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $ZenDaijun_Map And GetMapID() <> $ZenDaijun_Outpost Then
+		CurrentAction("Traveling to outpost for Zen Daijun.")
+		TravelTo($ZenDaijun_Outpost)
+	EndIf
 
-	If GetMapID() = $ZenDaijun_Map Then    
+	If GetMapID() = $ZenDaijun_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[76][4] = [ [-15213, 5733, " ", $vqrange] _		
+	If GetMapID() <> $ZenDaijun_Map Then
+		CurrentAction("Zen Daijun route waiting - on map " & GetMapID() & ", need " & $ZenDaijun_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Zen Daijun vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[76][4] = [ [-15213, 5733, " ", $vqrange] _		
 		, [-13906, 6686, " ", $vqrange] _
 		, [-9492, 7750, " ", $vqrange] _
 		, [-7983, 8813, " ", $vqrange] _
@@ -86,7 +97,6 @@ Func VQZenDaijun()
 		, [-11514, 3003, " ", $vqrange] _
 		, [-9602, 3877, " ", $vqrange] _
 		, [-5585, 3445, " ", $vqrange] _
-		, [-8017, 6339, " ", $vqrange] ]			
-		MoveandAggroVQFullRoute($aWaypoints)
-    EndIf
+		, [-8017, 6339, " ", $vqrange] ]
+	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aSilverwoodOutpostPath[2][2] = [ _
+Local $aSilverwoodOutpostPath[2][2] = [ _
 	[1550.63, -2982.15], _
 	[2013, -2216] _
 ]
@@ -17,7 +17,7 @@ Func GoOutSilverwood()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> Silverwood (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aSilverwoodOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQSilverwood()
 		If GetMapID() <> $Silverwood_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need Silverwood (" & $Silverwood_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $Silverwood_Map Then

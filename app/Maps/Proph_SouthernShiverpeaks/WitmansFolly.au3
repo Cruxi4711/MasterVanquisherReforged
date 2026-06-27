@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aWitmansFollyOutpostPath[2][2] = [ _
+Local $aWitmansFollyOutpostPath[2][2] = [ _
 	[4869, 3423], _
 	[5800, 1400] _
 ]
@@ -17,7 +17,7 @@ Func GoOutWitmansFolly()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> WitmansFolly (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aWitmansFollyOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQWitmansFolly()
 		If GetMapID() <> $WitmansFolly_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need WitmansFolly (" & $WitmansFolly_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $WitmansFolly_Map Then

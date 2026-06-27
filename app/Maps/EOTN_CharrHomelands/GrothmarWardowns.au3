@@ -4,42 +4,51 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Local $aGrothmarWardownsOutpostPath[1][2] = [ _
-	[-22058, 12968]]
+	[-22058, 12968] _
+]
 
 Func GoOutGrothmarWardowns()
 	Local $l_i_Map = GetMapID()
+
 	If $l_i_Map = $GrothmarWardowns_Map Then Return
+
 	If $l_i_Map = $GrothmarWardowns_Outpost Then
 		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Longeye's Ledge -> Grothmar Wardowns (portal).")
-		_Vanquisher_RunAggroPortalPath($aGrothmarWardownsOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		_Vanquisher_RunAggroPortalPath($aGrothmarWardownsOutpostPath, $vqrange, "longeye ")
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
+
 EndFunc
 
 Func VQGrothmarWardowns()
 	If GetMapID() <> $GrothmarWardowns_Map And GetMapID() <> $GrothmarWardowns_Outpost Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for GrothmarWardowns.")
+		CurrentAction("Traveling to outpost for Grothmar Wardowns.")
 		TravelTo($GrothmarWardowns_Outpost)
 	EndIf
+
 	If GetMapID() = $GrothmarWardowns_Outpost Then
 		_Vanquisher_ApplyDifficulty()
-		GoOutGrothmarWardowns()
+		GoOut()
 		If GetMapID() <> $GrothmarWardowns_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need GrothmarWardowns (" & $GrothmarWardowns_Map & ").")
+			CurrentAction("Routing - on map " & GetMapID() & ", need Grothmar Wardowns (" & $GrothmarWardowns_Map & ").")
 			Return
+		EndIf
 	EndIf
-	EndIf
+
 	If GetMapID() <> $GrothmarWardowns_Map Then
-		CurrentAction("GrothmarWardowns route waiting - on map " & GetMapID() & ", need " & $GrothmarWardowns_Map & ".")
+		CurrentAction("Grothmar Wardowns route waiting - on map " & GetMapID() & ", need " & $GrothmarWardowns_Map & ".")
 		Return
 	EndIf
-	CurrentAction("Starting GrothmarWardowns vanquish route.")
-	Local $aWaypoints[140][4] = [ _
+
+	CurrentAction("Starting Grothmar Wardowns vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[141][4] = [ _
 		[-21449, 12487, " ", $vqrange], _
 		[-21747, 11494, "shrine", $vqrange], _
 		[-19496, 12742, " ", $vqrange], _
@@ -143,6 +152,7 @@ Func VQGrothmarWardowns()
 		[-120, -9959, " ", $vqrange], _
 		[-634, -12384, " ", $vqrange], _
 		[-2997, -11507, " ", $vqrange], _
+		[-2997, -11507, " ", $vqrange], _
 		[-5184, -12384, " ", $vqrange], _
 		[-3278, -11359, " ", $vqrange], _
 		[-4136, -9281, " ", $vqrange], _
@@ -179,6 +189,7 @@ Func VQGrothmarWardowns()
 		[-14239, -3187, " ", $vqrange], _
 		[-11886, -2236, " ", $vqrange], _
 		[-9704, -932, " ", $vqrange], _
-		[-7400, 324, " ", $vqrange]]
+		[-7400, 324, " ", $vqrange] ]
+
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

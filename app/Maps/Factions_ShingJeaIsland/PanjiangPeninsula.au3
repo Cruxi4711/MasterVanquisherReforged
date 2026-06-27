@@ -1,17 +1,28 @@
-#include <Array.au3>
+﻿#include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQPanjiangPeninsula()
-    If GetMapID() <> $PanjiangPeninsula_Map And GetMapID() <> $PanjiangPeninsula_Outpost  Then TravelTo($PanjiangPeninsula_Outpost)   
-    If GetMapID() = $PanjiangPeninsula_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $PanjiangPeninsula_Map And GetMapID() <> $PanjiangPeninsula_Outpost Then
+		CurrentAction("Traveling to outpost for Panjiang Peninsula.")
+		TravelTo($PanjiangPeninsula_Outpost)
+	EndIf
 
-	If GetMapID() = $PanjiangPeninsula_Map Then    
+	If GetMapID() = $PanjiangPeninsula_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[89][4] = [ [11185, 13046, " ", $vqrange] _		
+	If GetMapID() <> $PanjiangPeninsula_Map Then
+		CurrentAction("Panjiang Peninsula route waiting - on map " & GetMapID() & ", need " & $PanjiangPeninsula_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Panjiang Peninsula vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[89][4] = [ [11185, 13046, " ", $vqrange] _
 		, [11039, 10853, " ", $vqrange] _
 		, [13984, 9460, " ", $vqrange] _
 		, [16569, 11304, " ", $vqrange] _
@@ -100,6 +111,5 @@ Func VQPanjiangPeninsula()
 		, [-316, 7902, " ", $vqrange] _
 		, [-1545, 6557, " ", $vqrange] _
 		, [2981, 4278, " ", $vqrange] ]
-		MoveandAggroVQFullRoute($aWaypoints)
-    EndIf
+	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

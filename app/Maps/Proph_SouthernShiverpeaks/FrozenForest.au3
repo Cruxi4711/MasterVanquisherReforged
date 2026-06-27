@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aFrozenForestOutpostPath[2][2] = [ _
+Local $aFrozenForestOutpostPath[2][2] = [ _
 	[-7081, -31932], _
 	[-7584, -31736] _
 ]
@@ -17,7 +17,7 @@ Func GoOutFrozenForest()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> FrozenForest (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aFrozenForestOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQFrozenForest()
 		If GetMapID() <> $FrozenForest_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need FrozenForest (" & $FrozenForest_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $FrozenForest_Map Then

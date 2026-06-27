@@ -1,6 +1,9 @@
+﻿#include-once
+
 Global Const $CHECK_INTERVAL = 1500
 Global Const $REWARD_WAIT_TIME = 1800000 ; 30 minuti
 Global $ActionCounter = 0
+Global $LEGIONARY_STONE_ID = 37810
 Global $Gui_Legio, $Gui_Bu, $Gui_Conset, $Gui_OpenChests
 Global $Bool_Conset, $Bool_Bu, $Bool_Stones, $Bool_OpenChests
 Global $BlockCount = 20
@@ -16,21 +19,301 @@ Func _Vanquisher_ExitRouteIfDone($a_s_Phase = "")
     Return False
 EndFunc
 
+; AggroMoveTo portal tile, step on, wait for zone load.
+Func _Vanquisher_RunPortalStep($a_f_X, $a_f_Y, $a_i_AggroRange = 1450, $a_s_Label = "portal")
+	If _Vanquisher_ShouldStop() Then Return
+	Local $l_i_MapBefore = GetMapID()
+	AggroMoveTo($a_f_X, $a_f_Y, $a_s_Label, $a_i_AggroRange)
+	If GetMapID() <> $l_i_MapBefore Or Map_GetInstanceInfo("IsLoading") Then
+		WaitForLoad()
+		_Vanquisher_WaitForPlayerReadyAfterLoad()
+		Return
+	EndIf
+	Move($a_f_X, $a_f_Y)
+	If GetMapID() <> $l_i_MapBefore Or Map_GetInstanceInfo("IsLoading") Then
+		WaitForLoad()
+		_Vanquisher_WaitForPlayerReadyAfterLoad()
+		Return
+	EndIf
+	WaitForLoad()
+	_Vanquisher_WaitForPlayerReadyAfterLoad()
+EndFunc
+
+; Walk every point in path with combat; no portal step.
+Func _Vanquisher_RunAggroApproachPath($a_a_Points, $a_i_AggroRange = 1450, $a_s_Label = "")
+	Local $l_i_Count = UBound($a_a_Points)
+	If $l_i_Count < 1 Then Return
+	Local $l_i_MapBefore = GetMapID()
+	For $l_i_Idx = 0 To $l_i_Count - 1
+		If _Vanquisher_ShouldStop() Then Return
+		AggroMoveTo($a_a_Points[$l_i_Idx][0], $a_a_Points[$l_i_Idx][1], $a_s_Label & ($l_i_Idx + 1), $a_i_AggroRange)
+		If GetMapID() <> $l_i_MapBefore Or Map_GetInstanceInfo("IsLoading") Then
+			WaitForLoad()
+			_Vanquisher_WaitForPlayerReadyAfterLoad()
+			Return
+		EndIf
+	Next
+EndFunc
+
 ; Move through path with combat; last point is a portal (AggroMoveTo then Move + WaitForLoad).
 Func _Vanquisher_RunAggroPortalPath($a_a_Points, $a_i_AggroRange = 1450, $a_s_Label = "")
-    Local $l_i_Count = UBound($a_a_Points)
-    If $l_i_Count < 1 Then Return
-    Local $l_i_Last = $l_i_Count - 1
-    For $l_i_Idx = 0 To $l_i_Last - 1
-        If _Vanquisher_ShouldStop() Then Return
-        AggroMoveTo($a_a_Points[$l_i_Idx][0], $a_a_Points[$l_i_Idx][1], $a_s_Label & ($l_i_Idx + 1), $a_i_AggroRange)
-    Next
-    If _Vanquisher_ShouldStop() Then Return
-    AggroMoveTo($a_a_Points[$l_i_Last][0], $a_a_Points[$l_i_Last][1], $a_s_Label & " portal", $a_i_AggroRange)
-    Local $l_i_MapBefore = GetMapID()
-    Move($a_a_Points[$l_i_Last][0], $a_a_Points[$l_i_Last][1])
-    If GetMapID() <> $l_i_MapBefore Or Map_GetInstanceInfo("IsLoading") Then Return
-    WaitForLoad()
+	Local $l_i_Count = UBound($a_a_Points)
+	If $l_i_Count < 1 Then Return
+	If $l_i_Count = 1 Then
+		_Vanquisher_RunPortalStep($a_a_Points[0][0], $a_a_Points[0][1], $a_i_AggroRange, $a_s_Label & "portal")
+		Return
+	EndIf
+	Local $l_i_Last = $l_i_Count - 1
+	Local $l_i_MapBefore = GetMapID()
+	For $l_i_Idx = 0 To $l_i_Last - 1
+		If _Vanquisher_ShouldStop() Then Return
+		AggroMoveTo($a_a_Points[$l_i_Idx][0], $a_a_Points[$l_i_Idx][1], $a_s_Label & ($l_i_Idx + 1), $a_i_AggroRange)
+		If GetMapID() <> $l_i_MapBefore Or Map_GetInstanceInfo("IsLoading") Then
+			WaitForLoad()
+			_Vanquisher_WaitForPlayerReadyAfterLoad()
+			Return
+		EndIf
+	Next
+	If _Vanquisher_ShouldStop() Then Return
+	_Vanquisher_RunPortalStep($a_a_Points[$l_i_Last][0], $a_a_Points[$l_i_Last][1], $a_i_AggroRange, $a_s_Label & "portal")
+EndFunc
+
+Func _Vanquisher_RunExplorableTransitLeg($a_a_ApproachPath, $a_f_PortalX, $a_f_PortalY, $a_i_AggroRange = 1450, $a_s_Label = "")
+	$g_b_Vanquisher_TransitOnly = True
+	If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+		$g_b_Vanquisher_TransitOnly = False
+		Return False
+	EndIf
+	$g_b_Vanquisher_CombatAIReady = False
+	_Vanquisher_InitCombatAI()
+	Local $l_i_MapBefore = GetMapID()
+	_Vanquisher_RunAggroApproachPath($a_a_ApproachPath, $a_i_AggroRange, $a_s_Label)
+	If GetMapID() <> $l_i_MapBefore Then
+		$g_b_Vanquisher_TransitOnly = False
+		Return True
+	EndIf
+	_Vanquisher_RunPortalStep($a_f_PortalX, $a_f_PortalY, $a_i_AggroRange, $a_s_Label & "portal")
+	$g_b_Vanquisher_TransitOnly = False
+	Return True
+EndFunc
+
+Func _Vanquisher_RunExplorableTransitPortalPath($a_a_Path, $a_i_AggroRange = 1450, $a_s_Label = "")
+	$g_b_Vanquisher_TransitOnly = True
+	If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+		$g_b_Vanquisher_TransitOnly = False
+		Return False
+	EndIf
+	$g_b_Vanquisher_CombatAIReady = False
+	_Vanquisher_InitCombatAI()
+	_Vanquisher_RunAggroPortalPath($a_a_Path, $a_i_AggroRange, $a_s_Label)
+	$g_b_Vanquisher_TransitOnly = False
+	Return True
+EndFunc
+
+Func _Vanquisher_IsShrineBlessingMap()
+	Switch GetMapID()
+		Case $DaladaUplands_Map, $GrothmarWardowns_Map, $SacnothValley_Map, _
+			$BjoraMarches_Map, $DrakkarLake_Map, $IceCliffChasms_Map, $JagaMoraine_Map, _
+			$NorrhartDomains_Map, $RivenEarth_Map, $SparkflySwamp_Map, $VarajarFells_Map, _
+			$VerdantCascades_Map, $TheRupturedHeart_Map
+			Return True
+	EndSwitch
+	Return False
+EndFunc
+
+Func _Vanquisher_TryNornShrineBlessing($a_f_X, $a_f_Y)
+	CurrentAction("Taking shrine blessing at (" & Round($a_f_X) & ", " & Round($a_f_Y) & ").")
+	GoNearestNPCToCoords($a_f_X, $a_f_Y)
+	Sleep(300)
+	Dialog(0x84)
+	If GetMapID() = $TheRupturedHeart_Map Then
+		Sleep(300)
+		Dialog(0x85)
+	EndIf
+	Sleep(300)
+EndFunc
+
+Func _Vanquisher_IsDuplicateShrineStep($aWaypoints, $a_i_Index, $a_b_Reverse = False)
+	If $a_b_Reverse Then
+		If $a_i_Index >= UBound($aWaypoints) - 1 Then Return False
+		Return $aWaypoints[$a_i_Index][0] = $aWaypoints[$a_i_Index + 1][0] And $aWaypoints[$a_i_Index][1] = $aWaypoints[$a_i_Index + 1][1]
+	EndIf
+	If $a_i_Index < 1 Then Return False
+	Return $aWaypoints[$a_i_Index][0] = $aWaypoints[$a_i_Index - 1][0] And $aWaypoints[$a_i_Index][1] = $aWaypoints[$a_i_Index - 1][1]
+EndFunc
+
+; ============================================================
+; Part B — Junundu / Wurm Spoor helpers
+; ============================================================
+
+;~ Returns True if the player is currently transformed into a Junundu wurm.
+;~ Checks skill slot 1 against the Junundu skill ID range (1438–1443).
+Func _Vanquisher_IsJunundutransformed()
+	Local $l_i_SkillID = Skill_GetSkillbarInfo(1, "SkillID", 0)
+	Return $l_i_SkillID >= $GC_I_SKILL_ID_JUNUNDU_FEAST And $l_i_SkillID <= $GC_I_SKILL_ID_LEAVE_JUNUNDU
+EndFunc
+
+;~ Locates the nearest Wurm Spoor gadget and interacts with it to mount a Junundu.
+;~ Uses GetNearestGadgetToAgent + Agent_GoSignpost (same pattern as CheckForChest).
+;~ Retries up to $a_i_MaxRetries times with a small reposition on each failure.
+;~ Returns True on confirmed transformation.
+Func _Vanquisher_MountJununduAtWaypoint($a_f_X, $a_f_Y, $a_i_MaxRetries = 3)
+	If _Vanquisher_IsJunundutransformed() Then
+		LogInfo("[Junundu] Already transformed — skipping mount.")
+		Return True
+	EndIf
+	CurrentAction("Mounting Junundu wurm.")
+	Local $l_i_Attempt = 0
+	Local $l_p_Spoor
+	While $l_i_Attempt < $a_i_MaxRetries
+		$l_i_Attempt += 1
+		LogInfo("[Junundu] Seeking Wurm Spoor — attempt " & $l_i_Attempt & "/" & $a_i_MaxRetries & ".")
+		$l_p_Spoor = GetNearestGadgetToAgent(-2, 1200)
+		If $l_p_Spoor = 0 Then
+			LogWarn("[Junundu] No Wurm Spoor in range on attempt " & $l_i_Attempt & " — repositioning.")
+			Move($a_f_X, $a_f_Y, 50)
+			RndSleep(2000)
+			ContinueLoop
+		EndIf
+		LogInfo("[Junundu] Wurm Spoor found — interacting.")
+		Agent_GoSignpost($l_p_Spoor)
+		RndSleep(2500)
+		If _Vanquisher_IsJunundutransformed() Then
+			LogInfo("[Junundu] Transformation confirmed.")
+			Return True
+		EndIf
+		LogWarn("[Junundu] Transformation not confirmed after attempt " & $l_i_Attempt & " — retrying.")
+		Move($a_f_X + (($l_i_Attempt - 1) * 200), $a_f_Y, 50)
+		RndSleep(1500)
+	WEnd
+	LogError("[Junundu] Failed to mount Junundu after " & $a_i_MaxRetries & " attempts.")
+	Return False
+EndFunc
+
+; ============================================================
+; Part A — Death / wipe recovery helpers
+; ============================================================
+
+;~ Waits for the party to respawn at a shrine after a full wipe.
+;~ Returns True when the player is confirmed alive, False on timeout or stop signal.
+Func _Vanquisher_WipeRespawnWait($a_i_TimeoutMs = 120000)
+	CurrentAction("[Wipe] Awaiting shrine respawn...")
+	LogStatus("[Wipe] Party wipe detected — waiting for shrine respawn.")
+	Local $l_t_Timer = TimerInit()
+	While TimerDiff($l_t_Timer) < $a_i_TimeoutMs
+		If _Vanquisher_ShouldStop() Then Return False
+		If _Vanquisher_IsPlayerAlive() Then
+			Other_RndSleep(1000)
+			If _Vanquisher_IsPlayerAlive() Then
+				LogStatus("[Wipe] Respawn confirmed — beginning recovery.")
+				CurrentAction("[Wipe] Respawned. Starting segmented recovery.")
+				Return True
+			EndIf
+		EndIf
+		Other_RndSleep(500)
+	WEnd
+	LogError("[Wipe] Shrine respawn timed out after " & Round($a_i_TimeoutMs / 1000) & "s.")
+	_Vanquisher_LogCrash("Shrine respawn timeout", "timeout_ms=" & $a_i_TimeoutMs)
+	Return False
+EndFunc
+
+;~ Returns the index of the waypoint nearest to the player's current position.
+Func _Vanquisher_FindNearestWaypointIndex($aWaypoints)
+	Local $l_v_Me = GetAgentByID(-2)
+	If Not IsDllStruct($l_v_Me) Then Return 0
+	Local $l_f_MyX = DllStructGetData($l_v_Me, "X")
+	Local $l_f_MyY = DllStructGetData($l_v_Me, "Y")
+	Local $l_i_BestIdx = 0
+	Local $l_f_BestDist = ComputeDistanceSquared($l_f_MyX, $l_f_MyY, $aWaypoints[0][0], $aWaypoints[0][1])
+	Local $l_i_Idx, $l_f_Dist
+	For $l_i_Idx = 1 To UBound($aWaypoints) - 1
+		$l_f_Dist = ComputeDistanceSquared($l_f_MyX, $l_f_MyY, $aWaypoints[$l_i_Idx][0], $aWaypoints[$l_i_Idx][1])
+		If $l_f_Dist < $l_f_BestDist Then
+			$l_f_BestDist = $l_f_Dist
+			$l_i_BestIdx = $l_i_Idx
+		EndIf
+	Next
+	Return $l_i_BestIdx
+EndFunc
+
+;~ Walks from the waypoint nearest to the current player position up to
+;~ $a_i_TargetIndex (inclusive) using forward index order and AggroMoveTo for
+;~ each segment.  Provides:
+;~   - per-segment bounded retries ($a_i_MaxRetryPerSeg)
+;~   - movement progress watchdog (nudge on <100 GW units of movement)
+;~   - 10-minute hard timeout with abort log
+;~ If the player is already at/past the target index, moves directly to the
+;~ target waypoint in one step.
+Func _Vanquisher_SegmentedRecovery($aWaypoints, $a_i_TargetIndex, $a_i_MaxRetryPerSeg = 2)
+	Local $l_i_Count = UBound($aWaypoints)
+	If $a_i_TargetIndex < 0 Then $a_i_TargetIndex = 0
+	If $a_i_TargetIndex >= $l_i_Count Then $a_i_TargetIndex = $l_i_Count - 1
+	Local $l_i_StartIdx = _Vanquisher_FindNearestWaypointIndex($aWaypoints)
+	CurrentAction("[Recovery] Recovering: wp " & ($l_i_StartIdx + 1) & " → wp " & ($a_i_TargetIndex + 1) & ".")
+	LogStatus("[Recovery] Segmented recovery start=" & $l_i_StartIdx & " target=" & $a_i_TargetIndex & ".")
+	If $l_i_StartIdx >= $a_i_TargetIndex Then
+		LogInfo("[Recovery] At/past target — direct move to wp " & ($a_i_TargetIndex + 1) & ".")
+		AggroMoveTo($aWaypoints[$a_i_TargetIndex][0], $aWaypoints[$a_i_TargetIndex][1], "[RecDirect]", $aWaypoints[$a_i_TargetIndex][3])
+		Return
+	EndIf
+	Local $l_t_Hard = TimerInit()
+	Local $l_i_HardMs = 600000
+	Local $l_i_Seg, $l_i_Retries
+	Local $l_v_Pre, $l_v_Post
+	Local $l_f_PreX, $l_f_PreY, $l_f_PostX, $l_f_PostY, $l_f_DistToTarget, $l_f_Progress
+	For $l_i_Seg = $l_i_StartIdx To $a_i_TargetIndex
+		If _Vanquisher_ShouldStop() Then Return
+		If TimerDiff($l_t_Hard) > $l_i_HardMs Then
+			LogError("[Recovery] Hard timeout — aborting at segment " & ($l_i_Seg + 1) & ".")
+			_Vanquisher_LogCrash("Recovery hard timeout", "seg=" & $l_i_Seg)
+			Return
+		EndIf
+		$l_i_Retries = 0
+		While $l_i_Retries <= $a_i_MaxRetryPerSeg
+			If _Vanquisher_ShouldStop() Then Return
+			LogInfo("[Recovery] Segment " & ($l_i_Seg + 1) & "/" & ($a_i_TargetIndex + 1) & " attempt " & ($l_i_Retries + 1) & ".")
+			$l_v_Pre = GetAgentByID(-2)
+			$l_f_PreX = DllStructGetData($l_v_Pre, "X")
+			$l_f_PreY = DllStructGetData($l_v_Pre, "Y")
+			AggroMoveTo($aWaypoints[$l_i_Seg][0], $aWaypoints[$l_i_Seg][1], "[Rec" & ($l_i_Seg + 1) & "]", $aWaypoints[$l_i_Seg][3])
+			If _Vanquisher_ShouldStop() Or $DeadOnTheRun Then Return
+			$l_v_Post = GetAgentByID(-2)
+			$l_f_PostX = DllStructGetData($l_v_Post, "X")
+			$l_f_PostY = DllStructGetData($l_v_Post, "Y")
+			$l_f_DistToTarget = ComputeDistance($l_f_PostX, $l_f_PostY, $aWaypoints[$l_i_Seg][0], $aWaypoints[$l_i_Seg][1])
+			If $l_f_DistToTarget < 350 Then
+				LogInfo("[Recovery] Segment " & ($l_i_Seg + 1) & " reached.")
+				ExitLoop
+			EndIf
+			$l_f_Progress = ComputeDistance($l_f_PreX, $l_f_PreY, $l_f_PostX, $l_f_PostY)
+			If $l_f_Progress < 100 And $l_i_Retries < $a_i_MaxRetryPerSeg Then
+				LogWarn("[Recovery] Stuck on segment " & ($l_i_Seg + 1) & " (moved " & Round($l_f_Progress) & ") — nudging.")
+				Move($l_f_PostX + 300, $l_f_PostY, 100)
+				RndSleep(1500)
+			EndIf
+			$l_i_Retries += 1
+			If $l_i_Retries > $a_i_MaxRetryPerSeg Then
+				LogWarn("[Recovery] Segment " & ($l_i_Seg + 1) & " skipped after max retries.")
+				_Vanquisher_LogCrash("Recovery segment skip", "seg=" & $l_i_Seg)
+			EndIf
+		WEnd
+	Next
+	LogStatus("[Recovery] Complete — resumed at wp " & ($a_i_TargetIndex + 1) & ".")
+	CurrentAction("[Recovery] Route resumed at waypoint " & ($a_i_TargetIndex + 1) & ".")
+EndFunc
+
+Func _Vanquisher_HandleWaypointExtras($aWaypoints, $a_i_Index, $a_b_Reverse = False)
+	Local $l_b_IsShrineStep = _Vanquisher_IsShrineBlessingMap() And ($aWaypoints[$a_i_Index][2] = "shrine" Or _Vanquisher_IsDuplicateShrineStep($aWaypoints, $a_i_Index, $a_b_Reverse))
+	If $l_b_IsShrineStep Then
+		_Vanquisher_TryNornShrineBlessing($aWaypoints[$a_i_Index][0], $aWaypoints[$a_i_Index][1])
+	EndIf
+	If $aWaypoints[$a_i_Index][2] = "wait20" Then
+		CurrentAction("Waiting for snowball...")
+		Sleep(20000)
+	EndIf
+	If $aWaypoints[$a_i_Index][2] = "junundu" Then
+		_Vanquisher_MountJununduAtWaypoint($aWaypoints[$a_i_Index][0], $aWaypoints[$a_i_Index][1])
+	EndIf
 EndFunc
 
 ; Standard forward + reverse route (use for any map with both passes).
@@ -53,16 +336,23 @@ Func MoveandAggroVQ($aWaypoints)
         $RangeLimit = $aWaypoints[$Index][3]
         If _Vanquisher_CheckVanquishDuringRoute($timer, " (forward)") Then Return
         AggroMoveTo($aWaypoints[$Index][0], $aWaypoints[$Index][1], $aWaypoints[$Index][2] & $ActionCounter, $aWaypoints[$Index][3])
+        _Vanquisher_HandleWaypointExtras($aWaypoints, $Index)
         $ActionCounter += 1
         If _Vanquisher_IsVanquishComplete() Then
             If _Vanquisher_OnVanquishComplete(" (forward)") Then Return
         EndIf
         If $DeadOnTheRun Then
-            CurrentAction("We died fighting at: " & $aWaypoints[$Index][2] & $ActionCounter & ", restarting waypoints.")
+            Local $l_i_DeathIndex = $Index
+            _Vanquisher_SaveDeathCheckpoint($Title, GetMapID(), $aWaypoints[$Index][0], $aWaypoints[$Index][1], $Index)
+            LogStatus("[Wipe] Forward route — wiped at waypoint " & ($l_i_DeathIndex + 1) & ".")
+            $DeadOnTheRun = 0
+            $BlockCount = 20
+            If Not _Vanquisher_WipeRespawnWait() Then Return
+            _Vanquisher_SegmentedRecovery($aWaypoints, $l_i_DeathIndex)
+            If _Vanquisher_ShouldStop() Or $DeadOnTheRun Then Return
+            _Vanquisher_ClearDeathCheckpoint()
             $ActionCounter = 1
-        	$Index = 0
-        	$DeadOnTheRun = 0
-            $BlockCount = 2; let's try and get back to our spot ASAP 
+            $Index = $l_i_DeathIndex - 1
         EndIf
     Next
     If _Vanquisher_IsVanquishComplete() Then
@@ -79,6 +369,7 @@ Func MoveandAggroVQWurm($aWaypoints)
         If _Vanquisher_ShouldStop() Then Return
         If _Vanquisher_CheckVanquishDuringRoute($timer, " (wurm)") Then Return
         AggroMoveTo($aWaypoints[$Index][0], $aWaypoints[$Index][1], $aWaypoints[$Index][2] & $ActionCounter, $aWaypoints[$Index][3])
+        _Vanquisher_HandleWaypointExtras($aWaypoints, $Index)
         $ActionCounter += 1
         If _Vanquisher_IsVanquishComplete() Then
             If _Vanquisher_OnVanquishComplete(" (wurm)") Then Return
@@ -100,16 +391,23 @@ Func MoveandAggroVQReverse($aWaypoints)
         If _Vanquisher_ShouldStop() Then Return
         If _Vanquisher_CheckVanquishDuringRoute($timer, " (reverse)") Then Return
         AggroMoveTo($aWaypoints[$Index][0], $aWaypoints[$Index][1], $aWaypoints[$Index][2] & $ActionCounter, $aWaypoints[$Index][3])
+        _Vanquisher_HandleWaypointExtras($aWaypoints, $Index, True)
         $ActionCounter += 1
         If _Vanquisher_IsVanquishComplete() Then
             If _Vanquisher_OnVanquishComplete(" (reverse)") Then Return
         EndIf
         If $DeadOnTheRun Then
-            CurrentAction("We died fighting at: " & $aWaypoints[$Index][2] & $ActionCounter & ", restarting waypoints.")
+            Local $l_i_DeathIndex = $Index
+            _Vanquisher_SaveDeathCheckpoint($Title, GetMapID(), $aWaypoints[$Index][0], $aWaypoints[$Index][1], $Index)
+            LogStatus("[Wipe] Reverse route — wiped at waypoint " & ($l_i_DeathIndex + 1) & ".")
+            $DeadOnTheRun = 0
+            $BlockCount = 20
+            If Not _Vanquisher_WipeRespawnWait() Then Return
+            _Vanquisher_SegmentedRecovery($aWaypoints, $l_i_DeathIndex)
+            If _Vanquisher_ShouldStop() Or $DeadOnTheRun Then Return
+            _Vanquisher_ClearDeathCheckpoint()
             $ActionCounter = 1
-        	$Index = UBound($aWaypoints) - 1
-        	$DeadOnTheRun = 0
-            $BlockCount = 2; let's try and get back to our spot ASAP 
+            $Index = $l_i_DeathIndex + 1
         EndIf
     Next
     If _Vanquisher_IsVanquishComplete() Then
@@ -397,6 +695,7 @@ EndFunc
 
 Func AggroMoveTo($x, $y, $s = "", $z = 1450)
 	If _Vanquisher_ShouldStop() Then Return
+	If Map_GetInstanceInfo("IsLoading") Or Not Map_GetInstanceInfo("IsExplorable") Then Return
 	If Not $g_b_Vanquisher_TransitOnly And _Vanquisher_IsVanquishComplete() Then
 		_Vanquisher_OnVanquishComplete(" (waypoint)")
 		Return
@@ -417,6 +716,10 @@ Func AggroMoveTo($x, $y, $s = "", $z = 1450)
 
 	Do
 		If $DeadOnTheRun Or _Vanquisher_ShouldStop() Then ExitLoop
+		If Map_GetInstanceInfo("IsLoading") Or Not Map_GetInstanceInfo("IsExplorable") Then
+			_Vanquisher_ResetCombatState("movement loop exited after zoning")
+			ExitLoop
+		EndIf
 		If _Vanquisher_CountDeadPartyMembers() > 0 And _Vanquisher_ShouldAttemptResurrection() Then
 			_Vanquisher_HandlePartyResurrection($VANQUISHER_REZ_COMBAT_WAIT_MS)
 			If GetPartyDead() Then $DeadOnTheRun = 1
@@ -448,7 +751,7 @@ Func AggroMoveTo($x, $y, $s = "", $z = 1450)
 				Move($x, $y, $random)
 			EndIf
 		EndIf
-		If $boolOpenChests Then 
+		If $boolOpenChests Then
 			CheckForChest()
 		EndIf
 
@@ -467,13 +770,11 @@ Func AggroMoveTo($x, $y, $s = "", $z = 1450)
 			RndSleep(350)
 			Move($x, $y, $random)
 		EndIf
-		If $boolOpenChests Then 
+		If $boolOpenChests Then
 			CheckForChest()
 		EndIf
 	Until ComputeDistance($coordsX, $coordsY, $x, $y) < 250 Or $iBlocked > $BlockCount
 EndFunc   ;==>AggroMoveTo
-
-
 Func _IsOpenChestsEnabled()
     Global $Bool_OpenChests, $Gui_OpenChests
     If $Bool_OpenChests Then Return True

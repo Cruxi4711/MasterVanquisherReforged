@@ -2,22 +2,36 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aMajestysRestOutpostPath[2][2] = [ _
-	[-5199, 16327], _
-	[-5252, 15997] _
+Local $aMajestysRestOutpostPath[1][2] = [ _
+	[-5199, 16327] _
 ]
 
-Global $aMajestysRestTransitPath[7][2] = [ _
+; Temple of the Ages (138) -> The Black Curtain (18).
+Local Const $MAJESTYSREST_TEMPLE_PORTAL_X = -5243
+Local Const $MAJESTYSREST_TEMPLE_PORTAL_Y = 15961
+
+; The Black Curtain (18) -> Talmark Wilderness (17). Last path point is approach; portal is separate.
+Local Const $MAJESTYSREST_BLACKCURTAIN_PORTAL_X = -20304
+Local Const $MAJESTYSREST_BLACKCURTAIN_PORTAL_Y = 1824
+
+; Talmark Wilderness (17) -> Majesty's Rest (60). Last path point is approach; portal is separate.
+Local Const $MAJESTYSREST_TALMARK_PORTAL_X = -20339
+Local Const $MAJESTYSREST_TALMARK_PORTAL_Y = 3824
+
+Global Const $MAJESTYSREST_TRANSIT_WIK = $GC_I_MAP_ID_WAR_IN_KRYTA_TALMARK_WILDERNESS
+
+Local $aMajestysRestTransitPath[8][2] = [ _
 	[-6302, 14890], _
-	[-13411, 14710], _
-	[-16718, 13517], _
+	[-12310, 14349], _
+	[-15074, 13794], _
+	[-16069, 13242], _
+	[-17215, 12961], _
 	[-17978, 10435], _
 	[-18374, 7235], _
-	[-20108, 2457], _
-	[-20274, 1812] _
+	[-20108, 2457] _
 ]
 
-Global $aMajestysRestTransit2Path[11][2] = [ _
+Local $aMajestysRestTransit2Path[10][2] = [ _
 	[16716, 2887], _
 	[11180, 7961], _
 	[3437, 8483], _
@@ -27,69 +41,124 @@ Global $aMajestysRestTransit2Path[11][2] = [ _
 	[-14167, 10912], _
 	[-17071, 7303], _
 	[-18812, 5631], _
-	[-19523, 3658], _
-	[-20190, 3714] _
+	[-19523, 3658] _
 ]
 
+; War in Kryta Talmark (837) -> Majesty's Rest (60). Approach only; portal is separate.
+Local $aMajestysRestWiKTransitPath[20][2] = [ _
+	[18554, 867], _
+	[17307, 2055], _
+	[14928, 4637], _
+	[12891, 6640], _
+	[10948, 7939], _
+	[7209, 7811], _
+	[2658, 8255], _
+	[-365, 8385], _
+	[-2377, 5137], _
+	[-3942, 2242], _
+	[-6322, 1748], _
+	[-8319, 3291], _
+	[-9942, 5001], _
+	[-10717, 7393], _
+	[-12610, 9544], _
+	[-14841, 10697], _
+	[-16086, 9916], _
+	[-16913, 7472], _
+	[-18487, 6350], _
+	[-19323, 3650] _
+]
+
+Func _Vanquisher_ResetMajestysRestRouteProgress()
+	$g_i_MajestysRestRoute_LastMapHandled = -1
+EndFunc
+
+; Temple of the Ages (138) -> The Black Curtain (18) -> Talmark (17 or WiK 837) -> Majesty's Rest farm (60).
 Func GoOutMajestysRest()
 	Local $l_i_Map = GetMapID()
 
 	If $l_i_Map = $MajestysRest_Map Then Return
 
 	If $l_i_Map = $MajestysRest_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_MajestysRestRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> MajestysRest (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aMajestysRestOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Temple of the Ages -> The Black Curtain (portal 1).")
+		_Vanquisher_RunAggroApproachPath($aMajestysRestOutpostPath, $vqrange, "temple ")
+		_Vanquisher_RunPortalStep($MAJESTYSREST_TEMPLE_PORTAL_X, $MAJESTYSREST_TEMPLE_PORTAL_Y, $vqrange, "temple portal")
+		If GetMapID() <> $l_i_Map Then $g_i_MajestysRestRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $MajestysRest_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_MajestysRestRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> MajestysRest (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aMajestysRestTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("The Black Curtain (transit) -> Talmark Wilderness (portal 2).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying Talmark Wilderness portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		Local $l_i_BlackCurtain = $MajestysRest_Transit
+		_Vanquisher_RunAggroApproachPath($aMajestysRestTransitPath, $vqrange, "blackcurtain ")
+		If GetMapID() = $l_i_BlackCurtain Then
+			_Vanquisher_RunPortalStep($MAJESTYSREST_BLACKCURTAIN_PORTAL_X, $MAJESTYSREST_BLACKCURTAIN_PORTAL_Y, $vqrange, "blackcurtain portal")
+		EndIf
+		If GetMapID() = $MajestysRest_Transit2 Or GetMapID() = $MAJESTYSREST_TRANSIT_WIK Then
+			$g_i_MajestysRestRoute_LastMapHandled = $l_i_BlackCurtain
+		EndIf
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
-	If $l_i_Map = $MajestysRest_Transit2 Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+	If $l_i_Map = $MajestysRest_Transit2 Or $l_i_Map = $MAJESTYSREST_TRANSIT_WIK Then
+		If $g_i_MajestysRestRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> MajestysRest (portal 3)")
-		_Vanquisher_RunAggroPortalPath($aMajestysRestTransit2Path, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Talmark Wilderness (transit) -> Majesty's Rest (portal 3).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying Majesty's Rest portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		Local $l_i_Talmark = $l_i_Map
+		If $l_i_Map = $MAJESTYSREST_TRANSIT_WIK Then
+			_Vanquisher_RunAggroApproachPath($aMajestysRestWiKTransitPath, $vqrange, "wiktalmark ")
+		Else
+			_Vanquisher_RunAggroApproachPath($aMajestysRestTransit2Path, $vqrange, "talmark ")
+		EndIf
+		If GetMapID() = $l_i_Talmark Then
+			_Vanquisher_RunPortalStep($MAJESTYSREST_TALMARK_PORTAL_X, $MAJESTYSREST_TALMARK_PORTAL_Y, $vqrange, "talmark portal")
+		EndIf
+		If GetMapID() = $MajestysRest_Map Then $g_i_MajestysRestRoute_LastMapHandled = $l_i_Talmark
 		$g_b_Vanquisher_TransitOnly = False
-		Return
 	EndIf
-
 EndFunc
 
 Func VQMajestysRest()
-	If GetMapID() <> $MajestysRest_Map And GetMapID() <> $MajestysRest_Outpost And GetMapID() <> $MajestysRest_Transit And GetMapID() <> $MajestysRest_Transit2 Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for MajestysRest.")
+	If GetMapID() <> $MajestysRest_Map And GetMapID() <> $MajestysRest_Outpost And GetMapID() <> $MajestysRest_Transit And GetMapID() <> $MajestysRest_Transit2 And GetMapID() <> $MAJESTYSREST_TRANSIT_WIK Then
+		_Vanquisher_ResetMajestysRestRouteProgress()
+		CurrentAction("Traveling to Temple of the Ages for Majesty's Rest.")
 		TravelTo($MajestysRest_Outpost)
 	EndIf
 
-	If GetMapID() = $MajestysRest_Outpost Or GetMapID() = $MajestysRest_Transit Or GetMapID() = $MajestysRest_Transit2 Then
+	If GetMapID() = $MajestysRest_Outpost Or GetMapID() = $MajestysRest_Transit Or GetMapID() = $MajestysRest_Transit2 Or GetMapID() = $MAJESTYSREST_TRANSIT_WIK Then
 		_Vanquisher_ApplyDifficulty()
-		GoOutMajestysRest()
+		GoOut()
 		If GetMapID() <> $MajestysRest_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need MajestysRest (" & $MajestysRest_Map & ").")
+			CurrentAction("Routing — on map " & GetMapID() & ", need Majesty's Rest (" & $MajestysRest_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $MajestysRest_Map Then
-		CurrentAction("MajestysRest route waiting - on map " & GetMapID() & ", need " & $MajestysRest_Map & ".")
+		CurrentAction("Majesty's Rest route waiting — on map " & GetMapID() & ", need " & $MajestysRest_Map & ".")
 		Return
 	EndIf
 
-	CurrentAction("Starting MajestysRest vanquish route.")
+	CurrentAction("Starting Majesty's Rest vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
 
 	Local $aWaypoints[77][4] = [ _
 		[21522, -3238, " ", $vqrange], _

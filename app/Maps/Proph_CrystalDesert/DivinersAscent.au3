@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aDivinersAscentOutpostPath[2][2] = [ _
+Local $aDivinersAscentOutpostPath[2][2] = [ _
 	[16763, 6828], _
 	[17024, 6837] _
 ]
@@ -17,7 +17,7 @@ Func GoOutDivinersAscent()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> DivinersAscent (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aDivinersAscentOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQDivinersAscent()
 		If GetMapID() <> $DivinersAscent_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need DivinersAscent (" & $DivinersAscent_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $DivinersAscent_Map Then
@@ -47,7 +47,7 @@ Func VQDivinersAscent()
 
 	CurrentAction("Starting DivinersAscent vanquish route.")
 
-	Local $aWaypoints[56][4] = [ _
+	Local $aWaypoints[102][4] = [ _
 		[-5681, 3541, " ", $vqrange], _
 		[-2632, 6401, " ", $vqrange], _
 		[-1332, 8504, " ", $vqrange], _
@@ -89,6 +89,7 @@ Func VQDivinersAscent()
 		[7664, -2845, " ", $vqrange], _
 		[9040, -4989, " ", $vqrange], _
 		[12198, -6182, " ", $vqrange], _
+		[16226, -2801, " ", $vqrange], _
 		[15591, -4735, " ", $vqrange], _
 		[15606, -7162, " ", $vqrange], _
 		[17114, -10290, " ", $vqrange], _
@@ -103,7 +104,52 @@ Func VQDivinersAscent()
 		[8, -15799, " ", $vqrange], _
 		[-9612, -15123, " ", $vqrange], _
 		[-9848, -12998, " ", $vqrange], _
-		[-13444, -13808, " ", $vqrange] ]
+		[-13444, -13808, " ", $vqrange], _
+		[-11025, -14680, " ", $vqrange], _
+		[-8547, -14141, " ", $vqrange], _
+		[-6065, -13767, " ", $vqrange], _
+		[-3541, -13792, " ", $vqrange], _
+		[-1039, -14192, " ", $vqrange], _
+		[1457, -13471, " ", $vqrange], _
+		[3961, -13076, " ", $vqrange], _
+		[6228, -14230, " ", $vqrange], _
+		[6688, -11732, " ", $vqrange], _
+		[7122, -9188, " ", $vqrange], _
+		[7753, -6721, " ", $vqrange], _
+		[5450, -5526, " ", $vqrange], _
+		[3126, -4384, " ", $vqrange], _
+		[1818, -6587, " ", $vqrange], _
+		[4325, -6953, " ", $vqrange], _
+		[6841, -6723, " ", $vqrange], _
+		[9279, -7322, " ", $vqrange], _
+		[10499, -5136, " ", $vqrange], _
+		[10236, -2304, " ", $vqrange], _
+		[9401, 70, " ", $vqrange], _
+		[11290, 1863, " ", $vqrange], _
+		[11619, 4416, " ", $vqrange], _
+		[10642, 6753, " ", $vqrange], _
+		[10942, 9249, " ", $vqrange], _
+		[12846, 10949, " ", $vqrange], _
+		[11615, 13185, " ", $vqrange], _
+		[9068, 13521, " ", $vqrange], _
+		[7135, 15162, " ", $vqrange], _
+		[4624, 15315, " ", $vqrange], _
+		[4680, 12812, " ", $vqrange], _
+		[2990, 10960, " ", $vqrange], _
+		[1821, 8688, " ", $vqrange], _
+		[4042, 9910, " ", $vqrange], _
+		[2555, 11966, " ", $vqrange], _
+		[863, 13827, " ", $vqrange], _
+		[-673, 15820, " ", $vqrange], _
+		[-2993, 16886, " ", $vqrange], _
+		[-5452, 16192, " ", $vqrange], _
+		[-6873, 14110, " ", $vqrange], _
+		[-8406, 12001, " ", $vqrange], _
+		[-10268, 10308, " ", $vqrange], _
+		[-12058, 8536, " ", $vqrange], _
+		[-14251, 9905, " ", $vqrange], _
+		[-15545, 12056, " ", $vqrange], _
+		[-16934, 14194, " ", $vqrange] ]
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

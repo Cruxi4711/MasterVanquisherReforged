@@ -1,5 +1,5 @@
 #include <Array.au3>
-Global $vqrange = 1450
+Local $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQDejarinEstate()

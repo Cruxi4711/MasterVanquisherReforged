@@ -1,17 +1,28 @@
-#include <Array.au3>
+﻿#include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQPongmeiValley()
-    If GetMapID() <> $PongmeiValley_Map And GetMapID() <> $PongmeiValley_Outpost  Then TravelTo($PongmeiValley_Outpost)   
-    If GetMapID() = $PongmeiValley_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $PongmeiValley_Map And GetMapID() <> $PongmeiValley_Outpost Then
+		CurrentAction("Traveling to outpost for Pongmei Valley.")
+		TravelTo($PongmeiValley_Outpost)
+	EndIf
 
-	If GetMapID() = $PongmeiValley_Map Then    
-		
-		Local $aWaypoints[73][4] = [ [-13428, 8312, " ", $vqrange] _		
+	If GetMapID() = $PongmeiValley_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
+
+	If GetMapID() <> $PongmeiValley_Map Then
+		CurrentAction("Pongmei Valley route waiting - on map " & GetMapID() & ", need " & $PongmeiValley_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Pongmei Valley vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[73][4] = [ [-13428, 8312, " ", $vqrange] _		
 		, [-15570, 9936, " ", $vqrange] _
 		, [-17509, 8482, " ", $vqrange] _
 		, [-15625, 6067, " ", $vqrange] _
@@ -84,6 +95,5 @@ Func VQPongmeiValley()
 		, [-7448, 6511, " ", $vqrange] _
 		, [-8561, 4527, " ", $vqrange] _
 		, [-6338.81, 2517.30, " ", $vqrange] ]
-		MoveandAggroVQFullRoute($aWaypoints)
-    EndIf
+	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

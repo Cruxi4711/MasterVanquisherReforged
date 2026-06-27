@@ -2,12 +2,20 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aMineralSpringsOutpostPath[2][2] = [ _
-	[-10030, 18833], _
-	[-9797, 19027] _
+; Granite Citadel (156) -> Tasca's Demise (92).
+Local Const $MINERALSPRINGS_GRANITE_PORTAL_X = -9381
+Local Const $MINERALSPRINGS_GRANITE_PORTAL_Y = 19732
+
+Local $aMineralSpringsOutpostPath[2][2] = [ _
+	[-10000, 18875], _
+	[-9250, 19850] _
 ]
 
-Global $aMineralSpringsTransitPath[11][2] = [ _
+; Tasca's Demise (92) -> Mineral Springs (96). Last path point is approach; portal is separate.
+Local Const $MINERALSPRINGS_TASCA_PORTAL_X = 8318
+Local Const $MINERALSPRINGS_TASCA_PORTAL_Y = 29896
+
+Local $aMineralSpringsTransitPath[11][2] = [ _
 	[-7118, 20976], _
 	[-3362, 18610], _
 	[-105, 17184], _
@@ -27,23 +35,24 @@ Func GoOutMineralSprings()
 	If $l_i_Map = $MineralSprings_Map Then Return
 
 	If $l_i_Map = $MineralSprings_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_MineralSpringsRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> MineralSprings (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aMineralSpringsOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Granite Citadel -> Tasca's Demise (portal 1).")
+		_Vanquisher_RunAggroApproachPath($aMineralSpringsOutpostPath, $vqrange, "granite ")
+		_Vanquisher_RunPortalStep($MINERALSPRINGS_GRANITE_PORTAL_X, $MINERALSPRINGS_GRANITE_PORTAL_Y, $vqrange, "granite portal")
+		If GetMapID() <> $l_i_Map Then $g_i_MineralSpringsRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $MineralSprings_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> MineralSprings (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aMineralSpringsTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
-		Return
+		If $g_i_MineralSpringsRoute_LastMapHandled = $l_i_Map Then Return
+		CurrentAction("Tasca's Demise (transit) -> Mineral Springs (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitLeg($aMineralSpringsTransitPath, $MINERALSPRINGS_TASCA_PORTAL_X, $MINERALSPRINGS_TASCA_PORTAL_Y, $vqrange, "tasca ") Then
+			CurrentAction("Transit map not ready yet � retrying Mineral Springs portal path.")
+			Return
+		EndIf
+		If GetMapID() = $MineralSprings_Map Then $g_i_MineralSpringsRoute_LastMapHandled = $l_i_Map
 	EndIf
 
 EndFunc
@@ -51,7 +60,7 @@ EndFunc
 Func VQMineralSprings()
 	If GetMapID() <> $MineralSprings_Map And GetMapID() <> $MineralSprings_Outpost And GetMapID() <> $MineralSprings_Transit Then
 		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for MineralSprings.")
+		CurrentAction("Traveling to Granite Citadel for MineralSprings.")
 		TravelTo($MineralSprings_Outpost)
 	EndIf
 
@@ -61,7 +70,7 @@ Func VQMineralSprings()
 		If GetMapID() <> $MineralSprings_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need MineralSprings (" & $MineralSprings_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $MineralSprings_Map Then
@@ -134,4 +143,3 @@ Func VQMineralSprings()
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
-

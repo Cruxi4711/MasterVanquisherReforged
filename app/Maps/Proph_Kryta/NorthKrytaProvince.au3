@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aNorthKrytaProvinceOutpostPath[4][2] = [ _
+Local $aNorthKrytaProvinceOutpostPath[4][2] = [ _
 	[810, 7749], _
 	[1458, 9940], _
 	[361, 12256], _
@@ -19,7 +19,7 @@ Func GoOutNorthKrytaProvince()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> NorthKrytaProvince (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aNorthKrytaProvinceOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -39,7 +39,7 @@ Func VQNorthKrytaProvince()
 		If GetMapID() <> $NorthKrytaProvince_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need NorthKrytaProvince (" & $NorthKrytaProvince_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $NorthKrytaProvince_Map Then
@@ -49,7 +49,7 @@ Func VQNorthKrytaProvince()
 
 	CurrentAction("Starting NorthKrytaProvince vanquish route.")
 
-	Local $aWaypoints[136][4] = [ _
+	Local $aWaypoints[141][4] = [ _
 		[5605, -16546, " ", $vqrange], _
 		[2344, -17322, " ", $vqrange], _
 		[929, -16761, " ", $vqrange], _
@@ -64,6 +64,7 @@ Func VQNorthKrytaProvince()
 		[-10282, -9766, " ", $vqrange], _
 		[-14697, -11692, " ", $vqrange], _
 		[-18691, -14755, " ", $vqrange], _
+		[-20083, -15189, " ", $vqrange], _
 		[-14759, -11692, " ", $vqrange], _
 		[-12416, -8602, " ", $vqrange], _
 		[-7436, -7373, " ", $vqrange], _
@@ -98,8 +99,12 @@ Func VQNorthKrytaProvince()
 		[567, 14773, " ", $vqrange], _
 		[667, 18647, " ", $vqrange], _
 		[8221, 18880, " ", $vqrange], _
+		[9314, 18386, " ", $vqrange], _
 		[8816, 21208, " ", $vqrange], _
+		[1449, 21429, " ", $vqrange], _
+		[2898, 21009, " ", $vqrange], _
 		[17768, 22489, " ", $vqrange], _
+		[19465, 23009, " ", $vqrange], _
 		[17541, 19417, " ", $vqrange], _
 		[16299, 16261, " ", $vqrange], _
 		[18343, 16623, " ", $vqrange], _

@@ -2,12 +2,12 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aAscalonFoothillsOutpostPath[2][2] = [ _
+Local $aAscalonFoothillsOutpostPath[2][2] = [ _
 	[9342, 4942], _
 	[9240, 3985] _
 ]
 
-Global $aAscalonFoothillsTransitPath[6][2] = [ _
+Local $aAscalonFoothillsTransitPath[6][2] = [ _
 	[8304, -458], _
 	[10540, -4383], _
 	[10274, -11684], _
@@ -22,23 +22,23 @@ Func GoOutAscalonFoothills()
 	If $l_i_Map = $AscalonFoothills_Map Then Return
 
 	If $l_i_Map = $AscalonFoothills_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_AscalonFoothillsRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> AscalonFoothills (portal 1)")
+		CurrentAction("Outpost -> Ascalon Foothills (portal 1).")
 		_Vanquisher_RunAggroPortalPath($aAscalonFoothillsOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_AscalonFoothillsRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $AscalonFoothills_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> AscalonFoothills (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aAscalonFoothillsTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
-		Return
+		If $g_i_AscalonFoothillsRoute_LastMapHandled = $l_i_Map Then Return
+		CurrentAction("Traveler's Vale (transit) -> Ascalon Foothills (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitPortalPath($aAscalonFoothillsTransitPath, $vqrange, "travelersvale ") Then
+			CurrentAction("Transit map not ready yet — retrying Ascalon Foothills portal path.")
+			Return
+		EndIf
+		If GetMapID() = $AscalonFoothills_Map Then $g_i_AscalonFoothillsRoute_LastMapHandled = $l_i_Map
 	EndIf
 
 EndFunc
@@ -56,7 +56,7 @@ Func VQAscalonFoothills()
 		If GetMapID() <> $AscalonFoothills_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need AscalonFoothills (" & $AscalonFoothills_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $AscalonFoothills_Map Then

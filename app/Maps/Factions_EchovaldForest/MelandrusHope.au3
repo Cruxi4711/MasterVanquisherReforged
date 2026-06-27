@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQMelandrusHope()
-    If GetMapID() <> $MelandrusHope_Map And GetMapID() <> $MelandrusHope_Outpost  Then TravelTo($MelandrusHope_Outpost)   
-    If GetMapID() = $MelandrusHope_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $MelandrusHope_Map And GetMapID() <> $MelandrusHope_Outpost Then
+		CurrentAction("Traveling to outpost for Melandru's Hope.")
+		TravelTo($MelandrusHope_Outpost)
+	EndIf
 
-	If GetMapID() = $MelandrusHope_Map Then    
+	If GetMapID() = $MelandrusHope_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[62][4] = [ [14778.99, 15936.15, " ", $vqrange] _
+	If GetMapID() <> $MelandrusHope_Map Then
+		CurrentAction("Melandru's Hope route waiting - on map " & GetMapID() & ", need " & $MelandrusHope_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Melandru's Hope vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[62][4] = [ [14778.99, 15936.15, " ", $vqrange] _
 		, [13383.25, 12167.86, " ", $vqrange] _
 		, [10183.48, 15669.38, " ", $vqrange] _
 		, [6569.35, 18649.86, " ", $vqrange] _
@@ -73,25 +84,26 @@ Func VQMelandrusHope()
 		, [9708.05, 1803.4, " ", $vqrange] _
 		, [12532.26, 2031.07, " ", $vqrange] _
 		, [13984.80, 7457.84, " ", $vqrange] ]
-		
-		GoNearestNPCToCoords(15202.95, 20349.68)
-	If GetKurzickFaction() > GetLuxonFaction() Then
-                Dialog(0x81)
-                Sleep(1000)
-                Dialog(0x2)
-                Sleep(1000)
-                Dialog(0x84)
-	        Sleep(1000)
-	        Dialog(0x86)
-	        Sleep(1000)
-        Else
-                Dialog(0x85)
-                Sleep(1000)
-                Dialog(0x86)
-                Sleep(1000)
-        EndIf
 
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-    EndIf
+	If Not _Vanquisher_ShouldSkipMapEntrySetup() Then
+		GoNearestNPCToCoords(15202.95, 20349.68)
+		If GetKurzickFaction() > GetLuxonFaction() Then
+			Dialog(0x81)
+			Sleep(1000)
+			Dialog(0x2)
+			Sleep(1000)
+			Dialog(0x84)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		Else
+			Dialog(0x85)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		EndIf
+	EndIf
+
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

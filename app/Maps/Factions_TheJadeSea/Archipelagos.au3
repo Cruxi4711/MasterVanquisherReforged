@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQArchipelagos()
-    If GetMapID() <> $Archipelagos_Map And GetMapID() <> $Archipelagos_Outpost  Then TravelTo($Archipelagos_Outpost)   
-    If GetMapID() = $Archipelagos_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $Archipelagos_Map And GetMapID() <> $Archipelagos_Outpost Then
+		CurrentAction("Traveling to outpost for Archipelagos.")
+		TravelTo($Archipelagos_Outpost)
+	EndIf
 
-	If GetMapID() = $Archipelagos_Map Then    
+	If GetMapID() = $Archipelagos_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[51][4] = [ [8197.62 ,9297.92, " ", $vqrange] _
+	If GetMapID() <> $Archipelagos_Map Then
+		CurrentAction("Archipelagos route waiting - on map " & GetMapID() & ", need " & $Archipelagos_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Archipelagos vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[51][4] = [ [8197.62 ,9297.92, " ", $vqrange] _
 		, [9222.12 ,7973.71, " ", $vqrange] _
 		, [13341 ,7105.67, " ", $vqrange] _
 		, [15144 ,3157.91, " ", $vqrange] _
@@ -63,25 +74,25 @@ Func VQArchipelagos()
 		, [-6859.77 ,-4873.08, " ", $vqrange] _
 		, [-8686.33 ,-5612.6, " ", $vqrange] ]
 
+	If Not _Vanquisher_ShouldSkipMapEntrySetup() Then
 		GoNearestNPCToCoords(4444.00, 10675.00)
-	If GetKurzickFaction() > GetLuxonFaction() Then
-                Dialog(0x81)
-                Sleep(1000)
-                Dialog(0x2)
-                Sleep(1000)
-                Dialog(0x84)
-	        Sleep(1000)
-	        Dialog(0x86)
-	        Sleep(1000)
-        Else
-                Dialog(0x85)
-                Sleep(1000)
-                Dialog(0x86)
-                Sleep(1000)
-        EndIf
+		If GetKurzickFaction() > GetLuxonFaction() Then
+			Dialog(0x81)
+			Sleep(1000)
+			Dialog(0x2)
+			Sleep(1000)
+			Dialog(0x84)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		Else
+			Dialog(0x85)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		EndIf
+	EndIf
 
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

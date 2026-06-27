@@ -2,7 +2,12 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aCursedLandsTransitPath[10][2] = [ _
+Local $aCursedLandsOutpostPath[2][2] = [ _
+	[-5057.52, 17188.52], _
+	[-5205, 15562] _
+]
+
+Local $aCursedLandsTransitPath[10][2] = [ _
 	[-5205, 15562], _
 	[-2349, 13986], _
 	[59, 15027], _
@@ -15,31 +20,34 @@ Global $aCursedLandsTransitPath[10][2] = [ _
 	[20018, 18317] _
 ]
 
+Func _Vanquisher_ResetCursedLandsRouteProgress()
+	$g_i_CursedLandsRoute_LastMapHandled = -1
+EndFunc
+
 Func GoOutCursedLands()
 	Local $l_i_Map = GetMapID()
 
 	If $l_i_Map = $CursedLands_Map Then Return
 
 	If $l_i_Map = $CursedLands_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_CursedLandsRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> CursedLands (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aCursedLandsOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Temple of the Ages -> The Black Curtain (portal 1).")
+		_Vanquisher_RunAggroPortalPath($aCursedLandsOutpostPath, $vqrange, "temple ")
+		If GetMapID() <> $l_i_Map Then $g_i_CursedLandsRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $CursedLands_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> CursedLands (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aCursedLandsTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
-		Return
+		If $g_i_CursedLandsRoute_LastMapHandled = $l_i_Map Then Return
+		CurrentAction("The Black Curtain (transit) -> Cursed Lands (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitPortalPath($aCursedLandsTransitPath, $vqrange, "blackcurtain ") Then
+			CurrentAction("Transit map not ready yet — retrying Cursed Lands portal path.")
+			Return
+		EndIf
+		If GetMapID() = $CursedLands_Map Then $g_i_CursedLandsRoute_LastMapHandled = $l_i_Map
 	EndIf
-
 EndFunc
 
 Func VQCursedLands()
@@ -55,7 +63,7 @@ Func VQCursedLands()
 		If GetMapID() <> $CursedLands_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need CursedLands (" & $CursedLands_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $CursedLands_Map Then

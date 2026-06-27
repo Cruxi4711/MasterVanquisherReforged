@@ -3,10 +3,11 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Local $aSacnothValleyOutpostPath[1][2] = [ _
-	[-15660, 13968]]
+Local $aSacnothOutpostPath[1][2] = [ _
+	[-15660, 13968] _
+]
 
-Local $aSacnothValleyTransitPath[18][2] = [ _
+Local $aSacnothTransitPath[18][2] = [ _
 	[-14310, 12724], _
 	[-11786, 12509], _
 	[-10014, 10738], _
@@ -24,50 +25,80 @@ Local $aSacnothValleyTransitPath[18][2] = [ _
 	[9598, -12690], _
 	[11233, -14754], _
 	[12766, -16898], _
-	[13959, -19234]]
+	[13959, -19234] _
+]
 
+; Dalada Uplands (647) -> Sacnoth Valley (651). Last path point is approach; portal is separate.
+Local Const $SACNOTHVALLEY_TRANSIT_PORTAL_X = 14468
+Local Const $SACNOTHVALLEY_TRANSIT_PORTAL_Y = -20702
+
+; Doomlore Shrine (648) -> Dalada Uplands (647).
+Local Const $SACNOTHVALLEY_OUTPOST_PORTAL_X = -15360
+Local Const $SACNOTHVALLEY_OUTPOST_PORTAL_Y = 13408
+
+Func _Vanquisher_ResetSacnothValleyRouteProgress()
+	$g_i_SacnothValleyRoute_LastMapHandled = -1
+EndFunc
+
+; Doomlore Shrine (648) -> Dalada Uplands transit (647) -> Sacnoth Valley farm (651).
 Func GoOutSacnothValley()
 	Local $l_i_Map = GetMapID()
+
 	If $l_i_Map = $SacnothValley_Map Then Return
+
 	If $l_i_Map = $SacnothValley_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_SacnothValleyRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> SacnothValley (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aSacnothValleyOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Doomlore Shrine -> Dalada Uplands (portal 1).")
+		_Vanquisher_RunAggroApproachPath($aSacnothOutpostPath, $vqrange, "doomlore ")
+		_Vanquisher_RunPortalStep($SACNOTHVALLEY_OUTPOST_PORTAL_X, $SACNOTHVALLEY_OUTPOST_PORTAL_Y, $vqrange, "doomlore portal")
+		If GetMapID() <> $l_i_Map Then $g_i_SacnothValleyRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
+
 	If $l_i_Map = $SacnothValley_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_SacnothValleyRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> SacnothValley (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aSacnothValleyTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Dalada Uplands (transit) -> Sacnoth Valley (portal 2).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying Sacnoth Valley portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		_Vanquisher_RunAggroApproachPath($aSacnothTransitPath, $vqrange, "dalada ")
+		_Vanquisher_RunPortalStep($SACNOTHVALLEY_TRANSIT_PORTAL_X, $SACNOTHVALLEY_TRANSIT_PORTAL_Y, $vqrange, "dalada portal")
+		If GetMapID() = $SacnothValley_Map Then $g_i_SacnothValleyRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
-		Return
 	EndIf
 EndFunc
 
 Func VQSacnothValley()
 	If GetMapID() <> $SacnothValley_Map And GetMapID() <> $SacnothValley_Outpost And GetMapID() <> $SacnothValley_Transit Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for SacnothValley.")
+		_Vanquisher_ResetSacnothValleyRouteProgress()
+		CurrentAction("Traveling to outpost for Sacnoth Valley.")
 		TravelTo($SacnothValley_Outpost)
 	EndIf
+
 	If GetMapID() = $SacnothValley_Outpost Or GetMapID() = $SacnothValley_Transit Then
 		_Vanquisher_ApplyDifficulty()
-		GoOutSacnothValley()
+		GoOut()
 		If GetMapID() <> $SacnothValley_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need SacnothValley (" & $SacnothValley_Map & ").")
+			CurrentAction("Routing — on map " & GetMapID() & ", need Sacnoth Valley (" & $SacnothValley_Map & ").")
 			Return
+		EndIf
 	EndIf
-	EndIf
+
 	If GetMapID() <> $SacnothValley_Map Then
-		CurrentAction("SacnothValley route waiting - on map " & GetMapID() & ", need " & $SacnothValley_Map & ".")
+		CurrentAction("Sacnoth Valley route waiting — on map " & GetMapID() & ", need " & $SacnothValley_Map & ".")
 		Return
 	EndIf
-	CurrentAction("Starting SacnothValley vanquish route.")
+
+	CurrentAction("Starting Sacnoth Valley vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
 	Local $aWaypoints[257][4] = [ _
 		[12118, 18377, " ", $vqrange], _
 		[10476, 19619, "shrine", $vqrange], _
@@ -325,6 +356,7 @@ Func VQSacnothValley()
 		[-10706, 10847, " ", $vqrange], _
 		[-12831, 12368, " ", $vqrange], _
 		[-14694, 14216, " ", $vqrange], _
-		[-15994, 16366, " ", $vqrange]]
+		[-15994, 16366, " ", $vqrange] ]
+
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

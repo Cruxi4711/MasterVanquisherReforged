@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aRegentValleyOutpostPath[4][2] = [ _
+Local $aRegentValleyOutpostPath[4][2] = [ _
 	[7936, -28412], _
 	[7194, -31058], _
 	[7208, -32163], _
@@ -19,7 +19,7 @@ Func GoOutRegentValley()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> RegentValley (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aRegentValleyOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -39,7 +39,7 @@ Func VQRegentValley()
 		If GetMapID() <> $RegentValley_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need RegentValley (" & $RegentValley_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $RegentValley_Map Then

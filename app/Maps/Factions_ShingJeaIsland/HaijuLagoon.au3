@@ -1,17 +1,28 @@
-#include <Array.au3>
+﻿#include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQHaijuLagoon()
-    If GetMapID() <> $HaijuLagoon_Map And GetMapID() <> $HaijuLagoon_Outpost  Then TravelTo($HaijuLagoon_Outpost)   
-    If GetMapID() = $HaijuLagoon_Outpost then
-        GoOut() 
-	
-    EndIf
+	If GetMapID() <> $HaijuLagoon_Map And GetMapID() <> $HaijuLagoon_Outpost Then
+		CurrentAction("Traveling to outpost for Haiju Lagoon.")
+		TravelTo($HaijuLagoon_Outpost)
+	EndIf
 
-	If GetMapID() = $HaijuLagoon_Map Then    
+	If GetMapID() = $HaijuLagoon_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[59][4] = [ [14484, -18600, " ", $vqrange] _
+	If GetMapID() <> $HaijuLagoon_Map Then
+		CurrentAction("Haiju Lagoon route waiting - on map " & GetMapID() & ", need " & $HaijuLagoon_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Haiju Lagoon vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[59][4] = [ [14484, -18600, " ", $vqrange] _
 		, [16232, -14877, " ", $vqrange] _
 		, [12196, -12428, " ", $vqrange] _
 		, [9797, -9325, " ", $vqrange] _
@@ -69,7 +80,6 @@ Func VQHaijuLagoon()
 		, [-2051, 7005, " ", $vqrange] _
 		, [-5427, 9048, " ", $vqrange] _
 		, [-68, 9818, " ", $vqrange] _
-		, [3736, 7831, " ", $vqrange] ]			
-		MoveandAggroVQFullRoute($aWaypoints)
-    EndIf
+		, [3736, 7831, " ", $vqrange] ]
+	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

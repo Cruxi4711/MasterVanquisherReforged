@@ -3,18 +3,23 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQBukdekByway()
-	If GetMapID() <> $BukdekByway_Map And GetMapID() <> $BukdekByway_Outpost Then TravelTo($BukdekByway_Outpost)
+	If GetMapID() <> $BukdekByway_Map And GetMapID() <> $BukdekByway_Outpost Then
+		CurrentAction("Traveling to outpost for Bukdek Byway.")
+		TravelTo($BukdekByway_Outpost)
+	EndIf
 	If GetMapID() = $BukdekByway_Outpost Then
 		_Vanquisher_ApplyDifficulty()
-		GoOut()
-	EndIf
-
-	If GetMapID() <> $BukdekByway_Map Then
-		CurrentAction("Bukdek route waiting — on map " & GetMapID() & ", need " & $BukdekByway_Map & ".")
 		Return
 	EndIf
 
-	CurrentAction("Starting Bukdek Byway route.")
+	If GetMapID() <> $BukdekByway_Map Then
+		CurrentAction("Bukdek Byway route waiting - on map " & GetMapID() & ", need " & $BukdekByway_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Bukdek Byway vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
 
 	Local $aWaypoints[33][4] = [ [-8896.22, -10049.12, " ", $vqrange] _
 	, [-5760.25, -8904.54, " ", $vqrange] _
@@ -50,5 +55,5 @@ Func VQBukdekByway()
 	, [-1308.34, 16657.90, " ", $vqrange] _
 	, [-9369.35, 11527.43, " ", $vqrange] ]
 
-		MoveandAggroVQFullRoute($aWaypoints)
+	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

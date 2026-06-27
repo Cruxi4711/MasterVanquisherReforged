@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQMinisterChosEstate()
-    If GetMapID() <> $MinisterChosEstate_Map And GetMapID() <> $RanMusuGardens_OutPost  Then TravelTo($RanMusuGardens_OutPost)
-    If GetMapID() = $RanMusuGardens_OutPost then
-       GoOut()
+	If GetMapID() <> $MinisterChosEstate_Map And GetMapID() <> $RanMusuGardens_OutPost Then
+		CurrentAction("Traveling to outpost for Minister Cho's Estate.")
+		TravelTo($RanMusuGardens_OutPost)
+	EndIf
 
-    EndIf
+	If GetMapID() = $RanMusuGardens_OutPost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-	If  GetMapID() = $MinisterChosEstate_Map then
+	If GetMapID() <> $MinisterChosEstate_Map Then
+		CurrentAction("Minister Cho's Estate route waiting - on map " & GetMapID() & ", need " & $MinisterChosEstate_Map & ".")
+		Return
+	EndIf
 
-		Local $aWaypoints[105][4] = [ [-19516, -1421, " ", $vqrange] _
+	CurrentAction("Starting Minister Cho's Estate vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[105][4] = [ [-19516, -1421, " ", $vqrange] _
 		, [-18432, -1723, " ", $vqrange] _
 		, [-17033, -2199, " ", $vqrange] _
 		, [-15622, -2496, " ", $vqrange] _
@@ -117,8 +128,6 @@ Func VQMinisterChosEstate()
 		, [7512, 3123, " ", $vqrange] _
 		, [11359, 5004, " ", $vqrange] ]
 
-		MoveandAggroVQ($aWaypoints)
-		MoveAndAggroVQReverse($aWaypoints)
-
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

@@ -1,16 +1,28 @@
 #include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
+
 Func VQXaquangSkyway()
-    If GetMapID() <> $XaquangSkyway_Map And GetMapID() <> $XaquangSkyway_Outpost  Then TravelTo($XaquangSkyway_Outpost)   
-    If GetMapID() = $XaquangSkyway_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $XaquangSkyway_Map And GetMapID() <> $XaquangSkyway_Outpost Then
+		CurrentAction("Traveling to outpost for Xaquang Skyway.")
+		TravelTo($XaquangSkyway_Outpost)
+	EndIf
 
-	If GetMapID() = $XaquangSkyway_Map Then    
+	If GetMapID() = $XaquangSkyway_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[66][4] = [ [2270, -9983, " ", $vqrange] _
+	If GetMapID() <> $XaquangSkyway_Map Then
+		CurrentAction("Xaquang Skyway route waiting - on map " & GetMapID() & ", need " & $XaquangSkyway_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Xaquang Skyway vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[66][4] = [ [2270, -9983, " ", $vqrange] _
 		, [422, -8499, " ", $vqrange] _
 		, [-2306, -8072, " ", $vqrange] _
 		, [-1954, -5086, " ", $vqrange] _
@@ -76,9 +88,6 @@ Func VQXaquangSkyway()
 		, [3812, 5332, " ", $vqrange] _
 		, [3707, 6331, " ", $vqrange] _
 		, [5567, 5761, " ", $vqrange] ]				
-
-		MoveandAggroVQ($aWaypoints)
-          	MoveAndAggroVQReverse($aWaypoints)
-
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

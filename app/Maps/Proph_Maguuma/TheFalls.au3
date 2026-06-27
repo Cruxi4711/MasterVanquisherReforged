@@ -2,78 +2,108 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aTheFallsOutpostPath[2][2] = [ _
-	[-14913, 578], _
-	[-15169, 426] _
+Local $aTheFallsOutpostPath[2][2] = [ _
+	[-14497, 835], _
+	[-15074, 437] _
 ]
 
-Global $aTheFallsTransitPath[9][2] = [ _
-	[-17065, -942], _
-	[-15179, -3115], _
-	[-13716, -7339], _
-	[-12855, -9881], _
-	[-15821, -10140], _
-	[-19351, -8594], _
-	[-20909, -11218], _
-	[-22657, -11462], _
-	[-23270, -11426] _
+; Ettin's Back (44) -> Reed Bog (45). Last path point is approach; portal is separate.
+Local Const $THEFALLS_TRANSIT_PORTAL_X = -23270
+Local Const $THEFALLS_TRANSIT_PORTAL_Y = -11426
+
+Local $aTheFallsTransitPath[12][2] = [ _
+	[-15468, 182], _
+	[-17369, -1254], _
+	[-15045, -3491], _
+	[-14214, -6888], _
+	[-12871, -8503], _
+	[-13425, -10161], _
+	[-15840, -10047], _
+	[-17518, -9051], _
+	[-19247, -8578], _
+	[-20052, -9789], _
+	[-21225, -11307], _
+	[-22445, -11443] _
 ]
 
-Global $aTheFallsTransit2Path[11][2] = [ _
-	[6861, 6446], _
-	[6353, 5885], _
-	[6414, 4896], _
-	[5527, 398], _
-	[5954, -3643], _
-	[2470, -4498], _
-	[-1229, -8667], _
-	[-2550, -6849], _
-	[-5626, -6814], _
-	[-6340, -7661], _
-	[-6489, -8107] _
+; Reed Bog (45) -> The Falls (46). Last path point is approach; portal is separate.
+Local Const $THEFALLS_TRANSIT2_PORTAL_X = -7444
+Local Const $THEFALLS_TRANSIT2_PORTAL_Y = -8557
+
+Local $aTheFallsTransit2Path[13][2] = [ _
+	[7020, 6680], _
+	[5146, 4827], _
+	[6116, 3654], _
+	[5890, 1132], _
+	[5715, -1765], _
+	[4996, -4440], _
+	[1538, -4971], _
+	[61, -6511], _
+	[-734, -8616], _
+	[-1950, -8705], _
+	[-2474, -6826], _
+	[-5398, -6985], _
+	[-6421, -7771] _
 ]
 
+Func _Vanquisher_ResetTheFallsRouteProgress()
+	$g_i_TheFallsRoute_LastMapHandled = -1
+EndFunc
+
+; Ventari's Refuge (139) -> Ettin's Back (44) -> Reed Bog (45) -> The Falls farm (46).
 Func GoOutTheFalls()
 	Local $l_i_Map = GetMapID()
 
 	If $l_i_Map = $TheFalls_Map Then Return
 
 	If $l_i_Map = $TheFalls_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_TheFallsRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> TheFalls (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aTheFallsOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Ventari's Refuge -> Ettin's Back (portal 1).")
+		_Vanquisher_RunAggroPortalPath($aTheFallsOutpostPath, $vqrange, "ventari ")
+		If GetMapID() <> $l_i_Map Then $g_i_TheFallsRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $TheFalls_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_TheFallsRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> TheFalls (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aTheFallsTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Ettin's Back (transit) -> Reed Bog (portal 2).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying Reed Bog portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		_Vanquisher_RunAggroApproachPath($aTheFallsTransitPath, $vqrange, "ettins ")
+		_Vanquisher_RunPortalStep($THEFALLS_TRANSIT_PORTAL_X, $THEFALLS_TRANSIT_PORTAL_Y, $vqrange, "ettins portal")
+		If GetMapID() = $TheFalls_Transit2 Then $g_i_TheFallsRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $TheFalls_Transit2 Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_TheFallsRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> TheFalls (portal 3)")
-		_Vanquisher_RunAggroPortalPath($aTheFallsTransit2Path, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Reed Bog (transit) -> The Falls (portal 3).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying The Falls portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		_Vanquisher_RunAggroApproachPath($aTheFallsTransit2Path, $vqrange, "reedbog ")
+		_Vanquisher_RunPortalStep($THEFALLS_TRANSIT2_PORTAL_X, $THEFALLS_TRANSIT2_PORTAL_Y, $vqrange, "reedbog portal")
+		If GetMapID() = $TheFalls_Map Then $g_i_TheFallsRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
-		Return
 	EndIf
-
 EndFunc
 
 Func VQTheFalls()
 	If GetMapID() <> $TheFalls_Map And GetMapID() <> $TheFalls_Outpost And GetMapID() <> $TheFalls_Transit And GetMapID() <> $TheFalls_Transit2 Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for TheFalls.")
+		_Vanquisher_ResetTheFallsRouteProgress()
+		CurrentAction("Traveling to Ventari's Refuge for The Falls.")
 		TravelTo($TheFalls_Outpost)
 	EndIf
 
@@ -81,17 +111,17 @@ Func VQTheFalls()
 		_Vanquisher_ApplyDifficulty()
 		GoOutTheFalls()
 		If GetMapID() <> $TheFalls_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need TheFalls (" & $TheFalls_Map & ").")
+			CurrentAction("Routing — on map " & GetMapID() & ", need The Falls (" & $TheFalls_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $TheFalls_Map Then
-		CurrentAction("TheFalls route waiting - on map " & GetMapID() & ", need " & $TheFalls_Map & ".")
+		CurrentAction("The Falls route waiting — on map " & GetMapID() & ", need " & $TheFalls_Map & ".")
 		Return
 	EndIf
 
-	CurrentAction("Starting TheFalls vanquish route.")
+	CurrentAction("Starting The Falls vanquish route.")
 
 	Local $aWaypoints[140][4] = [ _
 		[17116, 2201, " ", $vqrange], _

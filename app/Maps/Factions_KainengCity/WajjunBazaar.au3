@@ -1,16 +1,28 @@
 #include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
+
 Func VQWajjunBazaar()
-    If GetMapID() <> $WajjunBazaar_Map And GetMapID() <> $WajjunBazaar_Outpost  Then TravelTo($WajjunBazaar_Outpost)   
-    If GetMapID() = $WajjunBazaar_Outpost then
-       GoOut() 
+	If GetMapID() <> $WajjunBazaar_Map And GetMapID() <> $WajjunBazaar_Outpost Then
+		CurrentAction("Traveling to outpost for Wajjun Bazaar.")
+		TravelTo($WajjunBazaar_Outpost)
+	EndIf
 
-    EndIf
+	If GetMapID() = $WajjunBazaar_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-	If GetMapID() = $WajjunBazaar_Map Then    
+	If GetMapID() <> $WajjunBazaar_Map Then
+		CurrentAction("Wajjun Bazaar route waiting - on map " & GetMapID() & ", need " & $WajjunBazaar_Map & ".")
+		Return
+	EndIf
 
-		Local $aWaypoints[92][4] = [[8354, 14196, " ", $vqrange] _
+	CurrentAction("Starting Wajjun Bazaar vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[92][4] = [[8354, 14196, " ", $vqrange] _
 		, [7286, 14564, " ", $vqrange] _
 		, [4151, 13003, " ", $vqrange] _
 		, [4230, 11347, " ", $vqrange] _
@@ -102,10 +114,6 @@ Func VQWajjunBazaar()
 		, [7500, 2598, " ", $vqrange] _
 		, [9067, -740, " ", $vqrange] _
 		, [11398, 322, " ", $vqrange]]
-
-		MoveandAggroVQ($aWaypoints)
-		MoveAndAggroVQReverse($aWaypoints)
-
-	EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc
-

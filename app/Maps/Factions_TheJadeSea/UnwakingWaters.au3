@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQUnwakingWaters()
-    If GetMapID() <> $UnwakingWaters_Map And GetMapID() <> $UnwakingWaters_Outpost  Then TravelTo($UnwakingWaters_Outpost)   
-    If GetMapID() = $UnwakingWaters_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $UnwakingWaters_Map And GetMapID() <> $UnwakingWaters_Outpost Then
+		CurrentAction("Traveling to outpost for Unwaking Waters.")
+		TravelTo($UnwakingWaters_Outpost)
+	EndIf
 
-	If GetMapID() = $UnwakingWaters_Map Then    
+	If GetMapID() = $UnwakingWaters_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[23][4] = [ [3464.00, 1917.00, " ", $vqrange] _
+	If GetMapID() <> $UnwakingWaters_Map Then
+		CurrentAction("Unwaking Waters route waiting - on map " & GetMapID() & ", need " & $UnwakingWaters_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Unwaking Waters vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[23][4] = [ [3464.00, 1917.00, " ", $vqrange] _
 		, [3078.88, 5448.03, " ", $vqrange] _
 		, [797.97 , 3818.96, " ", $vqrange] _
 		, [1027.28 , 1349.43, " ", $vqrange] _
@@ -34,9 +45,7 @@ Func VQUnwakingWaters()
 		, [-3720.08, 1924.34, " ", $vqrange] _
 		, [-2685.00, -954.10, " ", $vqrange] _
 		, [-1820.30, 2831.60, " ", $vqrange] ]
-	
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

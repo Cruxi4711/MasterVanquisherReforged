@@ -2,6 +2,11 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
+Local $aGrenthsFootprintOutpostPath[2][2] = [ _
+	[1683, -1594], _
+	[4600, -27863] _
+]
+
 Func GoOutGrenthsFootprint()
 	Local $l_i_Map = GetMapID()
 
@@ -12,7 +17,7 @@ Func GoOutGrenthsFootprint()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> GrenthsFootprint (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aGrenthsFootprintOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -32,7 +37,7 @@ Func VQGrenthsFootprint()
 		If GetMapID() <> $GrenthsFootprint_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need GrenthsFootprint (" & $GrenthsFootprint_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $GrenthsFootprint_Map Then

@@ -2,59 +2,80 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aDryTopOutpostPath[2][2] = [ _
-	[852, -10457], _
+Local $aDryTopOutpostPath[2][2] = [ _
+	[820, -10349], _
 	[409, -9585] _
 ]
 
-Global $aDryTopTransitPath[14][2] = [ _
-	[370, -8607], _
-	[-504, -7172], _
-	[-5166, -8089], _
-	[-14358, -7670], _
-	[-21665, -6642], _
-	[-25990, -6089], _
-	[-24347, -3944], _
-	[-23878, -3055], _
-	[-22788, -1094], _
-	[-21448, -1480], _
-	[-21582, 2107], _
-	[-18948, 3362], _
-	[-19327, 4362], _
-	[-19513, 4863] _
+; Tangle Root (48) -> Dry Top (47). Last path point is approach; portal is separate.
+Local Const $DRYTOP_TRANSIT_PORTAL_X = -19513
+Local Const $DRYTOP_TRANSIT_PORTAL_Y = 4863
+
+Local $aDryTopTransitPath[21][2] = [ _
+	[542, -9581], _
+	[-81, -7048], _
+	[-3987, -7884], _
+	[-6970, -8091], _
+	[-8490, -8037], _
+	[-9799, -7981], _
+	[-12540, -7149], _
+	[-12147, -7126], _
+	[-14872, -7598], _
+	[-17103, -6981], _
+	[-20146, -6498], _
+	[-23690, -6319], _
+	[-25780, -6024], _
+	[-24404, -4170], _
+	[-23250, -2272], _
+	[-23010, -1212], _
+	[-21906, -1679], _
+	[-21624, 331], _
+	[-21307, 2104], _
+	[-19629, 2948], _
+	[-19395, 4235] _
 ]
 
+Func _Vanquisher_ResetDryTopRouteProgress()
+	$g_i_DryTopRoute_LastMapHandled = -1
+EndFunc
+
+; Maguuma Stade (141) -> Tangle Root transit (48) -> Dry Top farm (47).
 Func GoOutDryTop()
 	Local $l_i_Map = GetMapID()
 
 	If $l_i_Map = $DryTop_Map Then Return
 
 	If $l_i_Map = $DryTop_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_DryTopRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> DryTop (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aDryTopOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Maguuma Stade -> Tangle Root (portal 1).")
+		_Vanquisher_RunAggroPortalPath($aDryTopOutpostPath, $vqrange, "stade ")
+		If GetMapID() <> $l_i_Map Then $g_i_DryTopRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $DryTop_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_DryTopRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> DryTop (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aDryTopTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Tangle Root (transit) -> Dry Top (portal 2).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying Dry Top portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		_Vanquisher_RunAggroApproachPath($aDryTopTransitPath, $vqrange, "tangle ")
+		_Vanquisher_RunPortalStep($DRYTOP_TRANSIT_PORTAL_X, $DRYTOP_TRANSIT_PORTAL_Y, $vqrange, "tangle portal")
+		If GetMapID() = $DryTop_Map Then $g_i_DryTopRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
-		Return
 	EndIf
-
 EndFunc
 
 Func VQDryTop()
 	If GetMapID() <> $DryTop_Map And GetMapID() <> $DryTop_Outpost And GetMapID() <> $DryTop_Transit Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for DryTop.")
+		_Vanquisher_ResetDryTopRouteProgress()
+		CurrentAction("Traveling to Maguuma Stade for Dry Top.")
 		TravelTo($DryTop_Outpost)
 	EndIf
 
@@ -62,17 +83,17 @@ Func VQDryTop()
 		_Vanquisher_ApplyDifficulty()
 		GoOutDryTop()
 		If GetMapID() <> $DryTop_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need DryTop (" & $DryTop_Map & ").")
+			CurrentAction("Routing — on map " & GetMapID() & ", need Dry Top (" & $DryTop_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $DryTop_Map Then
-		CurrentAction("DryTop route waiting - on map " & GetMapID() & ", need " & $DryTop_Map & ".")
+		CurrentAction("Dry Top route waiting — on map " & GetMapID() & ", need " & $DryTop_Map & ".")
 		Return
 	EndIf
 
-	CurrentAction("Starting DryTop vanquish route.")
+	CurrentAction("Starting Dry Top vanquish route.")
 
 	Local $aWaypoints[45][4] = [ _
 		[4726, -6046, " ", $vqrange], _
@@ -123,4 +144,3 @@ Func VQDryTop()
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
-

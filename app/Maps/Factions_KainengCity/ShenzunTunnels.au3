@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQShenzunTunnels()
-    If GetMapID() <> $ShenzunTunnels_Map And GetMapID() <> $ShenzunTunnels_Outpost  Then TravelTo($ShenzunTunnels_Outpost)   
-    If GetMapID() = $ShenzunTunnels_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $ShenzunTunnels_Map And GetMapID() <> $ShenzunTunnels_Outpost Then
+		CurrentAction("Traveling to outpost for Shenzun Tunnels.")
+		TravelTo($ShenzunTunnels_Outpost)
+	EndIf
 
-	If GetMapID() = $ShenzunTunnels_Map Then    
+	If GetMapID() = $ShenzunTunnels_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[66][4] = [ [6219, -18196, " ", $vqrange] _
+	If GetMapID() <> $ShenzunTunnels_Map Then
+		CurrentAction("Shenzun Tunnels route waiting - on map " & GetMapID() & ", need " & $ShenzunTunnels_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Shenzun Tunnels vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[66][4] = [ [6219, -18196, " ", $vqrange] _
 		, [6608, -13566, " ", $vqrange] _
 		, [8030, -11589, " ", $vqrange] _
 		, [7502, -9586, " ", $vqrange] _
@@ -77,9 +88,6 @@ Func VQShenzunTunnels()
 		, [1542, 3357, " ", $vqrange] _
 		, [1255, -373, " ", $vqrange] _
 		, [-809, -571, " ", $vqrange] ]
-		
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

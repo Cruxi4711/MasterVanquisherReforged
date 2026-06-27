@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQSunquaVale()
-    If GetMapID() <> $SunquaVale_Map And GetMapID() <> $SunquaVale_Outpost  Then TravelTo($SunquaVale_Outpost)   
-    If GetMapID() = $SunquaVale_Outpost then
-        GoOut() 
+	If GetMapID() <> $SunquaVale_Map And GetMapID() <> $SunquaVale_Outpost Then
+		CurrentAction("Traveling to outpost for Sunqua Vale.")
+		TravelTo($SunquaVale_Outpost)
+	EndIf
 
-    EndIf
+	If GetMapID() = $SunquaVale_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-	If GetMapID() = $SunquaVale_Map Then    
+	If GetMapID() <> $SunquaVale_Map Then
+		CurrentAction("Sunqua Vale route waiting - on map " & GetMapID() & ", need " & $SunquaVale_Map & ".")
+		Return
+	EndIf
 
-		Local $aWaypoints[90][4] = [ [17277, -8881, " ", $vqrange] _		
+	CurrentAction("Starting Sunqua Vale vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[90][4] = [ [17277, -8881, " ", $vqrange] _		
 		, [15100, -8128, " ", $vqrange] _
 		, [13488, -8588, " ", $vqrange] _
 		, [13720, -11647, " ", $vqrange] _
@@ -101,10 +112,8 @@ Func VQSunquaVale()
 		, [3171, -8449, " ", $vqrange] _
 		, [5523, -7143, " ", $vqrange] _
 		, [3067, -4529, " ", $vqrange] ]
-		
-		MoveandAggroVQ($aWaypoints)
-		MoveAndAggroVQReverse($aWaypoints)
-        
-    EndIf
+
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc
 

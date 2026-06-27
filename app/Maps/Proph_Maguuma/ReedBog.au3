@@ -2,54 +2,71 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aReedBogOutpostPath[2][2] = [ _
-	[-14913, 578], _
-	[-15169, 426] _
+Local $aReedBogOutpostPath[2][2] = [ _
+	[-14497, 835], _
+	[-15074, 437] _
 ]
 
-Global $aReedBogTransitPath[9][2] = [ _
-	[-17065, -942], _
-	[-15179, -3115], _
-	[-13716, -7339], _
-	[-12855, -9881], _
-	[-15821, -10140], _
-	[-19351, -8594], _
-	[-20909, -11218], _
-	[-22657, -11462], _
-	[-23270, -11426] _
+; Ettin's Back (44) -> Reed Bog (45). Last path point is approach; portal is separate.
+Local Const $REEDBOG_TRANSIT_PORTAL_X = -23270
+Local Const $REEDBOG_TRANSIT_PORTAL_Y = -11426
+
+Local $aReedBogTransitPath[12][2] = [ _
+	[-15468, 182], _
+	[-17369, -1254], _
+	[-15045, -3491], _
+	[-14214, -6888], _
+	[-12871, -8503], _
+	[-13425, -10161], _
+	[-15840, -10047], _
+	[-17518, -9051], _
+	[-19247, -8578], _
+	[-20052, -9789], _
+	[-21225, -11307], _
+	[-22445, -11443] _
 ]
 
+Func _Vanquisher_ResetReedBogRouteProgress()
+	$g_i_ReedBogRoute_LastMapHandled = -1
+EndFunc
+
+; Ventari's Refuge (139) -> Ettin's Back transit (44) -> Reed Bog farm (45).
 Func GoOutReedBog()
 	Local $l_i_Map = GetMapID()
 
 	If $l_i_Map = $ReedBog_Map Then Return
 
 	If $l_i_Map = $ReedBog_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_ReedBogRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> ReedBog (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aReedBogOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Ventari's Refuge -> Ettin's Back (portal 1).")
+		_Vanquisher_RunAggroPortalPath($aReedBogOutpostPath, $vqrange, "ventari ")
+		If GetMapID() <> $l_i_Map Then $g_i_ReedBogRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $ReedBog_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_ReedBogRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> ReedBog (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aReedBogTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Ettin's Back (transit) -> Reed Bog (portal 2).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying Reed Bog portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		_Vanquisher_RunAggroApproachPath($aReedBogTransitPath, $vqrange, "ettins ")
+		_Vanquisher_RunPortalStep($REEDBOG_TRANSIT_PORTAL_X, $REEDBOG_TRANSIT_PORTAL_Y, $vqrange, "ettins portal")
+		If GetMapID() = $ReedBog_Map Then $g_i_ReedBogRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
-		Return
 	EndIf
-
 EndFunc
 
 Func VQReedBog()
 	If GetMapID() <> $ReedBog_Map And GetMapID() <> $ReedBog_Outpost And GetMapID() <> $ReedBog_Transit Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for ReedBog.")
+		_Vanquisher_ResetReedBogRouteProgress()
+		CurrentAction("Traveling to Ventari's Refuge for Reed Bog.")
 		TravelTo($ReedBog_Outpost)
 	EndIf
 
@@ -57,17 +74,17 @@ Func VQReedBog()
 		_Vanquisher_ApplyDifficulty()
 		GoOutReedBog()
 		If GetMapID() <> $ReedBog_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need ReedBog (" & $ReedBog_Map & ").")
+			CurrentAction("Routing — on map " & GetMapID() & ", need Reed Bog (" & $ReedBog_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $ReedBog_Map Then
-		CurrentAction("ReedBog route waiting - on map " & GetMapID() & ", need " & $ReedBog_Map & ".")
+		CurrentAction("Reed Bog route waiting — on map " & GetMapID() & ", need " & $ReedBog_Map & ".")
 		Return
 	EndIf
 
-	CurrentAction("Starting ReedBog vanquish route.")
+	CurrentAction("Starting Reed Bog vanquish route.")
 
 	Local $aWaypoints[28][4] = [ _
 		[7164, 7081, " ", $vqrange], _
@@ -101,4 +118,3 @@ Func VQReedBog()
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
-

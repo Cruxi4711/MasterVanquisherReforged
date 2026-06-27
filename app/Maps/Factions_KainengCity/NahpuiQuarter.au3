@@ -1,17 +1,28 @@
-#include <Array.au3>
+﻿#include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQNahpuiQuarter()
-    If GetMapID() <> $NahpuiQuarter_Map And GetMapID() <> $NahpuiQuarter_Outpost  Then TravelTo($NahpuiQuarter_Outpost)   
-    If GetMapID() = $NahpuiQuarter_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $NahpuiQuarter_Map And GetMapID() <> $NahpuiQuarter_Outpost Then
+		CurrentAction("Traveling to outpost for Nahpui Quarter.")
+		TravelTo($NahpuiQuarter_Outpost)
+	EndIf
 
-	If GetMapID() = $NahpuiQuarter_Map Then    
+	If GetMapID() = $NahpuiQuarter_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[46][4] = [ [10479, 12811, " ", $vqrange] _
+	If GetMapID() <> $NahpuiQuarter_Map Then
+		CurrentAction("Nahpui Quarter route waiting - on map " & GetMapID() & ", need " & $NahpuiQuarter_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Nahpui Quarter vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[46][4] = [ [10479, 12811, " ", $vqrange] _
 		, [10822, 11027, " ", $vqrange] _
 		, [15752, 10208, " ", $vqrange] _
 		, [19168, 6476, " ", $vqrange] _
@@ -58,8 +69,6 @@ Func VQNahpuiQuarter()
 		, [12413, -3364, " ", $vqrange] _
 		, [13840, -2163, " ", $vqrange] ]
 
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

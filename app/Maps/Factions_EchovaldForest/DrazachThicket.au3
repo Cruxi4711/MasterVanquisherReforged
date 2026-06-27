@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQDrazachThicket()
-    If GetMapID() <> $DrazachThicket_Map And GetMapID() <> $DrazachThicket_Outpost  Then TravelTo($DrazachThicket_Outpost)   
-    If GetMapID() = $DrazachThicket_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $DrazachThicket_Map And GetMapID() <> $DrazachThicket_Outpost Then
+		CurrentAction("Traveling to outpost for Drazach Thicket.")
+		TravelTo($DrazachThicket_Outpost)
+	EndIf
 
-	If GetMapID() = $DrazachThicket_Map Then    
+	If GetMapID() = $DrazachThicket_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[68][4] = [ [-6506, -16099, " ", $vqrange] _
+	If GetMapID() <> $DrazachThicket_Map Then
+		CurrentAction("Drazach Thicket route waiting - on map " & GetMapID() & ", need " & $DrazachThicket_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Drazach Thicket vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[68][4] = [ [-6506, -16099, " ", $vqrange] _
 		, [-8581, -15354, " ", $vqrange] _
 		, [-8627, -13151, " ", $vqrange] _
 		, [-6683, -12115, " ", $vqrange] _
@@ -80,25 +91,25 @@ Func VQDrazachThicket()
 		, [3174, 10834, " ", $vqrange] _
 		, [4105, 9296, " ", $vqrange] ]
 
+	If Not _Vanquisher_ShouldSkipMapEntrySetup() Then
 		GoNearestNPCToCoords(-5592, -16263)
-	If GetLuxonFaction() > GetKurzickFaction() Then
-                Dialog(0x81)
-                Sleep(1000)
-                Dialog(0x2)
-                Sleep(1000)
-                Dialog(0x84)
-	        Sleep(1000)
-	        Dialog(0x86)
-	        Sleep(1000)
-        Else
-                Dialog(0x85)
-                Sleep(1000)
-                Dialog(0x86)
-                Sleep(1000)
-        EndIf
+		If GetLuxonFaction() > GetKurzickFaction() Then
+			Dialog(0x81)
+			Sleep(1000)
+			Dialog(0x2)
+			Sleep(1000)
+			Dialog(0x84)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		Else
+			Dialog(0x85)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		EndIf
+	EndIf
 
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

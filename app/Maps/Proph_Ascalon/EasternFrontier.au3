@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aEasternFrontierOutpostPath[2][2] = [ _
+Local $aEasternFrontierOutpostPath[2][2] = [ _
 	[-2300, -13836], _
 	[-1593, -13669] _
 ]
@@ -17,7 +17,7 @@ Func GoOutEasternFrontier()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> EasternFrontier (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aEasternFrontierOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQEasternFrontier()
 		If GetMapID() <> $EasternFrontier_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need EasternFrontier (" & $EasternFrontier_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $EasternFrontier_Map Then
@@ -47,7 +47,7 @@ Func VQEasternFrontier()
 
 	CurrentAction("Starting EasternFrontier vanquish route.")
 
-	Local $aWaypoints[103][4] = [ _
+	Local $aWaypoints[106][4] = [ _
 		[-16892, 10937, " ", $vqrange], _
 		[-15601, 12640, " ", $vqrange], _
 		[-13350, 13968, " ", $vqrange], _
@@ -112,6 +112,9 @@ Func VQEasternFrontier()
 		[16336, -6589, " ", $vqrange], _
 		[15716, -6123, " ", $vqrange], _
 		[11029, -9075, " ", $vqrange], _
+		[13099, -9896, " ", $vqrange], _
+		[12967, -13251, " ", $vqrange], _
+		[16690, -12551, " ", $vqrange], _
 		[9140, -13964, " ", $vqrange], _
 		[8588, -15089, " ", $vqrange], _
 		[12257, -15238, " ", $vqrange], _

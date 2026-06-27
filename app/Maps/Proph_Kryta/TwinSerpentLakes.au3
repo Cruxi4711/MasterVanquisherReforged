@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aTwinSerpentLakesOutpostPath[4][2] = [ _
+Local $aTwinSerpentLakesOutpostPath[4][2] = [ _
 	[-20183, 10506], _
 	[-18896, 12390], _
 	[-16812, 13585], _
@@ -19,7 +19,7 @@ Func GoOutTwinSerpentLakes()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> TwinSerpentLakes (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aTwinSerpentLakesOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -39,7 +39,7 @@ Func VQTwinSerpentLakes()
 		If GetMapID() <> $TwinSerpentLakes_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need TwinSerpentLakes (" & $TwinSerpentLakes_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $TwinSerpentLakes_Map Then

@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQRheasCrater()
-    If GetMapID() <> $RheasCrater_Map And GetMapID() <> $RheasCrater_Outpost  Then TravelTo($RheasCrater_Outpost)   
-    If GetMapID() = $RheasCrater_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $RheasCrater_Map And GetMapID() <> $RheasCrater_Outpost Then
+		CurrentAction("Traveling to outpost for Rhea's Crater.")
+		TravelTo($RheasCrater_Outpost)
+	EndIf
 
-	If GetMapID() = $RheasCrater_Map Then    
+	If GetMapID() = $RheasCrater_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[55][4] = [ [9276.84 ,-146.666, " ", $vqrange] _
+	If GetMapID() <> $RheasCrater_Map Then
+		CurrentAction("Rhea's Crater route waiting - on map " & GetMapID() & ", need " & $RheasCrater_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Rhea's Crater vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[55][4] = [ [9276.84 ,-146.666, " ", $vqrange] _
 		, [5562.26 ,-288.208, " ", $vqrange] _
 		, [4556.35 ,-4096.02, " ", $vqrange] _
 		, [306.347 ,-5937.1, " ", $vqrange] _
@@ -66,26 +77,26 @@ Func VQRheasCrater()
 		, [5637.39 ,7565.61, " ", $vqrange] _
 		, [6796.92 ,10844.8, " ", $vqrange] _
 		, [8533.8 ,13615.6, " ", $vqrange] ]
-		
-		GoNearestNPCToCoords(13468.1 ,-1340.95)
-	If GetKurzickFaction() > GetLuxonFaction() Then
-                Dialog(0x81)
-                Sleep(1000)
-                Dialog(0x2)
-                Sleep(1000)
-                Dialog(0x84)
-	        Sleep(1000)
-	        Dialog(0x86)
-	        Sleep(1000)
-        Else
-                Dialog(0x85)
-                Sleep(1000)
-                Dialog(0x86)
-                Sleep(1000)
-        EndIf
 
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	If Not _Vanquisher_ShouldSkipMapEntrySetup() Then
+		GoNearestNPCToCoords(13468.1 ,-1340.95)
+		If GetKurzickFaction() > GetLuxonFaction() Then
+			Dialog(0x81)
+			Sleep(1000)
+			Dialog(0x2)
+			Sleep(1000)
+			Dialog(0x84)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		Else
+			Dialog(0x85)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		EndIf
+	EndIf
+
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

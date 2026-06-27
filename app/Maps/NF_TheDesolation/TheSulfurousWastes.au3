@@ -1,16 +1,16 @@
 #include <Array.au3>
-Global $vqrange = 1450
+Local $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQTheSulfurousWastes()
-    If GetMapID() <> $TheSulfurousWastes_Map And GetMapID() <> $TheSulfurousWastes_Outpost  Then TravelTo($TheSulfurousWastes_Outpost)
+    If GetMapID() <> $TheSulfurousWastes_Map And GetMapID() <> $TheSulfurousWastes_Outpost  Then TravelTo($TheSulfurousWastes_Outpost)   
     If GetMapID() = $TheSulfurousWastes_Outpost then
-       GoOut()
-
+       GoOut() 
+      
     EndIf
 
-	If GetMapID() = $TheSulfurousWastes_Map Then
-
+	If GetMapID() = $TheSulfurousWastes_Map Then    
+		
 		Local $aWaypointsA[13][4] = [ [ 25522, -4436, " ", $vqrange] _
 		, [ 24325, -2826, " ", $vqrange] _
 		, [ 24948, 259, " ", $vqrange] _
@@ -23,9 +23,8 @@ Func VQTheSulfurousWastes()
 		, [ 18136, -4457, " ", $vqrange] _
 		, [ 15832, -5071, " ", $vqrange] _
 		, [ 17250, -8849, " ", $vqrange] _
-		, [ 16039, -9571, " ", $vqrange] _
-		]
-
+		, [ 16039, -9571, " ", $vqrange] ]
+	
 		Local $aWaypoints[13][4] = [ [ 25522, -4436, " ", $vqrange] _
 		, [ 24325, -2826, " ", $vqrange] _
 		, [ 24948, 259, " ", $vqrange] _
@@ -38,27 +37,23 @@ Func VQTheSulfurousWastes()
 		, [ 18136, -4457, " ", $vqrange] _
 		, [ 15832, -5071, " ", $vqrange] _
 		, [ 17250, -8849, " ", $vqrange] _
-		, [ 16039, -9571, " ", $vqrange]]
-
+		, [ 16039, -9571, " ", $vqrange] ]
+		
 		GoNearestNPCToCoords(24412, -10695)
 		Sleep(1000)
 		Dialog(0x00000084)
 		Dialog(0x00000085)
 		Sleep(1000)
-
+		
 		AggroMoveTo(23368, -6278)
 		AggroMoveTo(21141, -5736)
-
+		
 		MoveTo(24080, -5864)
-		RndSleep(5000)
-		TargetNearestItem()
-		RndSleep(750)
-		GoSignpost(-1)
-		RndSleep(750)
-
+		_Vanquisher_MountJununduAtWaypoint(24080, -5864)
+		
 		MoveandAggroVQWurm($aWaypointsA)
 
 		MoveAndAggroVQReverse($aWaypoints)
-
+		
     EndIf
 EndFunc

@@ -2,6 +2,12 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
+Local $aVultureDriftsOutpostPath[3][2] = [ _
+	[-17562, -1143], _
+	[-18791, -310], _
+	[-20099, -320] _
+]
+
 Func GoOutVultureDrifts()
 	Local $l_i_Map = GetMapID()
 
@@ -12,7 +18,7 @@ Func GoOutVultureDrifts()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> VultureDrifts (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aVultureDriftsOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -32,7 +38,7 @@ Func VQVultureDrifts()
 		If GetMapID() <> $VultureDrifts_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need VultureDrifts (" & $VultureDrifts_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $VultureDrifts_Map Then

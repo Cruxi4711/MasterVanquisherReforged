@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aPerditionRockOutpostPath[2][2] = [ _
+Local $aPerditionRockOutpostPath[2][2] = [ _
 	[3603, -10090], _
 	[3800, -8600] _
 ]
@@ -17,7 +17,7 @@ Func GoOutPerditionRock()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> PerditionRock (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aPerditionRockOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQPerditionRock()
 		If GetMapID() <> $PerditionRock_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need PerditionRock (" & $PerditionRock_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $PerditionRock_Map Then

@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aSkywardReachOutpostPath[2][2] = [ _
+Local $aSkywardReachOutpostPath[2][2] = [ _
 	[-15225.14, 1966.78], _
 	[-15233.08, 2352.49] _
 ]
@@ -17,7 +17,7 @@ Func GoOutSkywardReach()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> SkywardReach (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aSkywardReachOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQSkywardReach()
 		If GetMapID() <> $SkywardReach_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need SkywardReach (" & $SkywardReach_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $SkywardReach_Map Then

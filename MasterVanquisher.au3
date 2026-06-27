@@ -450,8 +450,9 @@ While 1
 
 			If GetMapID() == $Map_To_Farm Then
 				If Death() = 1 Or GetIsDead(-2) Then
-					_Vanquisher_ResignToOutpost()
-					$g_b_Vanquisher_DeathResignPending = False
+					CurrentAction("In farm map while dead — evaluating wipe state.")
+					CheckDeath()
+					If Death() = 1 Or GetIsDead(-2) Then CurrentAction("Recoverable death state — waiting for revive/shrine.")
 				Else
 					CurrentAction("Already in Map, starting Vanquish.")
 				EndIf
@@ -631,16 +632,88 @@ Func status()
 	;GUICtrlSetData($label_stat, $string)
 EndFunc    ;==>status
 
+Func _Vanquisher_BoolText($a_b_Value)
+	Return ($a_b_Value) ? "True" : "False"
+EndFunc
+
+Func _Vanquisher_GetCurrentDeathPenalty()
+	Local $l_i_Morale = Party_GetMoraleInfo(-2, "Morale")
+	If $l_i_Morale >= 0 Then Return 0
+	Return Abs(Int($l_i_Morale))
+EndFunc
+
+Func _Vanquisher_HasRevivePathAlive()
+	Return Not GetPartyDead()
+EndFunc
+
+Func _Vanquisher_EvaluateWipeState(ByRef $isPlayerDead, ByRef $isPartyWiped, ByRef $isShrineRespawn, ByRef $currentDeathPenalty, ByRef $canRecover)
+	Local $l_b_IsExplorable = Map_GetInstanceInfo("IsExplorable")
+	Local $l_b_RevivePathAlive = _Vanquisher_HasRevivePathAlive()
+
+	$isPlayerDead = (Death() = 1 Or GetIsDead(-2))
+	$isPartyWiped = ($isPlayerDead And Not $l_b_RevivePathAlive)
+	$isShrineRespawn = ($l_b_IsExplorable And $g_b_Vanquisher_LastPlayerDead And Not $isPlayerDead)
+	$currentDeathPenalty = _Vanquisher_GetCurrentDeathPenalty()
+	$canRecover = ($l_b_RevivePathAlive Or $isShrineRespawn Or $g_b_Vanquisher_ShrineRecoveryActive Or ($isPlayerDead And $currentDeathPenalty < 60))
+EndFunc
+
 Func CheckDeath()
 	If Map_GetInstanceInfo("IsLoading") Then Return
-	If Death() <> 1 Then
-		If Not Map_GetInstanceInfo("IsExplorable") Then $g_b_Vanquisher_DeathResignPending = False
+
+	Local $isPlayerDead = False
+	Local $isPartyWiped = False
+	Local $isShrineRespawn = False
+	Local $currentDeathPenalty = 0
+	Local $canRecover = False
+	_Vanquisher_EvaluateWipeState($isPlayerDead, $isPartyWiped, $isShrineRespawn, $currentDeathPenalty, $canRecover)
+
+	If $g_i_Vanquisher_LastDeathPenalty < 0 Then
+		CurrentAction("DP snapshot: " & $currentDeathPenalty & "%")
+	ElseIf $currentDeathPenalty <> $g_i_Vanquisher_LastDeathPenalty Then
+		CurrentAction("DP update: " & $g_i_Vanquisher_LastDeathPenalty & "% -> " & $currentDeathPenalty & "%")
+	EndIf
+	$g_i_Vanquisher_LastDeathPenalty = $currentDeathPenalty
+
+	If $isShrineRespawn Then
+		CurrentAction("Shrine respawn detected.")
+	EndIf
+
+	If Not Map_GetInstanceInfo("IsExplorable") Then
+		$g_b_Vanquisher_DeathResignPending = False
+		$g_b_Vanquisher_LastPlayerDead = False
 		Return
 	EndIf
-	If Not Map_GetInstanceInfo("IsExplorable") Then Return
-	If $g_b_Vanquisher_DeathResignPending Then Return
-	$g_b_Vanquisher_DeathResignPending = True
-	_Vanquisher_ResignToOutpost()
+
+	If Not $isPlayerDead Then
+		$g_b_Vanquisher_DeathResignPending = False
+		$g_b_Vanquisher_LastPlayerDead = False
+		Return
+	EndIf
+
+	Local $l_b_NewDeath = Not $g_b_Vanquisher_LastPlayerDead
+	If $l_b_NewDeath Then
+		CurrentAction("Death detected | isPlayerDead=" & _Vanquisher_BoolText($isPlayerDead) & " | DP=" & $currentDeathPenalty & "%")
+		CurrentAction("Wipe evaluation | isPartyWiped=" & _Vanquisher_BoolText($isPartyWiped) & " | isShrineRespawn=" & _Vanquisher_BoolText($isShrineRespawn) & " | canRecover=" & _Vanquisher_BoolText($canRecover))
+	EndIf
+
+	If $g_b_Vanquisher_DeathResignPending Then
+		$g_b_Vanquisher_LastPlayerDead = True
+		Return
+	EndIf
+
+	Local $l_b_Unrecoverable = GetPartyDefeated() Or ($isPartyWiped And $currentDeathPenalty >= 60 And Not $canRecover)
+	If $l_b_Unrecoverable Then
+		Local $l_s_ResignReason = "DP >= 60 and no recovery path."
+		If GetPartyDefeated() Then $l_s_ResignReason = "Party defeated flag set."
+		CurrentAction("Resign reason: " & $l_s_ResignReason)
+		$g_b_Vanquisher_DeathResignPending = True
+		_Vanquisher_ResignToOutpost()
+		$g_b_Vanquisher_DeathResignPending = False
+	ElseIf $l_b_NewDeath Then
+		CurrentAction("Resign skipped: recoverable death state.")
+	EndIf
+
+	$g_b_Vanquisher_LastPlayerDead = $isPlayerDead
 EndFunc   ;==>CheckDeath
 
 Func CheckPartyDead()

@@ -2,12 +2,12 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aTearsOutpostPath[2][2] = [ _
+Local $aTearsOutpostPath[2][2] = [ _
 	[2043, 11028], _
 	[1795, 11698] _
 ]
 
-Global $aTearsTransitPath[7][2] = [ _
+Local $aTearsTransitPath[7][2] = [ _
 	[1606, 13394], _
 	[-4298, 17149], _
 	[-5176, 20570], _
@@ -32,19 +32,19 @@ Func GoOutTearsoftheFallen()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Fisherman's Haven -> Stingray Strand (portal 1).")
 		_Vanquisher_RunAggroPortalPath($aTearsOutpostPath, $vqrange, "haven ")
-		$g_i_TearsRoute_LastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_TearsRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $TearsoftheFallen_Transit Then
 		If $g_i_TearsRoute_LastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Stingray Strand (transit) -> Tears of the Fallen (portal 2).")
-		_Vanquisher_InitCombatAI()
-		_Vanquisher_RunAggroPortalPath($aTearsTransitPath, $vqrange, "stingray ")
-		$g_i_TearsRoute_LastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
+		If Not _Vanquisher_RunExplorableTransitPortalPath($aTearsTransitPath, $vqrange, "stingray ") Then
+			CurrentAction("Transit map not ready yet — retrying Tears portal path.")
+			Return
+		EndIf
+		If GetMapID() = $TearsoftheFallen_Map Then $g_i_TearsRoute_LastMapHandled = $l_i_Map
 	EndIf
 EndFunc
 

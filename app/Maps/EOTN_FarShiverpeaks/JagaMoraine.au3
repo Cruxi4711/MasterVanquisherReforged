@@ -1,11 +1,10 @@
-;Mapped by Crux
+; Mapped by Crux
 #include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQJagaMoraine()
 	If GetMapID() <> $JagaMoraine_Map And GetMapID() <> $JagaMoraine_Outpost Then
-		_Vanquisher_ResetGoOutRouteProgress()
 		CurrentAction("Traveling to outpost for Jaga Moraine.")
 		TravelTo($JagaMoraine_Outpost)
 	EndIf
@@ -25,6 +24,8 @@ Func VQJagaMoraine()
 	EndIf
 
 	CurrentAction("Starting Jaga Moraine vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
 
 	Local $aWaypoints[121][4] = [ _
 		[-11548, -23727, " ", $vqrange], _

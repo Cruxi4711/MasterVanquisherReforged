@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aWatchtowerCoastOutpostPath[3][2] = [ _
+Local $aWatchtowerCoastOutpostPath[3][2] = [ _
 	[18349, -10465], _
 	[17407, -10077], _
 	[17324, -9489] _
@@ -18,7 +18,7 @@ Func GoOutWatchtowerCoast()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> WatchtowerCoast (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aWatchtowerCoastOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -38,7 +38,7 @@ Func VQWatchtowerCoast()
 		If GetMapID() <> $WatchtowerCoast_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need WatchtowerCoast (" & $WatchtowerCoast_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $WatchtowerCoast_Map Then

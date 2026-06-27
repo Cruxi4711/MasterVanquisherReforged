@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aTangleRootOutpostPath[2][2] = [ _
+Local $aTangleRootOutpostPath[2][2] = [ _
 	[6418.01, -10500.90], _
 	[6212.98, -10712.02] _
 ]
@@ -17,7 +17,7 @@ Func GoOutTangleRoot()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> TangleRoot (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aTangleRootOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQTangleRoot()
 		If GetMapID() <> $TangleRoot_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need TangleRoot (" & $TangleRoot_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $TangleRoot_Map Then

@@ -2,23 +2,38 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aIronHorseMineOutpostPath[2][2] = [ _
-	[-11688, 11666], _
-	[-12281, 11654] _
+; Yak's Bend (134) -> Traveler's Vale (99).
+Local $aIronHorseMineOutpostPath[2][2] = [ _
+	[9303, 4208], _
+	[9275, 4000] _
 ]
 
-Global $aIronHorseMineTransitPath[10][2] = [ _
-	[-14364, 12884], _
-	[-7306, 17104], _
-	[-1519, 15606], _
-	[4887, 17101], _
-	[10751, 16175], _
-	[12604, 19236], _
-	[16305, 19985], _
-	[18238, 17604], _
-	[20070, 20046], _
-	[20520, 20584] _
+; Traveler's Vale (99) -> Iron Horse Mine (88). Last path point is approach; portal is separate.
+Local Const $IRONHORSEMINE_TRANSIT_PORTAL_X = -11061
+Local Const $IRONHORSEMINE_TRANSIT_PORTAL_Y = 14398
+
+Local $aIronHorseMineTransitPath[16][2] = [ _
+	[9069, 3087], _
+	[8428, 999], _
+	[7987, -485], _
+	[6780, -1772], _
+	[3632, -2064], _
+	[2335, 412], _
+	[2289, 3625], _
+	[2209, 6007], _
+	[848, 7871], _
+	[-1246, 9271], _
+	[-3344, 11264], _
+	[-5158, 12696], _
+	[-6721, 13662], _
+	[-7851, 13042], _
+	[-9986, 12390], _
+	[-10666, 13372] _
 ]
+
+Func _Vanquisher_ResetIronHorseMineRouteProgress()
+	$g_i_IronHorseMineRoute_LastMapHandled = -1
+EndFunc
 
 Func GoOutIronHorseMine()
 	Local $l_i_Map = GetMapID()
@@ -26,31 +41,30 @@ Func GoOutIronHorseMine()
 	If $l_i_Map = $IronHorseMine_Map Then Return
 
 	If $l_i_Map = $IronHorseMine_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_IronHorseMineRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> IronHorseMine (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aIronHorseMineOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Yak's Bend -> Traveler's Vale (portal 1).")
+		_Vanquisher_RunAggroPortalPath($aIronHorseMineOutpostPath, $vqrange, "yaksbend ")
+		If GetMapID() <> $l_i_Map Then $g_i_IronHorseMineRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $IronHorseMine_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> IronHorseMine (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aIronHorseMineTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
-		Return
+		If $g_i_IronHorseMineRoute_LastMapHandled = $l_i_Map Then Return
+		CurrentAction("Traveler's Vale (transit) -> Iron Horse Mine (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitLeg($aIronHorseMineTransitPath, $IRONHORSEMINE_TRANSIT_PORTAL_X, $IRONHORSEMINE_TRANSIT_PORTAL_Y, $vqrange, "travelers ") Then
+			CurrentAction("Transit map not ready yet — retrying Iron Horse Mine portal path.")
+			Return
+		EndIf
+		If GetMapID() = $IronHorseMine_Map Then $g_i_IronHorseMineRoute_LastMapHandled = $l_i_Map
 	EndIf
-
 EndFunc
 
 Func VQIronHorseMine()
 	If GetMapID() <> $IronHorseMine_Map And GetMapID() <> $IronHorseMine_Outpost And GetMapID() <> $IronHorseMine_Transit Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for IronHorseMine.")
+		_Vanquisher_ResetIronHorseMineRouteProgress()
+		CurrentAction("Traveling to Yak's Bend for Iron Horse Mine.")
 		TravelTo($IronHorseMine_Outpost)
 	EndIf
 
@@ -58,17 +72,17 @@ Func VQIronHorseMine()
 		_Vanquisher_ApplyDifficulty()
 		GoOutIronHorseMine()
 		If GetMapID() <> $IronHorseMine_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need IronHorseMine (" & $IronHorseMine_Map & ").")
+			CurrentAction("Routing - on map " & GetMapID() & ", need Iron Horse Mine (" & $IronHorseMine_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $IronHorseMine_Map Then
-		CurrentAction("IronHorseMine route waiting - on map " & GetMapID() & ", need " & $IronHorseMine_Map & ".")
+		CurrentAction("Iron Horse Mine route waiting - on map " & GetMapID() & ", need " & $IronHorseMine_Map & ".")
 		Return
 	EndIf
 
-	CurrentAction("Starting IronHorseMine vanquish route.")
+	CurrentAction("Starting Iron Horse Mine vanquish route.")
 
 	Local $aWaypoints[85][4] = [ _
 		[-23955, 4146, " ", $vqrange], _
@@ -157,6 +171,28 @@ Func VQIronHorseMine()
 		[-8368, -7730, " ", $vqrange], _
 		[-7877, -4046, " ", $vqrange] ]
 
+	Local $l_f_PlayerX = Agent_GetAgentInfo(-2, "X")
+	Local $l_f_PlayerY = Agent_GetAgentInfo(-2, "Y")
+	If $l_f_PlayerX > 10000 Then
+		_Vanquisher_ClearDeathCheckpoint()
+		_Vanquisher_ClearRouteProgress()
+		Local $l_i_EntryStart = _Vanquisher_FindClosestWaypointIndex($aWaypoints)
+		$g_i_Vanquisher_ProgressFloorIndex = $l_i_EntryStart
+		$g_i_Vanquisher_ProgressRouteSize = UBound($aWaypoints)
+		$g_s_Vanquisher_ProgressPhase = "forward"
+		$g_b_Vanquisher_RecoverMidRun = True
+		CurrentAction("Iron Horse Mine — southwest entry, starting forward at wp " & ($l_i_EntryStart + 1) & ".")
+	ElseIf Not $g_b_Vanquisher_RecoverMidRun And $g_s_Vanquisher_ProgressPhase = "" And Not $g_b_Vanquisher_DeathReturnActive Then
+		Local $l_f_DistToWp1 = ComputeDistance($l_f_PlayerX, $l_f_PlayerY, $aWaypoints[0][0], $aWaypoints[0][1])
+		If $l_f_DistToWp1 > 3000 Then
+			Local $l_i_EntryStart = _Vanquisher_FindClosestWaypointIndex($aWaypoints)
+			$g_i_Vanquisher_ProgressFloorIndex = $l_i_EntryStart
+			$g_i_Vanquisher_ProgressRouteSize = UBound($aWaypoints)
+			$g_s_Vanquisher_ProgressPhase = "forward"
+			$g_b_Vanquisher_RecoverMidRun = True
+			CurrentAction("Iron Horse Mine — off-route entry, starting forward at wp " & ($l_i_EntryStart + 1) & ".")
+		EndIf
+	EndIf
+
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
-

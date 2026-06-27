@@ -1,415 +1,187 @@
-;Mapped from route notes
+; Updated by Crux
 #include <Array.au3>
-Global $vqrange = 1450
+Local $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aTheShatteredRavinesOutpostPath[4][2] = [ _
-	[787, 56], _
-	[857, -1974], _
-	[-1058, -3540], _
-	[-1928, -4385] _
-]
-
-Func GoOutTheShatteredRavines()
-	Local $l_i_Map = GetMapID()
-	If $l_i_Map = $TheShatteredRavines_Map Then Return
-	If $l_i_Map = $TheShatteredRavines_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> The Shattered Ravines (portal)")
-		_Vanquisher_RunAggroPortalPath($aTheShatteredRavinesOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
-		Return
-	EndIf
-EndFunc
-
 Func VQTheShatteredRavines()
-	If GetMapID() <> $TheShatteredRavines_Map And GetMapID() <> $TheShatteredRavines_Outpost Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for The Shattered Ravines.")
-		TravelTo($TheShatteredRavines_Outpost)
+	If GetMapID() <> $TheShatteredRavines_Map And GetMapID() <> $TheShatteredRavines_Outpost Then TravelTo($TheShatteredRavines_Outpost)
+	If GetMapID() = $TheShatteredRavines_Outpost Then
+		GoOut()
 	EndIf
 
-	If GetMapID() = $TheShatteredRavines_Outpost Then
-		_Vanquisher_ApplyDifficulty()
-		GoOutTheShatteredRavines()
-		If GetMapID() <> $TheShatteredRavines_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need The Shattered Ravines (" & $TheShatteredRavines_Map & ").")
+	If GetMapID() = $TheShatteredRavines_Map Then
+
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Shattered Ravines not ready yet - waiting for map load.")
 			Return
 		EndIf
+
+		GoNearestNPCToCoords(909, 8064)
+		Sleep(1000)
+		Dialog(0x00000084)
+		Dialog(0x00000085)
+		Sleep(1000)
+
+		Local $aWaypoints[158][4] = [ [416, 9518, " ", $vqrange] _
+		, [909, 8064, "shrine", $vqrange] _
+		, [-945, 6334, " ", $vqrange] _
+		, [-3425, 5771, " ", $vqrange] _
+		, [-5910, 5331, " ", $vqrange] _
+		, [-8154, 6474, " ", $vqrange] _
+		, [-5699, 5659, " ", $vqrange] _
+		, [-3208, 4860, " ", $vqrange] _
+		, [-2395, 4504, "junundu", $vqrange] _
+		, [-3001, 6998, " ", $vqrange] _
+		, [-3059, 9617, " ", $vqrange] _
+		, [-5078, 11136, " ", $vqrange] _
+		, [-7347, 9900, " ", $vqrange] _
+		, [-9299, 8182, " ", $vqrange] _
+		, [-11837, 8799, " ", $vqrange] _
+		, [-14399, 8622, " ", $vqrange] _
+		, [-16913, 7944, "shrine", $vqrange] _
+		, [-19417, 7701, " ", $vqrange] _
+		, [-21189, 9480, " ", $vqrange] _
+		, [-23752, 9250, " ", $vqrange] _
+		, [-25443, 7344, " ", $vqrange] _
+		, [-25774, 4841, " ", $vqrange] _
+		, [-25326, 2273, " ", $vqrange] _
+		, [-26045, -122, " ", $vqrange] _
+		, [-26239, -1915, " ", $vqrange] _
+		, [-24740, -1474, " ", $vqrange] _
+		, [-23218, -3470, " ", $vqrange] _
+		, [-20844, -4470, " ", $vqrange] _
+		, [-18395, -3723, " ", $vqrange] _
+		, [-16161, -2783, "shrine", $vqrange] _
+		, [-17920, -995, " ", $vqrange] _
+		, [-15631, 221, " ", $vqrange] _
+		, [-13455, 1569, " ", $vqrange] _
+		, [-11177, 2787, " ", $vqrange] _
+		, [-8659, 2590, " ", $vqrange] _
+		, [-9830, 318, " ", $vqrange] _
+		, [-10818, -2001, " ", $vqrange] _
+		, [-13403, -1741, " ", $vqrange] _
+		, [-15951, -2180, " ", $vqrange] _
+		, [-18064, -3712, " ", $vqrange] _
+		, [-20238, -5146, " ", $vqrange] _
+		, [-21090, -7618, " ", $vqrange] _
+		, [-23175, -11918, " ", $vqrange] _
+		, [-23776, -9483, " ", $vqrange] _
+		, [-25404, -9091, "shrine", $vqrange] _
+		, [-26352, -7022, " ", $vqrange] _
+		, [-24096, -8256, " ", $vqrange] _
+		, [-21829, -9532, " ", $vqrange] _
+		, [-19489, -10632, " ", $vqrange] _
+		, [-17468, -10676, "junundu", $vqrange] _
+		, [-15186, -9619, " ", $vqrange] _
+		, [-12735, -10215, " ", $vqrange] _
+		, [-13473, -8742, " ", $vqrange] _
+		, [-15922, -7854, " ", $vqrange] _
+		, [-15424, -5321, " ", $vqrange] _
+		, [-13698, -7254, " ", $vqrange] _
+		, [-15942, -6063, " ", $vqrange] _
+		, [-18235, -7077, " ", $vqrange] _
+		, [-20780, -6988, " ", $vqrange] _
+		, [-23157, -6105, " ", $vqrange] _
+		, [-24804, -4123, " ", $vqrange] _
+		, [-23279, -2046, " ", $vqrange] _
+		, [-21604, -182, " ", $vqrange] _
+		, [-20528, 2171, " ", $vqrange] _
+		, [-20791, 4697, " ", $vqrange] _
+		, [-20511, 2111, " ", $vqrange] _
+		, [-18001, 2559, " ", $vqrange] _
+		, [-15657, 3674, " ", $vqrange] _
+		, [-13332, 4870, " ", $vqrange] _
+		, [-10911, 5807, " ", $vqrange] _
+		, [-8691, 4436, " ", $vqrange] _
+		, [-6510, 3009, " ", $vqrange] _
+		, [-4333, 1721, " ", $vqrange] _
+		, [-2122, 389, " ", $vqrange] _
+		, [-1377, -2124, " ", $vqrange] _
+		, [-3148, -4033, " ", $vqrange] _
+		, [-4963, -5775, " ", $vqrange] _
+		, [-6037, -3483, " ", $vqrange] _
+		, [-8144, -1961, " ", $vqrange] _
+		, [-10424, -927, " ", $vqrange] _
+		, [-11738, -3056, " ", $vqrange] _
+		, [-11288, -5630, " ", $vqrange] _
+		, [-10600, -8120, " ", $vqrange] _
+		, [-8984, -10035, " ", $vqrange] _
+		, [-8410, -10735, "shrine", $vqrange] _
+		, [-6534, -9050, " ", $vqrange] _
+		, [-3985, -8974, " ", $vqrange] _
+		, [-3032, -9580, " ", $vqrange] _
+		, [-3715, -8853, "junundu", $vqrange] _
+		, [-2573, -6604, " ", $vqrange] _
+		, [-146, -5948, " ", $vqrange] _
+		, [-2732, -5970, " ", $vqrange] _
+		, [-5275, -6096, " ", $vqrange] _
+		, [-3479, -4281, " ", $vqrange] _
+		, [-1652, -2413, " ", $vqrange] _
+		, [-1989, 146, " ", $vqrange] _
+		, [-925, 2431, " ", $vqrange] _
+		, [1563, 3247, " ", $vqrange] _
+		, [4121, 3334, " ", $vqrange] _
+		, [6565, 3977, " ", $vqrange] _
+		, [9045, 3577, " ", $vqrange] _
+		, [11489, 2925, " ", $vqrange] _
+		, [13215, 4767, " ", $vqrange] _
+		, [15261, 6385, " ", $vqrange] _
+		, [17621, 7439, " ", $vqrange] _
+		, [20115, 7954, " ", $vqrange] _
+		, [22555, 8665, " ", $vqrange] _
+		, [24653, 10339, " ", $vqrange] _
+		, [25263, 10152, " ", $vqrange] _
+		, [23164, 8740, " ", $vqrange] _
+		, [20754, 8038, " ", $vqrange] _
+		, [18190, 7544, " ", $vqrange] _
+		, [17215, 6447, " ", $vqrange] _
+		, [14647, 6073, " ", $vqrange] _
+		, [12877, 4306, " ", $vqrange] _
+		, [12039, 1942, " ", $vqrange] _
+		, [12679, -565, " ", $vqrange] _
+		, [10163, -663, " ", $vqrange] _
+		, [12066, 1070, " ", $vqrange] _
+		, [14326, 2242, " ", $vqrange] _
+		, [11781, 1935, " ", $vqrange] _
+		, [9229, 1961, " ", $vqrange] _
+		, [7052, 702, " ", $vqrange] _
+		, [4915, -869, " ", $vqrange] _
+		, [2346, -1204, " ", $vqrange] _
+		, [4847, -1786, " ", $vqrange] _
+		, [7385, -2273, " ", $vqrange] _
+		, [9991, -2267, " ", $vqrange] _
+		, [12485, -2896, " ", $vqrange] _
+		, [14544, -1359, " ", $vqrange] _
+		, [15182, 1165, " ", $vqrange] _
+		, [16615, 3264, " ", $vqrange] _
+		, [19064, 2407, " ", $vqrange] _
+		, [20867, 635, " ", $vqrange] _
+		, [22209, -1602, " ", $vqrange] _
+		, [23319, -3889, " ", $vqrange] _
+		, [23231, -4280, "shrine", $vqrange] _
+		, [23182, -6809, " ", $vqrange] _
+		, [22424, -8064, " ", $vqrange] _
+		, [20257, -6759, " ", $vqrange] _
+		, [19400, -8985, " ", $vqrange] _
+		, [17913, -9842, " ", $vqrange] _
+		, [15510, -8902, " ", $vqrange] _
+		, [13009, -8747, " ", $vqrange] _
+		, [11354, -8319, " ", $vqrange] _
+		, [13310, -6704, " ", $vqrange] _
+		, [11166, -5383, " ", $vqrange] _
+		, [8646, -4999, " ", $vqrange] _
+		, [7722, -3974, "shrine", $vqrange] _
+		, [5248, -3305, " ", $vqrange] _
+		, [3141, -4680, " ", $vqrange] _
+		, [3973, -7108, " ", $vqrange] _
+		, [1447, -7041, " ", $vqrange] _
+		, [-994, -6337, " ", $vqrange] _
+		, [-3535, -6908, " ", $vqrange] _
+		, [-5581, -8352, " ", $vqrange] _
+		, [-7699, -9727, " ", $vqrange] _
+		, [-10168, -10493, " ", $vqrange] ]
+		MoveandAggroVQ($aWaypoints)
+		MoveandAggroVQReverse($aWaypoints)
+
 	EndIf
-
-	If GetMapID() <> $TheShatteredRavines_Map Then
-		CurrentAction("The Shattered Ravines route waiting - on map " & GetMapID() & ", need " & $TheShatteredRavines_Map & ".")
-		Return
-	EndIf
-
-	CurrentAction("Starting The Shattered Ravines vanquish route.")
-	Local $aWaypoints[363][4] = [ _
-		[416, 9518, "shrine", $vqrange], _
-		[1025, 9078, " ", $vqrange], _
-		[1179, 7813, " ", $vqrange], _
-		[252, 7323, " ", $vqrange], _
-		[-816, 7332, " ", $vqrange], _
-		[-1633, 7550, " ", $vqrange], _
-		[-3270, 7793, " ", $vqrange], _
-		[-4048, 8490, " ", $vqrange], _
-		[-5644, 8968, " ", $vqrange], _
-		[-6345, 8754, " ", $vqrange], _
-		[-6865, 7935, " ", $vqrange], _
-		[-5770, 7238, " ", $vqrange], _
-		[-4888, 7095, " ", $vqrange], _
-		[-5314, 6244, " ", $vqrange], _
-		[-6464, 6133, " ", $vqrange], _
-		[-7119, 6679, " ", $vqrange], _
-		[-8060, 7047, " ", $vqrange], _
-		[-8484, 6428, " ", $vqrange], _
-		[-7710, 5541, " ", $vqrange], _
-		[-6791, 4882, " ", $vqrange], _
-		[-5553, 4868, " ", $vqrange], _
-		[-3763, 4896, " ", $vqrange], _
-		[-2668, 4628, " ", $vqrange], _
-		[-1182, 4288, " ", $vqrange], _
-		[796, 5217, " ", $vqrange], _
-		[1481, 6345, " ", $vqrange], _
-		[4635, 9021, " ", $vqrange], _
-		[4413, 8000, " ", $vqrange], _
-		[4045, 6916, " ", $vqrange], _
-		[3844, 5716, " ", $vqrange], _
-		[3548, 3656, " ", $vqrange], _
-		[2526, 3180, " ", $vqrange], _
-		[1646, 2868, " ", $vqrange], _
-		[708, 3067, " ", $vqrange], _
-		[2749, 2849, " ", $vqrange], _
-		[3887, 2445, " ", $vqrange], _
-		[4456, 2707, " ", $vqrange], _
-		[5248, 3319, " ", $vqrange], _
-		[6967, 3998, " ", $vqrange], _
-		[8244, 4000, " ", $vqrange], _
-		[10040, 3283, " ", $vqrange], _
-		[11085, 4312, " ", $vqrange], _
-		[12271, 5566, " ", $vqrange], _
-		[10263, 3877, " ", $vqrange], _
-		[10471, 2426, " ", $vqrange], _
-		[12671, 775, " ", $vqrange], _
-		[14320, 1127, " ", $vqrange], _
-		[14558, 3137, " ", $vqrange], _
-		[15137, 3754, " ", $vqrange], _
-		[16627, 5093, " ", $vqrange], _
-		[17219, 4484, " ", $vqrange], _
-		[18081, 3291, " ", $vqrange], _
-		[19090, 2300, " ", $vqrange], _
-		[20423, 1059, " ", $vqrange], _
-		[21707, -639, " ", $vqrange], _
-		[22680, -2283, " ", $vqrange], _
-		[23027, -4146, " ", $vqrange], _
-		[22618, -5325, " ", $vqrange], _
-		[22755, -6588, " ", $vqrange], _
-		[22795, -7641, " ", $vqrange], _
-		[22000, -7716, " ", $vqrange], _
-		[20945, -6794, " ", $vqrange], _
-		[19943, -6537, " ", $vqrange], _
-		[18335, -6367, " ", $vqrange], _
-		[17725, -5575, " ", $vqrange], _
-		[17618, -3436, " ", $vqrange], _
-		[17679, -1711, " ", $vqrange], _
-		[18521, -1605, " ", $vqrange], _
-		[18871, -2247, " ", $vqrange], _
-		[19782, -4022, " ", $vqrange], _
-		[18692, -4499, " ", $vqrange], _
-		[17761, -4799, " ", $vqrange], _
-		[17965, -6296, " ", $vqrange], _
-		[19369, -6852, " ", $vqrange], _
-		[20398, -6741, " ", $vqrange], _
-		[21579, -7318, " ", $vqrange], _
-		[20932, -8127, " ", $vqrange], _
-		[19879, -8467, " ", $vqrange], _
-		[18745, -8594, " ", $vqrange], _
-		[16141, -7554, " ", $vqrange], _
-		[15476, -6591, " ", $vqrange], _
-		[14686, -5325, " ", $vqrange], _
-		[14522, -4334, " ", $vqrange], _
-		[14482, -3628, " ", $vqrange], _
-		[14459, -1972, " ", $vqrange], _
-		[14670, -461, " ", $vqrange], _
-		[12360, -322, " ", $vqrange], _
-		[10105, -474, " ", $vqrange], _
-		[7978, -657, " ", $vqrange], _
-		[7091, -924, " ", $vqrange], _
-		[8433, -741, " ", $vqrange], _
-		[10842, -921, " ", $vqrange], _
-		[14507, -1645, " ", $vqrange], _
-		[14469, -2506, " ", $vqrange], _
-		[13921, -4316, " ", $vqrange], _
-		[13284, -5899, " ", $vqrange], _
-		[14447, -8862, " ", $vqrange], _
-		[11793, -7790, " ", $vqrange], _
-		[12792, -6115, " ", $vqrange], _
-		[11921, -5528, " ", $vqrange], _
-		[10283, -5778, " ", $vqrange], _
-		[8561, -5490, " ", $vqrange], _
-		[7513, -4293, " ", $vqrange], _
-		[5011, -3222, " ", $vqrange], _
-		[3643, -3916, " ", $vqrange], _
-		[3259, -4785, " ", $vqrange], _
-		[3588, -5429, " ", $vqrange], _
-		[4615, -7967, " ", $vqrange], _
-		[2874, -7587, " ", $vqrange], _
-		[1285, -7136, " ", $vqrange], _
-		[504, -6299, " ", $vqrange], _
-		[-2101, -6630, " ", $vqrange], _
-		[-3108, -7379, " ", $vqrange], _
-		[-3831, -9486, " ", $vqrange], _
-		[-5227, -8767, " ", $vqrange], _
-		[-6845, -9313, " ", $vqrange], _
-		[-10083, -10733, " ", $vqrange], _
-		[-10047, -9745, " ", $vqrange], _
-		[-10185, -8961, " ", $vqrange], _
-		[-10854, -7438, " ", $vqrange], _
-		[-11974, -6677, " ", $vqrange], _
-		[-13040, -6230, " ", $vqrange], _
-		[-13187, -6163, " ", $vqrange], _
-		[-13823, -5347, " ", $vqrange], _
-		[-13326, -4917, " ", $vqrange], _
-		[-12523, -4174, " ", $vqrange], _
-		[-12167, -1474, " ", $vqrange], _
-		[-12232, -1326, " ", $vqrange], _
-		[-13449, -1664, " ", $vqrange], _
-		[-15050, -2024, " ", $vqrange], _
-		[-16407, -2330, " ", $vqrange], _
-		[-17769, -3370, " ", $vqrange], _
-		[-17619, -4199, " ", $vqrange], _
-		[-18478, -5400, " ", $vqrange], _
-		[-20332, -5481, " ", $vqrange], _
-		[-21523, -8866, " ", $vqrange], _
-		[-22583, -8123, " ", $vqrange], _
-		[-23478, -7591, " ", $vqrange], _
-		[-25118, -7077, " ", $vqrange], _
-		[-26471, -7113, " ", $vqrange], _
-		[-25061, -8878, " ", $vqrange], _
-		[-23898, -9097, " ", $vqrange], _
-		[-23045, -11803, " ", $vqrange], _
-		[-22584, -11142, " ", $vqrange], _
-		[-21399, -10223, " ", $vqrange], _
-		[-21356, -8965, " ", $vqrange], _
-		[-20479, -5684, " ", $vqrange], _
-		[-21667, -4642, " ", $vqrange], _
-		[-23157, -3582, " ", $vqrange], _
-		[-24058, -2271, " ", $vqrange], _
-		[-24711, -1482, " ", $vqrange], _
-		[-25817, -1145, " ", $vqrange], _
-		[-26462, -345, " ", $vqrange], _
-		[-25716, -63, " ", $vqrange], _
-		[-24915, 913, " ", $vqrange], _
-		[-25455, 1819, " ", $vqrange], _
-		[-25929, 2404, " ", $vqrange], _
-		[-25402, 3103, " ", $vqrange], _
-		[-25624, 4747, " ", $vqrange], _
-		[-26030, 6224, " ", $vqrange], _
-		[-26055, 6934, " ", $vqrange], _
-		[-25210, 8109, " ", $vqrange], _
-		[-24841, 9479, " ", $vqrange], _
-		[-23939, 9196, " ", $vqrange], _
-		[-23020, 9181, " ", $vqrange], _
-		[-21319, 9496, " ", $vqrange], _
-		[-20045, 9626, " ", $vqrange], _
-		[-19316, 9390, " ", $vqrange], _
-		[-19315, 8648, " ", $vqrange], _
-		[-18583, 8028, " ", $vqrange], _
-		[-17806, 7784, " ", $vqrange], _
-		[-17387, 7526, " ", $vqrange], _
-		[-16603, 8325, " ", $vqrange], _
-		[-15469, 8823, " ", $vqrange], _
-		[-14334, 8958, " ", $vqrange], _
-		[-13303, 9272, " ", $vqrange], _
-		[-12366, 9262, " ", $vqrange], _
-		[-10257, 9293, " ", $vqrange], _
-		[-11262, 8893, " ", $vqrange], _
-		[-12052, 8189, " ", $vqrange], _
-		[-13440, 7761, " ", $vqrange], _
-		[-14107, 7155, " ", $vqrange], _
-		[-15112, 6206, " ", $vqrange], _
-		[-15922, 5693, " ", $vqrange], _
-		[-16544, 5414, " ", $vqrange], _
-		[-17412, 5056, " ", $vqrange], _
-		[-18206, 4692, " ", $vqrange], _
-		[-19163, 3925, " ", $vqrange], _
-		[-19443, 4635, " ", $vqrange], _
-		[-18900, 6427, " ", $vqrange], _
-		[-19547, 6938, " ", $vqrange], _
-		[-21178, 7139, " ", $vqrange], _
-		[-22044, 6149, " ", $vqrange], _
-		[-22870, 4633, " ", $vqrange], _
-		[-23385, 3265, " ", $vqrange], _
-		[-23870, 1976, " ", $vqrange], _
-		[-24329, 757, " ", $vqrange], _
-		[-25185, -949, " ", $vqrange], _
-		[-23149, -3545, " ", $vqrange], _
-		[-20992, -2885, " ", $vqrange], _
-		[-19607, -1398, " ", $vqrange], _
-		[-18347, -589, " ", $vqrange], _
-		[-16766, -435, " ", $vqrange], _
-		[-15437, 677, " ", $vqrange], _
-		[-14149, 1199, " ", $vqrange], _
-		[-12121, 2591, " ", $vqrange], _
-		[-11138, 2816, " ", $vqrange], _
-		[-10358, 2725, " ", $vqrange], _
-		[-8866, 2375, " ", $vqrange], _
-		[-9415, 1656, " ", $vqrange], _
-		[-9746, 591, " ", $vqrange], _
-		[-9860, -643, " ", $vqrange], _
-		[-8989, -1656, " ", $vqrange], _
-		[-9323, -3057, " ", $vqrange], _
-		[-9177, -4587, " ", $vqrange], _
-		[-8904, -5919, " ", $vqrange], _
-		[-8009, -10599, " ", $vqrange], _
-		[-7042, -8987, " ", $vqrange], _
-		[-6497, -7351, " ", $vqrange], _
-		[-6431, -6099, " ", $vqrange], _
-		[-6961, -2691, " ", $vqrange], _
-		[-5950, -1950, " ", $vqrange], _
-		[-4674, -1551, " ", $vqrange], _
-		[-3523, -1048, " ", $vqrange], _
-		[-2792, -1814, " ", $vqrange], _
-		[-3379, -2847, " ", $vqrange], _
-		[-4362, -3367, " ", $vqrange], _
-		[-5703, -4919, " ", $vqrange], _
-		[-5149, -7103, " ", $vqrange], _
-		[-5158, -5904, " ", $vqrange], _
-		[-6501, -4131, " ", $vqrange], _
-		[-8141, -2359, " ", $vqrange], _
-		[-9553, -1390, " ", $vqrange], _
-		[-10467, -1538, " ", $vqrange], _
-		[-14269, -782, " ", $vqrange], _
-		[-16033, -216, " ", $vqrange], _
-		[-11465, -1625, " ", $vqrange], _
-		[-11906, -3571, " ", $vqrange], _
-		[-14666, -4285, " ", $vqrange], _
-		[-15769, -5816, " ", $vqrange], _
-		[-15848, -6577, " ", $vqrange], _
-		[-14229, -7084, " ", $vqrange], _
-		[-12861, -7600, " ", $vqrange], _
-		[-11959, -8138, " ", $vqrange], _
-		[-11669, -9370, " ", $vqrange], _
-		[-12181, -7912, " ", $vqrange], _
-		[-15658, -6749, " ", $vqrange], _
-		[-16800, -7317, " ", $vqrange], _
-		[-16013, -7983, " ", $vqrange], _
-		[-13410, -9696, " ", $vqrange], _
-		[-13059, -10624, " ", $vqrange], _
-		[-14637, -10849, " ", $vqrange], _
-		[-15376, -10122, " ", $vqrange], _
-		[-16373, -10090, " ", $vqrange], _
-		[-17719, -10807, " ", $vqrange], _
-		[-19181, -10933, " ", $vqrange], _
-		[-21026, -9606, " ", $vqrange], _
-		[-18329, -9400, " ", $vqrange], _
-		[-16427, -9394, " ", $vqrange], _
-		[-13975, -8771, " ", $vqrange], _
-		[-16443, -7601, " ", $vqrange], _
-		[-18289, -6976, " ", $vqrange], _
-		[-20005, -7024, " ", $vqrange], _
-		[-21772, -6647, " ", $vqrange], _
-		[-23071, -6282, " ", $vqrange], _
-		[-25192, -5068, " ", $vqrange], _
-		[-26567, -5204, " ", $vqrange], _
-		[-24922, -4271, " ", $vqrange], _
-		[-23459, -2262, " ", $vqrange], _
-		[-21802, -491, " ", $vqrange], _
-		[-20221, 1197, " ", $vqrange], _
-		[-20712, 2517, " ", $vqrange], _
-		[-20877, 3367, " ", $vqrange], _
-		[-20364, 7019, " ", $vqrange], _
-		[-20957, 4309, " ", $vqrange], _
-		[-20498, 1365, " ", $vqrange], _
-		[-18146, 2498, " ", $vqrange], _
-		[-15494, 3659, " ", $vqrange], _
-		[-14240, 4428, " ", $vqrange], _
-		[-12016, 5474, " ", $vqrange], _
-		[-10653, 6048, " ", $vqrange], _
-		[-10052, 7329, " ", $vqrange], _
-		[-8388, 8970, " ", $vqrange], _
-		[-6653, 10245, " ", $vqrange], _
-		[-5370, 10524, " ", $vqrange], _
-		[-3963, 10417, " ", $vqrange], _
-		[-3109, 8772, " ", $vqrange], _
-		[-2857, 8286, " ", $vqrange], _
-		[-3785, 10280, " ", $vqrange], _
-		[-4805, 10987, " ", $vqrange], _
-		[-5941, 10816, " ", $vqrange], _
-		[-6665, 10323, " ", $vqrange], _
-		[-7418, 9715, " ", $vqrange], _
-		[-8561, 8777, " ", $vqrange], _
-		[-9784, 7432, " ", $vqrange], _
-		[-10446, 6531, " ", $vqrange], _
-		[-9763, 5142, " ", $vqrange], _
-		[-8721, 4459, " ", $vqrange], _
-		[-6881, 3293, " ", $vqrange], _
-		[-5805, 2309, " ", $vqrange], _
-		[-7224, -205, " ", $vqrange], _
-		[-5735, 2380, " ", $vqrange], _
-		[-4597, 2055, " ", $vqrange], _
-		[-3124, 1326, " ", $vqrange], _
-		[-1510, 223, " ", $vqrange], _
-		[-1448, -678, " ", $vqrange], _
-		[-1812, -2708, " ", $vqrange], _
-		[144, -4181, " ", $vqrange], _
-		[2471, -6078, " ", $vqrange], _
-		[558, -4577, " ", $vqrange], _
-		[-76, -3752, " ", $vqrange], _
-		[-2389, -3193, " ", $vqrange], _
-		[-4803, -5652, " ", $vqrange], _
-		[-4414, -5105, " ", $vqrange], _
-		[-3269, -4214, " ", $vqrange], _
-		[-2008, -2693, " ", $vqrange], _
-		[-1371, -1171, " ", $vqrange], _
-		[-588, -37, " ", $vqrange], _
-		[203, -443, " ", $vqrange], _
-		[2579, -1205, " ", $vqrange], _
-		[3596, -1471, " ", $vqrange], _
-		[5171, -1372, " ", $vqrange], _
-		[6746, -2044, " ", $vqrange], _
-		[7957, -2352, " ", $vqrange], _
-		[9003, -2324, " ", $vqrange], _
-		[10652, -2209, " ", $vqrange], _
-		[12073, -2802, " ", $vqrange], _
-		[13383, -3406, " ", $vqrange], _
-		[12170, -2781, " ", $vqrange], _
-		[10413, -2392, " ", $vqrange], _
-		[9402, -2419, " ", $vqrange], _
-		[8637, -2420, " ", $vqrange], _
-		[7342, -2323, " ", $vqrange], _
-		[6078, -1813, " ", $vqrange], _
-		[5587, -988, " ", $vqrange], _
-		[5830, -292, " ", $vqrange], _
-		[6840, 259, " ", $vqrange], _
-		[7594, 969, " ", $vqrange], _
-		[8692, 1653, " ", $vqrange], _
-		[10288, 2368, " ", $vqrange], _
-		[11302, 2264, " ", $vqrange], _
-		[11664, 2766, " ", $vqrange], _
-		[12490, 3972, " ", $vqrange], _
-		[13137, 4592, " ", $vqrange], _
-		[14218, 5731, " ", $vqrange], _
-		[15438, 6429, " ", $vqrange], _
-		[18299, 5291, " ", $vqrange], _
-		[19615, 3564, " ", $vqrange], _
-		[18791, 4798, " ", $vqrange], _
-		[18148, 5326, " ", $vqrange], _
-		[17034, 6854, " ", $vqrange], _
-		[18073, 7638, " ", $vqrange], _
-		[18936, 8594, " ", $vqrange], _
-		[19527, 9429, " ", $vqrange], _
-		[19327, 8677, " ", $vqrange], _
-		[19041, 8015, " ", $vqrange], _
-		[19644, 7899, " ", $vqrange], _
-		[20767, 7911, " ", $vqrange], _
-		[21723, 8268, " ", $vqrange], _
-		[22806, 8678, " ", $vqrange], _
-		[24139, 9243, " ", $vqrange], _
-		[25051, 8651, " ", $vqrange], _
-		[24793, 9901, " ", $vqrange]]
-
-	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

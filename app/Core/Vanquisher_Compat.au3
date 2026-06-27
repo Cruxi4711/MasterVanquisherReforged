@@ -1,4 +1,4 @@
-#include-once
+﻿#include-once
 
 ; Central stop check used by movement and GoOut routines.
 ; Keeps routes from continuing after the GUI/run state has been stopped.
@@ -8,6 +8,23 @@ Func _Vanquisher_ShouldStop()
     If $g_b_Vanquisher_AbortRoute Then Return True
     If $g_b_Vanquisher_RunFinished Then Return True
     Return False
+EndFunc
+
+Func _Vanquisher_CooperativeSleep($a_i_DurationMs)
+    Local $l_i_RemainingMs = Int($a_i_DurationMs)
+    If $l_i_RemainingMs <= 0 Then Return
+
+    While $l_i_RemainingMs > 0
+        If _Vanquisher_ShouldStop() Then Return
+
+        Local $l_i_SliceMs = 100
+        If $l_i_RemainingMs < $l_i_SliceMs Then $l_i_SliceMs = $l_i_RemainingMs
+
+        Sleep($l_i_SliceMs)
+        $l_i_RemainingMs -= $l_i_SliceMs
+
+        If IsFunc("_Vanquisher_PumpGUI") Then _Vanquisher_PumpGUI()
+    WEnd
 EndFunc
 
 ; Legacy GWA/GWToolbox-style aliases for Master Vanquisher on top of GwAu3.
@@ -159,7 +176,7 @@ Func _Vanquisher_SaveLastCharacter($a_s_Name)
     IniWrite(_Vanquisher_CharIniPath(), "Character", "LastName", $a_s_Name)
 EndFunc
 
-Func _Vanquisher_CountGWClients()
+Func _Vanquisher_CountGWClientsInPrefix()
     Local $l_i_Count = ProcessList("gw.exe")[0][0]
     Local $l_i_GwExe = ProcessList("Gw.exe")[0][0]
     If $l_i_GwExe > $l_i_Count Then $l_i_Count = $l_i_GwExe
@@ -168,22 +185,259 @@ Func _Vanquisher_CountGWClients()
     Return $l_i_Count
 EndFunc
 
+Func _Vanquisher_ProcCmdlineIsGw($a_s_Cmdline)
+    Return StringRegExp($a_s_Cmdline, "(?i)Gw\.exe")
+EndFunc
+
+Func _Vanquisher_ReadProcEnvironVar($a_i_Pid, $a_s_Name)
+    Local $l_a_Roots[2] = ["Z:\proc\" & $a_i_Pid & "\environ", "Y:\proc\" & $a_i_Pid & "\environ"]
+    For $l_i_RootIdx = 0 To 1
+        Local $l_s_Blob = FileRead($l_a_Roots[$l_i_RootIdx], 1)
+        If @error Then ContinueLoop
+
+        Local $l_as_Pairs = StringSplit($l_s_Blob, Chr(0), $STR_ENTIRESPLIT)
+        For $l_i_Pair = 1 To $l_as_Pairs[0]
+            Local $l_i_Eq = StringInStr($l_as_Pairs[$l_i_Pair], "=")
+            If $l_i_Eq <= 1 Then ContinueLoop
+            If StringCompare(StringLeft($l_as_Pairs[$l_i_Pair], $l_i_Eq - 1), $a_s_Name, 0) = 0 Then
+                Return StringMid($l_as_Pairs[$l_i_Pair], $l_i_Eq + 1)
+            EndIf
+        Next
+    Next
+    Return ""
+EndFunc
+
+Func _Vanquisher_RunUnixCommand($a_s_Command)
+    If Not _Vanquisher_IsWine() Then Return ""
+
+    Local $l_s_OutFile = @TempDir & "\vanquisher_cmd_out.txt"
+    FileDelete($l_s_OutFile)
+    Local $l_s_UnixOut = _Vanquisher_ShellQuote(_Vanquisher_UnixPath($l_s_OutFile))
+    Local $l_s_Cmd = 'start /unix /usr/bin/bash -lc ' & _Vanquisher_ShellQuote($a_s_Command & " > " & $l_s_UnixOut & " 2>/dev/null")
+    RunWait(@ComSpec & ' /c ' & $l_s_Cmd, @TempDir, @SW_HIDE)
+    If Not FileExists($l_s_OutFile) Then Return ""
+    Local $l_s_Result = StringStripWS(FileRead($l_s_OutFile), 3)
+    FileDelete($l_s_OutFile)
+    Return $l_s_Result
+EndFunc
+
+Func _Vanquisher_GetRunningGwWinePrefix()
+    Local $l_a_Roots[2] = ["Z:\proc", "Y:\proc"]
+    For $l_i_RootIdx = 0 To 1
+        Local $l_s_Root = $l_a_Roots[$l_i_RootIdx]
+        Local $l_s_Search = FileFindFirstFile($l_s_Root & "\*")
+        If $l_s_Search = -1 Then ContinueLoop
+
+        While 1
+            Local $l_s_Entry = FileFindNextFile($l_s_Search)
+            If @error Then ExitLoop
+            If Not StringRegExp($l_s_Entry, "^\d+$") Then ContinueLoop
+
+            Local $l_s_Cmdline = FileRead($l_s_Root & "\" & $l_s_Entry & "\cmdline", 1)
+            If @error Or Not _Vanquisher_ProcCmdlineIsGw($l_s_Cmdline) Then ContinueLoop
+
+            Local $l_s_Prefix = _Vanquisher_ReadProcEnvironVar(Number($l_s_Entry), "WINEPREFIX")
+            FileClose($l_s_Search)
+            If $l_s_Prefix <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_Prefix)
+
+            Local $l_s_Home = _Vanquisher_ReadProcEnvironVar(Number($l_s_Entry), "HOME")
+            If $l_s_Home <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_Home & "/.wine")
+        WEnd
+        FileClose($l_s_Search)
+    Next
+
+    Local $l_s_FromShell = _Vanquisher_RunUnixCommand('for pid in $(pgrep -x Gw.exe 2>/dev/null); do tr "\0" "\n" < /proc/$pid/environ | sed -n "s/^WINEPREFIX=//p" | head -1; break; done')
+    If $l_s_FromShell <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_FromShell)
+    Return ""
+EndFunc
+
+Func _Vanquisher_CountGWClientsViaProc()
+    If Not _Vanquisher_IsWine() Then Return 0
+
+    Local $l_i_Count = 0
+    Local $l_a_ProcRoots[2] = ["Z:\proc", "Y:\proc"]
+    For $l_i_RootIdx = 0 To 1
+        Local $l_s_Root = $l_a_ProcRoots[$l_i_RootIdx]
+        Local $l_s_Search = FileFindFirstFile($l_s_Root & "\*")
+        If $l_s_Search = -1 Then ContinueLoop
+
+        While 1
+            Local $l_s_Entry = FileFindNextFile($l_s_Search)
+            If @error Then ExitLoop
+            If Not StringRegExp($l_s_Entry, "^\d+$") Then ContinueLoop
+
+            Local $l_s_Cmdline = FileRead($l_s_Root & "\" & $l_s_Entry & "\cmdline", 1)
+            If Not @error And _Vanquisher_ProcCmdlineIsGw($l_s_Cmdline) Then $l_i_Count += 1
+        WEnd
+        FileClose($l_s_Search)
+        If $l_i_Count > 0 Then Return $l_i_Count
+    Next
+
+    Local $l_s_Count = _Vanquisher_RunUnixCommand("pgrep -x Gw.exe >/dev/null && pgrep -xc Gw.exe || pgrep -xc gw.exe || echo 0")
+    If $l_s_Count <> "" And StringIsInt($l_s_Count) Then Return Number($l_s_Count)
+    Return 0
+EndFunc
+
+Func _Vanquisher_CountGWClients()
+    Local $l_i_Count = _Vanquisher_CountGWClientsInPrefix()
+    If $l_i_Count > 0 Then Return $l_i_Count
+    Return _Vanquisher_CountGWClientsViaProc()
+EndFunc
+
 Func _Vanquisher_GWIsRunning()
     Return _Vanquisher_CountGWClients() > 0
 EndFunc
 
-Func Gwen_GetLoggedCharNames()
-    Local $l_s_Names = _Vanquisher_GetMemoryCharNames()
-    If $l_s_Names <> "" Then Return $l_s_Names
+Func _Vanquisher_IsWine()
+    Local $l_a_Wine = DllCall("ntdll.dll", "str", "wine_get_version")
+    Return Not @error And IsArray($l_a_Wine) And $l_a_Wine[0] <> ""
+EndFunc
 
-    _Gwen_AppendNamesFromWindows($l_s_Names)
-    Return $l_s_Names
+Func _Vanquisher_ReadUnixEnvironVar($a_s_Name)
+    Local $l_a_Roots[2] = ["Z:\proc\self\environ", "Y:\proc\self\environ"]
+    For $l_i_RootIdx = 0 To 1
+        Local $l_s_Blob = FileRead($l_a_Roots[$l_i_RootIdx], 1)
+        If @error Then ContinueLoop
+
+        Local $l_as_Pairs = StringSplit($l_s_Blob, Chr(0), $STR_ENTIRESPLIT)
+        For $l_i_Pair = 1 To $l_as_Pairs[0]
+            Local $l_i_Eq = StringInStr($l_as_Pairs[$l_i_Pair], "=")
+            If $l_i_Eq <= 1 Then ContinueLoop
+            If StringCompare(StringLeft($l_as_Pairs[$l_i_Pair], $l_i_Eq - 1), $a_s_Name, 0) = 0 Then
+                Return StringMid($l_as_Pairs[$l_i_Pair], $l_i_Eq + 1)
+            EndIf
+        Next
+    Next
+    Return ""
+EndFunc
+
+Func _Vanquisher_NormalizeUnixPath($a_s_Path)
+    Local $l_s_Path = StringReplace(StringStripWS($a_s_Path, 3), "\", "/")
+    While StringLen($l_s_Path) > 1 And StringRight($l_s_Path, 1) = "/"
+        $l_s_Path = StringLeft($l_s_Path, StringLen($l_s_Path) - 1)
+    WEnd
+    Return $l_s_Path
+EndFunc
+
+Func _Vanquisher_GetWinePrefix()
+    Local $l_s_Prefix = _Vanquisher_ReadUnixEnvironVar("WINEPREFIX")
+    If $l_s_Prefix <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_Prefix)
+
+    $l_s_Prefix = EnvGet("WINEPREFIX")
+    If $l_s_Prefix <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_Prefix)
+
+    Local $l_s_Home = _Vanquisher_ReadUnixEnvironVar("HOME")
+    If $l_s_Home <> "" Then Return _Vanquisher_NormalizeUnixPath($l_s_Home & "/.wine")
+
+    Return "unknown"
+EndFunc
+
+Func _Vanquisher_GetConfiguredWinePrefix()
+    Local $l_s_Prefix = IniRead($VANQUISHER_CHAR_INI, "Wine", "Prefix", "")
+    Return _Vanquisher_NormalizeUnixPath($l_s_Prefix)
+EndFunc
+
+Func _Vanquisher_WinePrefixIsCorrect()
+    If Not _Vanquisher_IsWine() Then Return True
+
+    Local $l_s_Current = _Vanquisher_GetWinePrefix()
+    Local $l_s_RunningGw = _Vanquisher_GetRunningGwWinePrefix()
+
+    If $l_s_RunningGw <> "" Then
+        If $l_s_Current = "unknown" Then Return False
+        Return StringCompare($l_s_Current, $l_s_RunningGw, 0) = 0
+    EndIf
+
+    Local $l_s_Configured = _Vanquisher_GetConfiguredWinePrefix()
+    If $l_s_Configured = "" Then Return True
+    If $l_s_Current = "unknown" Then Return False
+    Return StringCompare($l_s_Current, $l_s_Configured, 0) = 0
+EndFunc
+
+Func _Vanquisher_ExpectedWinePrefix()
+    Local $l_s_RunningGw = _Vanquisher_GetRunningGwWinePrefix()
+    If $l_s_RunningGw <> "" Then Return $l_s_RunningGw
+    Return _Vanquisher_GetConfiguredWinePrefix()
+EndFunc
+
+Func _Vanquisher_ShellQuote($a_s_Value)
+    Return "'" & StringReplace($a_s_Value, "'", "'\\''") & "'"
+EndFunc
+
+Func _Vanquisher_UnixPath($a_s_WinPath)
+    Local $l_s_Path = StringReplace($a_s_WinPath, "\", "/")
+    If StringLeft(StringLower($l_s_Path), 2) = "z:" Then $l_s_Path = StringMid($l_s_Path, 3)
+    Return $l_s_Path
+EndFunc
+
+Func _Vanquisher_RelaunchViaLauncher($a_s_Prefix = "")
+    Local $l_s_Launcher = @ScriptDir & "\run_vanquisher.sh"
+    If Not FileExists($l_s_Launcher) Then Return False
+
+    Local $l_s_Dir = _Vanquisher_UnixPath(@ScriptDir)
+    Local $l_s_Prefix = $a_s_Prefix
+    If $l_s_Prefix = "" Then $l_s_Prefix = _Vanquisher_ExpectedWinePrefix()
+    If $l_s_Prefix = "" Then Return False
+
+    Local $l_s_Cmd = 'start /unix /usr/bin/bash -lc "export WINEPREFIX=' & _Vanquisher_ShellQuote($l_s_Prefix) & '; cd ' & _Vanquisher_ShellQuote($l_s_Dir) & '; exec ./run_vanquisher.sh"'
+    Run(@ComSpec & ' /c ' & $l_s_Cmd, @ScriptDir, @SW_HIDE)
+    Return Not @error
+EndFunc
+
+Func _Vanquisher_HandleWrongWinePrefix()
+    If Not _Vanquisher_IsWine() Then Return
+    If _Vanquisher_WinePrefixIsCorrect() Then Return
+
+    Local $l_s_Expected = _Vanquisher_ExpectedWinePrefix()
+    If $l_s_Expected = "" Then Return
+
+    Local $l_s_RunningGw = _Vanquisher_GetRunningGwWinePrefix()
+    Local $l_s_Reason = "Vanquisher is running in the wrong Wine prefix."
+    If $l_s_RunningGw <> "" Then
+        $l_s_Reason = "Guild Wars is running in a different Wine prefix than Vanquisher."
+    EndIf
+
+    Local $l_i_Answer = MsgBox(36, "Wrong Wine Prefix", _
+        $l_s_Reason & @CRLF & @CRLF & _
+        "Vanquisher: " & _Vanquisher_GetWinePrefix() & @CRLF & _
+        "Required:   " & $l_s_Expected & @CRLF & @CRLF & _
+        "Do not open MasterVanquisher.au3 directly from AutoIt." & @CRLF & @CRLF & _
+        "Click Yes to relaunch in the same prefix as Guild Wars.")
+
+    If $l_i_Answer = $IDYES Then
+        If _Vanquisher_RelaunchViaLauncher($l_s_Expected) Then Exit
+        MsgBox(16, "Master Vanquisher Reforged", "Could not relaunch automatically. Close this window and run ./run_vanquisher.sh from the project folder.")
+    EndIf
+EndFunc
+
+Func _Vanquisher_PrefixHint()
+    If Not _Vanquisher_IsWine() Then Return ""
+
+    Local $l_s_Current = _Vanquisher_GetWinePrefix()
+    Local $l_s_Expected = _Vanquisher_ExpectedWinePrefix()
+    Local $l_s_Msg = " Wine prefix: " & $l_s_Current & "."
+
+    If $l_s_Expected <> "" And Not _Vanquisher_WinePrefixIsCorrect() Then
+        $l_s_Msg &= " Required: " & $l_s_Expected & ". Close and relaunch with ./run_vanquisher.sh"
+    EndIf
+    Return $l_s_Msg
+EndFunc
+
+Func _Vanquisher_WineAttachBlockedMsg()
+    If _Vanquisher_WinePrefixIsCorrect() Then Return ""
+
+    Local $l_s_Expected = _Vanquisher_ExpectedWinePrefix()
+    If $l_s_Expected = "" Then Return ""
+
+    Return "Guild Wars is running in " & $l_s_Expected & " but Vanquisher is in " & _Vanquisher_GetWinePrefix() & ". Close Vanquisher and relaunch with ./run_vanquisher.sh"
+EndFunc
+
+Func Gwen_GetLoggedCharNames()
+    Return _Vanquisher_GetMemoryCharNames()
 EndFunc
 
 Func Gwen_GetCharNamesFromWindowsOnly()
-    Local $l_s_Names = ""
-    _Gwen_AppendNamesFromWindows($l_s_Names)
-    Return $l_s_Names
+    Return Gwen_GetLoggedCharNames()
 EndFunc
 
 Func _Vanquisher_GetMemoryCharNames()
@@ -278,12 +532,20 @@ Func _Vanquisher_AttachToCharacter($a_s_CharName)
     $a_s_CharName = StringStripWS($a_s_CharName, 3)
     If $a_s_CharName = "" Then Return False
 
+    Local $l_s_Block = _Vanquisher_WineAttachBlockedMsg()
+    If $l_s_Block <> "" Then
+        CurrentAction($l_s_Block)
+        Return False
+    EndIf
+
     If Not Initialize($a_s_CharName, True) Then
         Local $l_s_MemoryNames = _Vanquisher_GetMemoryCharNames()
         If $l_s_MemoryNames <> "" Then
-            CurrentAction("Attach failed for '" & $a_s_CharName & "'. Found: " & StringReplace($l_s_MemoryNames, "|", ", "))
+            CurrentAction("Attach failed for '" & $a_s_CharName & "'. Memory sees: " & StringReplace($l_s_MemoryNames, "|", ", "))
+        ElseIf Not _Vanquisher_WinePrefixIsCorrect() Then
+            CurrentAction("Attach failed. Vanquisher and Guild Wars must use the same Wine prefix.")
         Else
-            CurrentAction("Attach failed. Start Guild Wars, log in on that character, click Refresh, then Attach.")
+            CurrentAction("Attach failed. Log fully into a character in-game, click Refresh, then Attach.")
         EndIf
         Return False
     EndIf
@@ -585,6 +847,10 @@ Func GoSignpost($aAgent)
     Return Agent_GoSignpost($aAgent)
 EndFunc
 
+Func TargetNearestItem()
+    Core_PerformAction($GC_I_CONTROL_TARGETING_ITEM_NEAREST, 0x1E)
+EndFunc
+
 Func OpenChest($a_b_WithLockpick = True)
     Return Item_OpenChest($a_b_WithLockpick)
 EndFunc
@@ -637,19 +903,75 @@ Func _Vanquisher_TryCaptureVanquishBaseline()
     Return False
 EndFunc
 
-; GwAu3 Utility AI requires Cache_SkillBar() once per explorable zone before UAI_Fight can cast or auto-attack.
+; GwAu3 Utility AI requires Cache_SkillBar() once per explorable zone before Fight()/UAI_Fight can cast or auto-attack.
 Func _Vanquisher_InitCombatAI()
     If $g_b_Vanquisher_CombatAIReady Then Return
     If Not Map_GetInstanceInfo("IsExplorable") Then Return
     If Map_GetInstanceInfo("IsLoading") Then Return
-    $g_b_CacheWeaponSet = True
+    $g_b_CacheWeaponSet = False
     Cache_SkillBar()
     $g_b_Vanquisher_CombatAIReady = True
     CurrentAction("Utility AI skill bar cached.")
 EndFunc
 
+Func _Vanquisher_ResetCombatState($a_s_Reason = "")
+    $g_h_Vanquisher_FightTimer = 0
+    $g_b_Vanquisher_CombatStateActive = False
+    $g_s_Vanquisher_CombatGroupLabel = ""
+    _Vanquisher_EndCombatWatchdog()
+    If $a_s_Reason <> "" Then LogStatus("Combat state reset: " & $a_s_Reason)
+EndFunc
+
 Func _Vanquisher_ResetGoOutRouteProgress()
     $g_i_Vanquisher_GoOutLastMapHandled = -1
+    $g_i_TearsRoute_LastMapHandled = -1
+    $g_i_GriffonsMouthRoute_LastMapHandled = -1
+    $g_i_IronHorseMineRoute_LastMapHandled = -1
+    $g_i_StingrayRoute_LastMapHandled = -1
+    $g_i_TravelersValeRoute_LastMapHandled = -1
+    $g_i_ReedBogRoute_LastMapHandled = -1
+    $g_i_TheFallsRoute_LastMapHandled = -1
+    $g_i_DryTopRoute_LastMapHandled = -1
+    $g_i_TalmarkWildernessRoute_LastMapHandled = -1
+    $g_i_MajestysRestRoute_LastMapHandled = -1
+    $g_i_KessexPeakRoute_LastMapHandled = -1
+    $g_i_CursedLandsRoute_LastMapHandled = -1
+    $g_i_NeboTerraceRoute_LastMapHandled = -1
+    $g_i_MineralSpringsRoute_LastMapHandled = -1
+    $g_i_LornarsPassRoute_LastMapHandled = -1
+    $g_i_IcedomeRoute_LastMapHandled = -1
+    $g_i_DreadnoughtsDriftRoute_LastMapHandled = -1
+    $g_i_MamnoonLagoonRoute_LastMapHandled = -1
+    $g_i_TheAridSeaRoute_LastMapHandled = -1
+    $g_i_AscalonFoothillsRoute_LastMapHandled = -1
+    $g_i_DiessaLowlandsRoute_LastMapHandled = -1
+    $g_i_DragonsGulletRoute_LastMapHandled = -1
+    $g_i_FlameTempleCorridorRoute_LastMapHandled = -1
+    $g_i_SacnothValleyRoute_LastMapHandled = -1
+    $g_i_CrystalOverlookRoute_LastMapHandled = -1
+EndFunc
+
+Func _Vanquisher_WaitForPlayerReadyAfterLoad($a_i_TimeoutMs = 10000)
+    Agent_CancelAction()
+    Local $l_h_Timer = TimerInit()
+    Local $l_b_CoordsReady = False
+    While TimerDiff($l_h_Timer) < $a_i_TimeoutMs
+        If Map_GetInstanceInfo("IsLoading") Then
+            Sleep(250)
+            ContinueLoop
+        EndIf
+        Local $l_f_X = Agent_GetAgentInfo(-2, "X")
+        Local $l_f_Y = Agent_GetAgentInfo(-2, "Y")
+        If $l_f_X <> 0 Or $l_f_Y <> 0 Then
+            $l_b_CoordsReady = True
+            ExitLoop
+        EndIf
+        Sleep(250)
+    WEnd
+    If Not $l_b_CoordsReady Then Return False
+    Other_WaitPingStabilized(1000)
+    Sleep(Other_GetPing() + 250)
+    Return True
 EndFunc
 
 Func _Vanquisher_RefreshVanquishBaseline()
@@ -660,11 +982,14 @@ Func _Vanquisher_RefreshVanquishBaseline()
     $g_b_Vanquisher_HasRunRoute = False
     $g_b_Vanquisher_RunFinished = False
     $g_b_Vanquisher_AbortRoute = False
+    $g_b_Vanquisher_DeathResignPending = False
+    $g_b_Vanquisher_LastPlayerDead = False
+    $g_i_Vanquisher_LastDeathPenalty = -1
     $g_b_Vanquisher_CombatAIReady = False
+    _Vanquisher_ResetCombatState()
     $g_b_Vanquisher_TransitOnly = False
-    $g_i_Vanquisher_GoOutLastMapHandled = -1
-    $g_i_TearsRoute_LastMapHandled = -1
-    $g_i_StingrayRoute_LastMapHandled = -1
+    $g_b_Vanquisher_DeathReturnToCheckpoint = False
+    _Vanquisher_ResetGoOutRouteProgress()
     $g_h_Vanquisher_ConsumablePollTimer = 0
     For $l_i_Idx = 0 To 6
         $g_a_Vanquisher_BULastUsed[$l_i_Idx] = 0
@@ -751,8 +1076,11 @@ Func _Vanquisher_FinishRun()
     If $g_b_Vanquisher_RunFinished Then Return
     $g_b_Vanquisher_RunFinished = True
     $g_b_Vanquisher_AbortRoute = True
+    _Vanquisher_ClearDeathCheckpoint()
+    _Vanquisher_ClearRouteProgress()
     CurrentAction("Vanquish complete — resigning and stopping bot.")
     _Vanquisher_ReturnToOutpost()
+    _Vanquisher_UseDeathPenaltyItems()
     $boolrun = False
     CurrentAction("Vanquish finished — stopping bot.")
 EndFunc
@@ -770,9 +1098,15 @@ EndFunc
 
 Func _Vanquisher_ResignToOutpost()
     CurrentAction("Resigning to outpost.")
+    _Vanquisher_ResetCombatState("resign requested")
+    $DeadOnTheRun = 1
     Chat_SendChat("resign", "/")
     Sleep(3000)
     WaitForLoad()
+    If Not Map_GetInstanceInfo("IsExplorable") Then
+        _Vanquisher_ClearStaleRecoveryForOutpostStart()
+        $g_b_Vanquisher_DeathResignPending = False
+    EndIf
     Return Not Map_GetInstanceInfo("IsExplorable")
 EndFunc
 
@@ -1104,4 +1438,737 @@ Func GetNearestNPCToCoords($a_f_X, $a_f_Y)
     If $l_p_Best = 0 Then Return 0
     Return GetAgentByID(Agent_GetAgentInfo($l_p_Best, "ID"))
 EndFunc
+#Region Custom merge helpers
+Func _Vanquisher_LogCrash($a_s_Message, $a_s_Context = "")
+    Local $l_s_Line = @YEAR & "-" & StringFormat("%02d", @MON) & "-" & StringFormat("%02d", @MDAY) & " " & StringFormat("%02d", @HOUR) & ":" & StringFormat("%02d", @MIN) & ":" & StringFormat("%02d", @SEC) & " | " & $a_s_Message
+    If $a_s_Context <> "" Then $l_s_Line &= " | " & $a_s_Context
+
+    Local $l_i_Slash = StringInStr($g_s_LogFile, "\", 0, -1)
+    If $l_i_Slash > 0 Then
+        Local $l_s_LogDir = StringLeft($g_s_LogFile, $l_i_Slash - 1)
+        If $l_s_LogDir <> "" And Not FileExists($l_s_LogDir) Then DirCreate($l_s_LogDir)
+    EndIf
+
+    FileWriteLine($g_s_LogFile, $l_s_Line)
+    If IsFunc("LogStatus") Then LogStatus($l_s_Line)
+EndFunc
+
+Func _Vanquisher_DeathCheckpoint_Save($a_s_Title, $a_i_Map, $a_f_X, $a_f_Y, $a_i_WaypointIndex)
+    _Vanquisher_SaveDeathCheckpoint($a_s_Title, $a_i_Map, $a_f_X, $a_f_Y, $a_i_WaypointIndex)
+EndFunc
+
+Func _Vanquisher_DeathCheckpoint_Load($a_s_Title, $a_i_Map)
+    Return _Vanquisher_LoadDeathCheckpoint($a_s_Title, $a_i_Map)
+EndFunc
+
+Func _Vanquisher_DeathCheckpoint_Clear()
+    _Vanquisher_ClearDeathCheckpoint()
+EndFunc
+
+Func _Vanquisher_ProgressSave($a_i_WaypointIndex, $a_s_Phase = "forward", $a_i_TotalCount = -1)
+    _Vanquisher_SaveRouteProgress($a_i_WaypointIndex, $a_s_Phase, $a_i_TotalCount)
+EndFunc
+
+Func _Vanquisher_ProgressLoad($a_s_Title, $a_i_Map)
+    Return _Vanquisher_LoadRouteProgress($a_s_Title, $a_i_Map)
+EndFunc
+
+Func _Vanquisher_ProgressClear()
+    _Vanquisher_ClearRouteProgress()
+EndFunc
+
+Func _Vanquisher_HandleDeathReturn()
+    If Not $g_b_Vanquisher_DeathReturnActive Then Return False
+    If Not _Vanquisher_WaitUntilAlive() Then Return False
+    CurrentAction("Death return active — resume from wp " & ($g_i_Vanquisher_DeathReturnUntilIndex + 1) & ".")
+    _Vanquisher_LogCrash("Death return active", "waypoint=" & $g_i_Vanquisher_DeathReturnUntilIndex)
+    Return True
+EndFunc
+
+Func _Vanquisher_MapStallCheck()
+    Return _Vanquisher_MapWatchdogShouldDefer()
+EndFunc
+
+Func _Vanquisher_ResetMapWatchdog()
+    _Vanquisher_BeginMapAttempt()
+EndFunc
+
+Func _Vanquisher_ShrineRecovery($a_i_JumpToWaypointIndex = -1, $a_i_GapFillUntilIndex = -1)
+    $g_b_Vanquisher_ShrineRecoveryActive = True
+    $g_i_Vanquisher_JumpToWaypointIndex = $a_i_JumpToWaypointIndex
+    $g_i_Vanquisher_ShrineGapFillUntilIndex = $a_i_GapFillUntilIndex
+    _Vanquisher_LogCrash("Shrine recovery armed", "jump=" & $a_i_JumpToWaypointIndex & ", fillUntil=" & $a_i_GapFillUntilIndex)
+    Return True
+EndFunc
+
+Func _Vanquisher_RunShrineRecovery()
+    If Not $g_b_Vanquisher_ShrineRecoveryActive Then Return False
+    $g_b_Vanquisher_ShrineRecoveryActive = False
+    CurrentAction("Shrine recovery ready.")
+    Return True
+EndFunc
+
+Func _Vanquisher_WipeRecovery()
+    $g_b_Vanquisher_WipeRecoveryPending = True
+    _Vanquisher_LogCrash("Wipe recovery armed")
+    Return True
+EndFunc
+#EndRegion
+
+#Region Custom merge imports
+
+Func _Vanquisher_ParseCharFromTitle($a_s_Title)
+    If StringLeft($a_s_Title, 13) = "Guild Wars - " Then
+        Return StringStripWS(StringMid($a_s_Title, 14), 3)
+    EndIf
+    Return ""
+EndFunc
+
+Func _Vanquisher_IsPidInList(ByRef $a_a_Pids, $a_i_Pid)
+    For $l_i_Idx = 1 To $a_a_Pids[0]
+        If $a_a_Pids[$l_i_Idx] = $a_i_Pid Then Return True
+    Next
+    Return False
+EndFunc
+
+Func _Vanquisher_AddPid(ByRef $a_a_Pids, $a_i_Pid)
+    If $a_i_Pid = 0 Or _Vanquisher_IsPidInList($a_a_Pids, $a_i_Pid) Then Return
+    $a_a_Pids[0] += 1
+    ReDim $a_a_Pids[$a_a_Pids[0] + 1]
+    $a_a_Pids[$a_a_Pids[0]] = $a_i_Pid
+EndFunc
+
+Func _Vanquisher_CollectGWClientPids()
+    Local $l_a_Pids[1] = [0]
+    Local $l_as_ProcessList = ProcessList("gw.exe")
+
+    For $l_i_Idx = 1 To $l_as_ProcessList[0][0]
+        _Vanquisher_AddPid($l_a_Pids, $l_as_ProcessList[$l_i_Idx][1])
+    Next
+
+    Local $l_a_Wins = WinList("[CLASS:" & $GC_S_CLASS_DX_WINDOW & "]")
+    For $l_i_Idx = 1 To $l_a_Wins[0][0]
+        _Vanquisher_AddPid($l_a_Pids, WinGetProcess($l_a_Wins[$l_i_Idx][1]))
+    Next
+
+    Return $l_a_Pids
+EndFunc
+
+Func _Vanquisher_CharNameFromPid($a_i_Pid)
+    Memory_Open($a_i_Pid)
+    If Not $g_h_GWProcess Then Return ""
+
+    If Scanner_InitializeSections() And Scanner_ScanForCharname() And $g_p_CharName <> 0 Then
+        Local $l_s_Char = StringStripWS(Player_GetCharName(), 3)
+        Memory_Close()
+        $g_h_GWProcess = 0
+        If $l_s_Char <> "" Then Return $l_s_Char
+    EndIf
+
+    Local $l_h_Win = Scanner_GetHwnd($a_i_Pid)
+    If $l_h_Win Then
+        Local $l_s_Char = _Vanquisher_ParseCharFromTitle(WinGetTitle($l_h_Win))
+        If $l_s_Char <> "" Then
+            Memory_Close()
+            $g_h_GWProcess = 0
+            Return $l_s_Char
+        EndIf
+    EndIf
+
+    Memory_Close()
+    $g_h_GWProcess = 0
+    Return ""
+EndFunc
+
+Func _Vanquisher_IsMercenaryHeroId($a_i_HeroId)
+	Return $a_i_HeroId >= $HERO_MercenaryHero1 And $a_i_HeroId <= $HERO_MercenaryHero8
+EndFunc   ;==>_Vanquisher_IsMercenaryHeroId
+
+Func _Vanquisher_AddPartyHero($a_i_HeroId, $a_s_HeroName = "")
+	If $a_i_HeroId < 1 Then
+		CurrentAction("Skipped unknown hero: " & $a_s_HeroName)
+		Return False
+	EndIf
+	CurrentAction("Adding hero " & $a_s_HeroName & " (id " & $a_i_HeroId & ")")
+	If _Vanquisher_IsMercenaryHeroId($a_i_HeroId) Then
+		Ui_AddHero($a_i_HeroId)
+	Else
+		Party_AddHero($a_i_HeroId)
+	EndIf
+	Sleep(500)
+	Other_PingSleep()
+	Return True
+EndFunc   ;==>_Vanquisher_AddPartyHero
+
+Func _Vanquisher_SetupParty()
+	If Not $Bool_AddHeroes Then
+		CurrentAction("Skipped Party Setup")
+		Return
+	EndIf
+	If Map_GetInstanceInfo("IsExplorable") Then Return
+	If Not _Vanquisher_IsAtCorrectOutpost() Then Return
+
+	KickAllHeroes()
+	Sleep(1000)
+
+	CurrentAction("Setting up Party.")
+	Local $l_i_FarmMap = $Map_To_Farm
+	If $l_i_FarmMap = 0 Then $l_i_FarmMap = GetMapID()
+	Local $l_i_OutpostCap = GetMaxPartySize(GetMapID())
+	Local $l_i_FarmCap = GetMaxPartySize($l_i_FarmMap)
+	$PartySize = ($l_i_OutpostCap < $l_i_FarmCap) ? $l_i_OutpostCap : $l_i_FarmCap
+	Local $l_i_HeroesAdded = 0
+
+	If $PartySize >= 4 Then
+		If _Vanquisher_AddPartyHero(GetHeroIdByName(GUICtrlRead($COMBO_HERO1)), GUICtrlRead($COMBO_HERO1)) Then $l_i_HeroesAdded += 1
+		If _Vanquisher_AddPartyHero(GetHeroIdByName(GUICtrlRead($COMBO_HERO2)), GUICtrlRead($COMBO_HERO2)) Then $l_i_HeroesAdded += 1
+		If _Vanquisher_AddPartyHero(GetHeroIdByName(GUICtrlRead($COMBO_HERO3)), GUICtrlRead($COMBO_HERO3)) Then $l_i_HeroesAdded += 1
+	EndIf
+
+	If $PartySize >= 6 Then
+		If _Vanquisher_AddPartyHero(GetHeroIdByName(GUICtrlRead($COMBO_HERO4)), GUICtrlRead($COMBO_HERO4)) Then $l_i_HeroesAdded += 1
+		If _Vanquisher_AddPartyHero(GetHeroIdByName(GUICtrlRead($COMBO_HERO5)), GUICtrlRead($COMBO_HERO5)) Then $l_i_HeroesAdded += 1
+	EndIf
+
+	If $PartySize = 8 Then
+		If _Vanquisher_AddPartyHero(GetHeroIdByName(GUICtrlRead($COMBO_HERO6)), GUICtrlRead($COMBO_HERO6)) Then $l_i_HeroesAdded += 1
+		If _Vanquisher_AddPartyHero(GetHeroIdByName(GUICtrlRead($COMBO_HERO7)), GUICtrlRead($COMBO_HERO7)) Then $l_i_HeroesAdded += 1
+	EndIf
+
+	If $l_i_HeroesAdded > 0 Then _Vanquisher_WaitForPartyHeroes($l_i_HeroesAdded)
+
+	Other_WaitPingStabilized(1000)
+	Sleep(Other_GetPing() + 250)
+	CurrentAction("Party Setup")
+EndFunc
+
+Func _Vanquisher_WaitForPartyHeroes($a_i_ExpectedCount, $a_i_TimeoutMs = 15000)
+    If $a_i_ExpectedCount <= 0 Then Return True
+    Local $l_h_Timer = TimerInit()
+    While TimerDiff($l_h_Timer) < $a_i_TimeoutMs
+        If Party_GetMyPartyInfo("ArrayHeroPartyMemberSize") >= $a_i_ExpectedCount Then Return True
+        Sleep(250)
+    WEnd
+    CurrentAction("Party heroes " & Party_GetMyPartyInfo("ArrayHeroPartyMemberSize") & "/" & $a_i_ExpectedCount & " — continuing.")
+    Return False
+EndFunc   ;==>_Vanquisher_WaitForPartyHeroes
+
+Func _Vanquisher_IsPlayerAlive()
+    If Agent_GetAgentInfo(-2, "IsDead") Then Return False
+    If Death() = 1 Then Return False
+    If Agent_GetAgentInfo(-2, "HPPercent") <= 0 Then Return False
+    Return True
+EndFunc   ;==>_Vanquisher_IsPlayerAlive
+
+Func _Vanquisher_IsAtMinMorale($a_v_AgentID)
+    Return Party_GetMoraleInfo($a_v_AgentID, "IsMinMorale")
+EndFunc   ;==>_Vanquisher_IsAtMinMorale
+
+Func _Vanquisher_IsFullPartyWipe()
+    ; True wipe = entire party at 60% death penalty (min morale).
+    ; Plain "everyone dead" is recoverable via the in-zone shrine revive.
+    If Not _Vanquisher_IsAtMinMorale(-2) Then Return False
+    Local $l_i_HeroCount = Party_GetMyPartyInfo("ArrayHeroPartyMemberSize")
+    For $l_i_Idx = 1 To $l_i_HeroCount
+        Local $l_i_AgentID = Party_GetMyPartyHeroInfo($l_i_Idx, "AgentID")
+        If $l_i_AgentID > 0 And Not _Vanquisher_IsAtMinMorale($l_i_AgentID) Then Return False
+    Next
+    Return True
+EndFunc   ;==>_Vanquisher_IsFullPartyWipe
+
+Func _Vanquisher_WaitUntilAlive()
+    If _Vanquisher_IsPlayerAlive() Then Return True
+    If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then Return False
+    If _Vanquisher_IsPlayerAlive() Then Return True
+    If _Vanquisher_IsFullPartyWipe() Then Return False
+    CurrentAction("Waiting for shrine resurrection...")
+    While True
+        If _Vanquisher_IsFullPartyWipe() Then Return False
+        If _Vanquisher_IsPlayerAlive() Then
+            Other_RndSleep(500)
+            Return True
+        EndIf
+        Other_RndSleep(500)
+    WEnd
+EndFunc   ;==>_Vanquisher_WaitUntilAlive
+
+Func _Vanquisher_SaveDeathCheckpoint($a_s_Title, $a_i_Map, $a_f_X, $a_f_Y, $a_i_WaypointIndex)
+    If Not FileExists(@ScriptDir & "\Trace") Then DirCreate(@ScriptDir & "\Trace")
+    IniWrite($g_s_Vanquisher_DeathCheckpointIni, "checkpoint", "title", $a_s_Title)
+    IniWrite($g_s_Vanquisher_DeathCheckpointIni, "checkpoint", "map", String($a_i_Map))
+    IniWrite($g_s_Vanquisher_DeathCheckpointIni, "checkpoint", "x", String($a_f_X))
+    IniWrite($g_s_Vanquisher_DeathCheckpointIni, "checkpoint", "y", String($a_f_Y))
+    IniWrite($g_s_Vanquisher_DeathCheckpointIni, "checkpoint", "waypoint_index", String($a_i_WaypointIndex))
+    $g_b_Vanquisher_DeathReturnActive = True
+    $g_i_Vanquisher_DeathReturnUntilIndex = $a_i_WaypointIndex
+    $g_f_Vanquisher_DeathTargetX = $a_f_X
+    $g_f_Vanquisher_DeathTargetY = $a_f_Y
+EndFunc
+
+Func _Vanquisher_LoadDeathCheckpoint($a_s_Title, $a_i_Map)
+    If Not FileExists($g_s_Vanquisher_DeathCheckpointIni) Then Return False
+    If GetMapID() <> $a_i_Map Then Return False
+    If Not Map_GetInstanceInfo("IsExplorable") Then Return False
+    Local $l_s_Title = IniRead($g_s_Vanquisher_DeathCheckpointIni, "checkpoint", "title", "")
+    Local $l_i_Map = Int(IniRead($g_s_Vanquisher_DeathCheckpointIni, "checkpoint", "map", "0"))
+    If $l_s_Title <> $a_s_Title Or $l_i_Map <> $a_i_Map Then Return False
+    $g_f_Vanquisher_DeathTargetX = Int(IniRead($g_s_Vanquisher_DeathCheckpointIni, "checkpoint", "x", "0"))
+    $g_f_Vanquisher_DeathTargetY = Int(IniRead($g_s_Vanquisher_DeathCheckpointIni, "checkpoint", "y", "0"))
+    $g_i_Vanquisher_DeathReturnUntilIndex = Int(IniRead($g_s_Vanquisher_DeathCheckpointIni, "checkpoint", "waypoint_index", "0"))
+    $g_b_Vanquisher_DeathReturnActive = True
+    $g_b_Vanquisher_RecoverMidRun = False
+    CurrentAction("Loaded death checkpoint — return to wp " & ($g_i_Vanquisher_DeathReturnUntilIndex + 1) & " (" & $g_f_Vanquisher_DeathTargetX & ", " & $g_f_Vanquisher_DeathTargetY & ").")
+    LogStatus("Death checkpoint loaded for " & $a_s_Title & " map " & $a_i_Map)
+    Return True
+EndFunc
+
+Func _Vanquisher_ClearDeathCheckpoint()
+    $g_b_Vanquisher_DeathReturnActive = False
+    $g_i_Vanquisher_DeathReturnUntilIndex = -1
+    $g_f_Vanquisher_DeathTargetX = 0
+    $g_f_Vanquisher_DeathTargetY = 0
+    If FileExists($g_s_Vanquisher_DeathCheckpointIni) Then FileDelete($g_s_Vanquisher_DeathCheckpointIni)
+EndFunc
+
+Func _Vanquisher_IsOnFarmExplorable($a_i_FarmMap)
+    If Not Map_GetInstanceInfo("IsExplorable") Then Return False
+    If GetMapID() = $a_i_FarmMap Then Return True
+    If $a_i_FarmMap = $Map_To_Farm And $Title = "TalmarkWilderness" Then
+        Return _Vanquisher_IsOnTalmarkWildernessMap()
+    EndIf
+    Return False
+EndFunc
+
+Func _Vanquisher_HasSavedRouteProgress($a_s_Title, $a_i_Map)
+    If Not FileExists($g_s_Vanquisher_ProgressIni) Then Return False
+    Local $l_s_Title = IniRead($g_s_Vanquisher_ProgressIni, "progress", "title", "")
+    Local $l_i_Map = Int(IniRead($g_s_Vanquisher_ProgressIni, "progress", "map", "0"))
+    Return $l_s_Title = $a_s_Title And $l_i_Map = $a_i_Map
+EndFunc
+
+Func _Vanquisher_ClearStaleRecoveryForOutpostStart()
+    $g_b_Vanquisher_RecoverMidRun = False
+    $g_b_Vanquisher_SkipForwardRoute = False
+    $g_b_Vanquisher_DeathReturnToCheckpoint = False
+    $g_b_Vanquisher_DeathReturnActive = False
+    $g_i_Vanquisher_DeathReturnUntilIndex = -1
+    $g_f_Vanquisher_DeathTargetX = 0
+    $g_f_Vanquisher_DeathTargetY = 0
+    $g_b_Vanquisher_PostRezForwardNeeded = False
+    $g_i_Vanquisher_PostRezForwardFromIndex = -1
+    $g_i_Vanquisher_PostRezForwardToIndex = -1
+    $g_b_Vanquisher_PostRezBacktrackNeeded = False
+    $g_i_Vanquisher_PostRezBacktrackFromIndex = -1
+    $g_b_Vanquisher_ShrineRecoveryActive = False
+    $g_i_Vanquisher_JumpToWaypointIndex = -1
+    $g_i_Vanquisher_ShrineGapFillUntilIndex = -1
+    $g_b_Vanquisher_FreshFarmEntry = False
+    _Vanquisher_ClearRouteProgress()
+    _Vanquisher_ClearDeathCheckpoint()
+    CurrentAction("Outpost start — fresh route from wp 1.")
+EndFunc
+
+Func _Vanquisher_TryEnableCrashRecovery()
+    If Not _Vanquisher_IsOnFarmExplorable($Map_To_Farm) Then Return False
+    If _Vanquisher_IsFullPartyWipe() Then Return False
+    If Death() = 1 Or GetIsDead(-2) Or Not _Vanquisher_IsPlayerAlive() Then Return False
+    If $g_b_Vanquisher_RecoverMidRun And $g_s_Vanquisher_ProgressPhase <> "" Then Return True
+    Local $l_b_HasProgress = _Vanquisher_LoadRouteProgress($Title, $Map_To_Farm)
+    $g_b_Vanquisher_RecoverMidRun = $l_b_HasProgress
+    If $l_b_HasProgress Then
+        CurrentAction("Crash recovery enabled — resuming " & $g_s_Vanquisher_ProgressPhase & " wp " & ($g_i_Vanquisher_ProgressFloorIndex + 1) & ".")
+        LogStatus("Crash recovery enabled | player (" & Round(Agent_GetAgentInfo(-2, "X")) & ", " & Round(Agent_GetAgentInfo(-2, "Y")) & ") | map " & GetMapID())
+    Else
+        CurrentAction("Already in map — no saved progress, running from start.")
+        LogStatus("In map without progress file | player (" & Round(Agent_GetAgentInfo(-2, "X")) & ", " & Round(Agent_GetAgentInfo(-2, "Y")) & ") | map " & GetMapID())
+    EndIf
+    Return $l_b_HasProgress
+EndFunc
+
+Func _Vanquisher_UseDeathCheckpointReturn()
+    Return $g_b_Vanquisher_DeathReturnToCheckpoint
+EndFunc
+
+Func _Vanquisher_TryLoadDeathCheckpointOnFarm()
+    If Not _Vanquisher_IsOnFarmExplorable($Map_To_Farm) Then Return False
+    If $g_b_Vanquisher_DeathReturnActive Then Return True
+    If Not FileExists($g_s_Vanquisher_DeathCheckpointIni) Then Return False
+    Return _Vanquisher_LoadDeathCheckpoint($Title, $Map_To_Farm)
+EndFunc
+
+Func _Vanquisher_ShouldSkipMapEntrySetup()
+    Return $g_b_Vanquisher_RecoverMidRun Or $g_b_Vanquisher_DeathReturnActive Or $g_b_Vanquisher_SkipForwardRoute
+EndFunc
+
+Func _Vanquisher_SaveRouteProgress($a_i_WaypointIndex, $a_s_Phase = "forward", $a_i_TotalCount = -1)
+    If Not FileExists(@ScriptDir & "\Trace") Then DirCreate(@ScriptDir & "\Trace")
+    IniWrite($g_s_Vanquisher_ProgressIni, "progress", "title", $Title)
+    IniWrite($g_s_Vanquisher_ProgressIni, "progress", "map", String(GetMapID()))
+    IniWrite($g_s_Vanquisher_ProgressIni, "progress", "waypoint_index", String($a_i_WaypointIndex))
+    IniWrite($g_s_Vanquisher_ProgressIni, "progress", "phase", $a_s_Phase)
+    IniWrite($g_s_Vanquisher_ProgressIni, "progress", "route_size", String($a_i_TotalCount))
+    IniWrite($g_s_Vanquisher_ProgressIni, "progress", "x", String(Agent_GetAgentInfo(-2, "X")))
+    IniWrite($g_s_Vanquisher_ProgressIni, "progress", "y", String(Agent_GetAgentInfo(-2, "Y")))
+EndFunc
+
+Func _Vanquisher_LoadRouteProgress($a_s_Title, $a_i_Map)
+    $g_i_Vanquisher_ProgressFloorIndex = -1
+    $g_s_Vanquisher_ProgressPhase = ""
+    $g_b_Vanquisher_SkipForwardRoute = False
+    $g_f_Vanquisher_ProgressX = 0
+    $g_f_Vanquisher_ProgressY = 0
+    $g_i_Vanquisher_ProgressRouteSize = -1
+    If Not FileExists($g_s_Vanquisher_ProgressIni) Then Return False
+    Local $l_s_Title = IniRead($g_s_Vanquisher_ProgressIni, "progress", "title", "")
+    Local $l_i_Map = Int(IniRead($g_s_Vanquisher_ProgressIni, "progress", "map", "0"))
+    If $l_s_Title <> $a_s_Title Or $l_i_Map <> $a_i_Map Then Return False
+    $g_i_Vanquisher_ProgressFloorIndex = Int(IniRead($g_s_Vanquisher_ProgressIni, "progress", "waypoint_index", "0"))
+    $g_s_Vanquisher_ProgressPhase = IniRead($g_s_Vanquisher_ProgressIni, "progress", "phase", "forward")
+    $g_i_Vanquisher_ProgressRouteSize = Int(IniRead($g_s_Vanquisher_ProgressIni, "progress", "route_size", "-1"))
+    $g_f_Vanquisher_ProgressX = Number(IniRead($g_s_Vanquisher_ProgressIni, "progress", "x", "0"))
+    $g_f_Vanquisher_ProgressY = Number(IniRead($g_s_Vanquisher_ProgressIni, "progress", "y", "0"))
+    If $g_s_Vanquisher_ProgressPhase = "reverse" Then $g_b_Vanquisher_SkipForwardRoute = True
+    CurrentAction("Loaded route progress — " & $g_s_Vanquisher_ProgressPhase & " wp " & ($g_i_Vanquisher_ProgressFloorIndex + 1) & ".")
+    LogStatus("Route progress loaded for " & $a_s_Title & " map " & $a_i_Map & " wp " & ($g_i_Vanquisher_ProgressFloorIndex + 1))
+    Return True
+EndFunc
+
+Func _Vanquisher_ClearRouteProgress()
+    $g_i_Vanquisher_ProgressFloorIndex = -1
+    $g_s_Vanquisher_ProgressPhase = ""
+    $g_b_Vanquisher_SkipForwardRoute = False
+    $g_f_Vanquisher_ProgressX = 0
+    $g_f_Vanquisher_ProgressY = 0
+    $g_i_Vanquisher_ProgressRouteSize = -1
+    If FileExists($g_s_Vanquisher_ProgressIni) Then FileDelete($g_s_Vanquisher_ProgressIni)
+EndFunc
+
+Func _Vanquisher_BeginCombatWatchdog($a_f_AggroRange = 1450)
+	$g_h_Vanquisher_CombatFightTimer = TimerInit()
+	$g_h_Vanquisher_CombatStallTimer = TimerInit()
+	$g_h_Vanquisher_CombatTargetHPTimer = TimerInit()
+	$g_i_Vanquisher_CombatLastKilled = GetFoesKilled()
+	$g_f_Vanquisher_CombatLastX = Agent_GetAgentInfo(-2, "X")
+	$g_f_Vanquisher_CombatLastY = Agent_GetAgentInfo(-2, "Y")
+	$g_f_Vanquisher_CombatLastTargetHP = -1
+	$g_i_Vanquisher_CombatAggroRange = $a_f_AggroRange
+EndFunc
+
+Func _Vanquisher_EndCombatWatchdog()
+	$g_h_Vanquisher_CombatFightTimer = 0
+	$g_h_Vanquisher_CombatStallTimer = 0
+	$g_h_Vanquisher_CombatTargetHPTimer = 0
+	$g_f_Vanquisher_CombatLastTargetHP = -1
+EndFunc
+
+Func _Vanquisher_CombatWatchdogAbort($a_s_Reason)
+	CurrentAction($a_s_Reason)
+	LogStatus($a_s_Reason)
+	Agent_CancelAction()
+	If Agent_GetAgentInfo(-2, "IsAttacking") Then Core_ControlAction($GC_I_CONTROL_ACTION_CANCEL_ACTION)
+	Return True
+EndFunc
+
+Func _Vanquisher_CombatWatchdogResetStall()
+	$g_h_Vanquisher_CombatStallTimer = TimerInit()
+EndFunc
+
+Func _Vanquisher_CombatWatchdogShouldExit()
+	If $g_h_Vanquisher_CombatFightTimer = 0 Then Return False
+
+	_Vanquisher_TickCallTarget($g_i_Vanquisher_CombatAggroRange)
+
+	Local $l_i_Killed = GetFoesKilled()
+	If $l_i_Killed > $g_i_Vanquisher_CombatLastKilled Then
+		$g_i_Vanquisher_CombatLastKilled = $l_i_Killed
+		_Vanquisher_CombatWatchdogResetStall()
+		_Vanquisher_TickMapProgress()
+	EndIf
+
+	Local $l_f_X = Agent_GetAgentInfo(-2, "X")
+	Local $l_f_Y = Agent_GetAgentInfo(-2, "Y")
+	If ComputeDistance($g_f_Vanquisher_CombatLastX, $g_f_Vanquisher_CombatLastY, $l_f_X, $l_f_Y) > 300 Then
+		$g_f_Vanquisher_CombatLastX = $l_f_X
+		$g_f_Vanquisher_CombatLastY = $l_f_Y
+		_Vanquisher_CombatWatchdogResetStall()
+	EndIf
+
+	Local $l_t_Target = GetCurrentTarget()
+	If IsDllStruct($l_t_Target) Then
+		Local $l_f_HP = DllStructGetData($l_t_Target, "HP")
+		If $l_f_HP > 0 Then
+			If $g_f_Vanquisher_CombatLastTargetHP >= 0 And Abs($l_f_HP - $g_f_Vanquisher_CombatLastTargetHP) < 0.001 Then
+				If TimerDiff($g_h_Vanquisher_CombatTargetHPTimer) >= $VANQUISHER_COMBAT_TARGET_HP_STALL_MS Then
+					Return _Vanquisher_CombatWatchdogAbort("Combat stall — target HP unchanged 30s")
+				EndIf
+			Else
+				$g_f_Vanquisher_CombatLastTargetHP = $l_f_HP
+				$g_h_Vanquisher_CombatTargetHPTimer = TimerInit()
+			EndIf
+		EndIf
+	EndIf
+
+	If TimerDiff($g_h_Vanquisher_CombatFightTimer) >= $VANQUISHER_COMBAT_HARD_CAP_MS Then
+		Return _Vanquisher_CombatWatchdogAbort("Combat stall — hard cap " & Int($VANQUISHER_COMBAT_HARD_CAP_MS / 1000) & "s")
+	EndIf
+
+	If TimerDiff($g_h_Vanquisher_CombatStallTimer) >= $VANQUISHER_COMBAT_STALL_MS Then
+		Return _Vanquisher_CombatWatchdogAbort("Combat stall — no kill/position progress")
+	EndIf
+
+	Return False
+EndFunc
+
+Func _Vanquisher_EnsureOutpostReady($a_i_ExpectedMapID = 0, $a_i_TimeoutMs = 30000)
+    Agent_CancelAction()
+
+    Local $l_i_MapArg = ($a_i_ExpectedMapID > 0 ? $a_i_ExpectedMapID : -1)
+    If Not Map_WaitMapLoading($l_i_MapArg, $GC_I_MAP_TYPE_OUTPOST, $a_i_TimeoutMs) Then Return False
+
+    Other_WaitPingStabilized(1000)
+
+    Local $l_h_Timer = TimerInit()
+    While (Agent_GetAgentInfo(-2, "X") = 0 And Agent_GetAgentInfo(-2, "Y") = 0) And TimerDiff($l_h_Timer) < 10000
+        Sleep(250)
+    WEnd
+
+    Sleep(Other_GetPing() + 250)
+    Return True
+EndFunc   ;==>_Vanquisher_EnsureOutpostReady
+
+Func _Vanquisher_CanReachFarmFromHere($a_i_FarmMapID)
+    ; Legacy path check — prefer _Vanquisher_EnsureCorrectOutpost for GoOut routing.
+    If GetMapID() = $a_i_FarmMapID Then Return True
+    If Not Map_GetInstanceInfo("IsOutpost") Then Return False
+    Local $aPath = Map_FindMapPath(GetMapID(), $a_i_FarmMapID)
+    Return UBound($aPath) >= 2
+EndFunc   ;==>_Vanquisher_CanReachFarmFromHere
+
+Func _Vanquisher_BeginMapAttempt()
+    $g_h_Vanquisher_MapAttemptTimer = TimerInit()
+    $g_h_Vanquisher_MapProgressTimer = TimerInit()
+    $g_i_Vanquisher_MapAttemptKilledBaseline = GetFoesKilled()
+    $g_b_Vanquisher_StragglerHuntFailed = False
+EndFunc
+
+Func _Vanquisher_TickMapProgress()
+    If $g_h_Vanquisher_MapProgressTimer = 0 Then Return
+    Local $l_i_Killed = GetFoesKilled()
+    If $l_i_Killed > $g_i_Vanquisher_MapAttemptKilledBaseline Then
+        $g_i_Vanquisher_MapAttemptKilledBaseline = $l_i_Killed
+        $g_h_Vanquisher_MapProgressTimer = TimerInit()
+    EndIf
+EndFunc
+
+Func _Vanquisher_MapWatchdogShouldDefer()
+    If $g_b_Vanquisher_TransitOnly Then Return False
+    If Not Map_GetInstanceInfo("IsExplorable") Then Return False
+    If GetAreaVanquished() Then Return False
+    If $g_h_Vanquisher_MapAttemptTimer = 0 Then Return False
+
+    UpdateVanquish()
+    _Vanquisher_TickMapProgress()
+
+    If TimerDiff($g_h_Vanquisher_MapAttemptTimer) >= $VANQUISHER_MAP_STALL_TIMEOUT_MS Then
+        _Vanquisher_LogCrash("Map attempt timeout", "map=" & GetMapID())
+        Return True
+    EndIf
+
+    Local $l_i_Remaining = GetFoesToKill()
+    If $l_i_Remaining > 0 And TimerDiff($g_h_Vanquisher_MapProgressTimer) >= $VANQUISHER_MAP_PROGRESS_STALL_MS Then
+        _Vanquisher_LogCrash("Map progress stalled", "map=" & GetMapID() & ", foes=" & $l_i_Remaining)
+        Return True
+    EndIf
+
+    If $g_b_Vanquisher_StragglerHuntFailed And $l_i_Remaining > 0 And $l_i_Remaining <= $VANQUISHER_STRAGGLER_THRESHOLD Then
+        _Vanquisher_LogCrash("Straggler hunt failed", "map=" & GetMapID() & ", foes=" & $l_i_Remaining)
+        Return True
+    EndIf
+
+    Return False
+EndFunc
+
+Func _Vanquisher_SignalMapDefer($a_s_Reason)
+    $g_b_Vanquisher_AbortRoute = True
+    _Vanquisher_LogCrash("Map defer signaled", $a_s_Reason)
+    Return True
+EndFunc
+
+Func _Vanquisher_IsAtCorrectOutpost($a_i_OutpostID = 0)
+    If $a_i_OutpostID = 0 Then $a_i_OutpostID = $Map_To_Zone
+    If $a_i_OutpostID = 0 Then Return False
+    Return Map_GetInstanceInfo("IsOutpost") And GetMapID() = $a_i_OutpostID
+EndFunc   ;==>_Vanquisher_IsAtCorrectOutpost
+
+Func _Vanquisher_IsOnTalmarkWildernessMap()
+    Local $l_i_Map = GetMapID()
+    Return $l_i_Map = $TalmarkWilderness_Map Or $l_i_Map = $GC_I_MAP_ID_WAR_IN_KRYTA_TALMARK_WILDERNESS
+EndFunc   ;==>_Vanquisher_IsOnTalmarkWildernessMap
+
+Func _Vanquisher_IsOnTargetFarmMap()
+    If GetMapID() = $Map_To_Farm Then Return True
+    Switch $Title
+        Case "TalmarkWilderness"
+            Return _Vanquisher_IsOnTalmarkWildernessMap()
+    EndSwitch
+    Return False
+EndFunc   ;==>_Vanquisher_IsOnTargetFarmMap
+
+Func _Vanquisher_IsOnVanquishConsumableMap()
+    If $g_b_Vanquisher_TransitOnly Then Return False
+    If _Vanquisher_IsOnTransitToFarm() Then Return False
+    If Not _Vanquisher_IsOnTargetFarmMap() Then Return False
+    Return True
+EndFunc   ;==>_Vanquisher_IsOnVanquishConsumableMap
+
+Func _Vanquisher_ShouldUseConset()
+    If Not _IsConsetEnabled() Then Return False
+    Return _Vanquisher_IsOnVanquishConsumableMap()
+EndFunc   ;==>_Vanquisher_ShouldUseConset
+
+Func _Vanquisher_ShouldUseBU()
+    If Not _IsBuEnabled() Then Return False
+    Return _Vanquisher_IsOnVanquishConsumableMap()
+EndFunc   ;==>_Vanquisher_ShouldUseBU
+
+Func _Vanquisher_ShouldUseStones()
+    If Not _IsStonesEnabled() Then Return False
+    Return _Vanquisher_IsOnVanquishConsumableMap()
+EndFunc   ;==>_Vanquisher_ShouldUseStones
+
+Func _Vanquisher_EnsureCorrectOutpost()
+    If Map_GetInstanceInfo("IsExplorable") Then
+        CurrentAction("Still in explorable — returning to outpost before travel.")
+        If Not _Vanquisher_ReturnToOutpost() Then Return False
+    EndIf
+    If _Vanquisher_IsAtCorrectOutpost() Then
+        CurrentAction("At outpost " & GetMapID() & " for " & $Title)
+        Return True
+    EndIf
+    CurrentAction("Need outpost " & $Map_To_Zone & " for " & $Title & " (currently " & GetMapID() & ")")
+    If $Map_To_Zone = 0 Then Return False
+    If Not (Map_IsMapUnlocked($Map_To_Zone) And Map_IsOutpost($Map_To_Zone)) Then
+        CurrentAction("Outpost " & $Map_To_Zone & " is not unlocked for " & $Title & ".")
+        Return False
+    EndIf
+    Local $l_i_Tries = 0
+    While Not _Vanquisher_IsAtCorrectOutpost() And $l_i_Tries < 6
+        If Not _Vanquisher_SafeTravelToOutpost($Map_To_Zone, True) Then Return False
+        $l_i_Tries += 1
+    WEnd
+    If Not _Vanquisher_IsAtCorrectOutpost() Then
+        CurrentAction("Failed to reach outpost " & $Map_To_Zone & " (still at " & GetMapID() & ").")
+        Return False
+    EndIf
+    Return True
+EndFunc   ;==>_Vanquisher_EnsureCorrectOutpost
+
+Func _Vanquisher_SafeTravelToOutpost($a_i_OutpostID, $a_b_ExactOnly = False)
+    Local $l_h_Timer = TimerInit()
+    While Map_GetInstanceInfo("Type") = $GC_I_MAP_TYPE_LOADING And TimerDiff($l_h_Timer) < 15000
+        Sleep(250)
+    WEnd
+
+    Local $l_i_Target = $a_i_OutpostID
+    If Not $a_b_ExactOnly Then
+        If $l_i_Target > 0 And Not (Map_IsMapUnlocked($l_i_Target) And Map_IsOutpost($l_i_Target)) Then
+            Local $l_i_Fallback = Map_FindNearestUnlockedOutpost($l_i_Target)
+            If $l_i_Fallback > 0 Then
+                CurrentAction("Using nearest unlocked outpost " & $l_i_Fallback & " for map " & $l_i_Target)
+                $l_i_Target = $l_i_Fallback
+            EndIf
+        EndIf
+    ElseIf $l_i_Target > 0 And Not (Map_IsMapUnlocked($l_i_Target) And Map_IsOutpost($l_i_Target)) Then
+        CurrentAction("Exact outpost " & $l_i_Target & " is not unlocked.")
+        Return False
+    EndIf
+
+    If $l_i_Target = 0 Then
+        CurrentAction("No unlocked outpost found for travel target " & $a_i_OutpostID)
+        Return False
+    EndIf
+
+    If $l_i_Target > 0 And Map_GetMapID() = $l_i_Target And Not Map_GetInstanceInfo("IsOutpost") Then
+        CurrentAction("Returning to outpost from mission instance")
+        Map_ReturnToOutpost()
+        Sleep(Other_GetPing() + 250)
+        If Not Map_GetInstanceInfo("IsOutpost") And Map_IsMapUnlocked($l_i_Target) Then
+            RndTravel($l_i_Target)
+        EndIf
+        Return _Vanquisher_EnsureOutpostReady($l_i_Target)
+    EndIf
+
+    If Map_GetMapID() = $l_i_Target And Map_GetInstanceInfo("IsOutpost") Then
+        CurrentAction("Settling in outpost " & $l_i_Target)
+        RndTravel($l_i_Target)
+        Return _Vanquisher_EnsureOutpostReady($l_i_Target)
+    EndIf
+
+    If Map_GetMapID() <> $l_i_Target Then
+        CurrentAction("Travelling to outpost " & $l_i_Target)
+        RndTravel($l_i_Target)
+        If Not _Vanquisher_EnsureOutpostReady($l_i_Target) Then Return False
+    EndIf
+
+    Return True
+EndFunc   ;==>_Vanquisher_SafeTravelToOutpost
+
+Func _Vanquisher_ZoneToExplorable($a_i_OutpostID, $a_i_FarmMapID)
+    If GetMapID() = $a_i_FarmMapID Then Return True
+    If $a_i_OutpostID = 0 Or $a_i_FarmMapID = 0 Then Return False
+
+    If Map_GetInstanceInfo("IsExplorable") Or Not _Vanquisher_IsAtCorrectOutpost($a_i_OutpostID) Then
+        CurrentAction("Resetting to outpost " & $a_i_OutpostID & " before zoning to farm " & $a_i_FarmMapID)
+        If Not _Vanquisher_SafeTravelToOutpost($a_i_OutpostID, True) Then Return False
+        If Not _Vanquisher_EnsureOutpostReady($a_i_OutpostID) Then Return False
+    EndIf
+
+    Local $aPath = Map_FindMapPath($a_i_OutpostID, $a_i_FarmMapID)
+    If UBound($aPath) < 2 Then
+        CurrentAction("No path from outpost " & $a_i_OutpostID & " to farm " & $a_i_FarmMapID)
+        Return False
+    EndIf
+
+    For $i = 1 To UBound($aPath) - 1
+        If GetMapID() = $a_i_FarmMapID Then Return True
+
+        Local $l_i_FromMap = GetMapID()
+        Local $l_i_ToMap = $aPath[$i]
+        Local $aCoords = Map_GetExitPortalsCoords($l_i_FromMap, $l_i_ToMap)
+        If Not IsArray($aCoords) Then
+            CurrentAction("Missing portal coords " & $l_i_FromMap & " -> " & $l_i_ToMap)
+            Return False
+        EndIf
+
+        CurrentAction("Zoning " & $l_i_FromMap & " -> " & $l_i_ToMap & " at (" & $aCoords[0] & ", " & $aCoords[1] & ")")
+        Local $l_i_MapSnapshot = GetMapID()
+        _Vanquisher_GateBeforeMovement()
+        Map_Move($aCoords[0], $aCoords[1], 0)
+        Local $l_h_PortalTimer = TimerInit()
+        While GetMapID() = $l_i_MapSnapshot And Not Map_GetInstanceInfo("IsLoading") And TimerDiff($l_h_PortalTimer) < 20000
+            Sleep(250)
+            If Agent_GetAgentInfo(-2, "MoveX") = 0 And Agent_GetAgentInfo(-2, "MoveY") = 0 Then
+                Map_Move($aCoords[0], $aCoords[1], 0)
+            EndIf
+        WEnd
+        If GetMapID() = $l_i_MapSnapshot And Not Map_GetInstanceInfo("IsLoading") Then
+            Move($aCoords[0], $aCoords[1])
+            Sleep(Other_GetPing() + 250)
+        EndIf
+        WaitForLoad()
+
+        If GetMapID() = $a_i_FarmMapID Then
+            $g_b_Vanquisher_FreshFarmEntry = True
+            Return True
+        EndIf
+        _Vanquisher_WaitForPlayerReadyAfterLoad()
+    Next
+
+    If GetMapID() = $a_i_FarmMapID Then
+        $g_b_Vanquisher_FreshFarmEntry = True
+        Return True
+    EndIf
+    Return False
+EndFunc   ;==>_Vanquisher_ZoneToExplorable
+#EndRegion
 #EndRegion

@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aScoundrelsRiseOutpostPath[2][2] = [ _
+Local $aScoundrelsRiseOutpostPath[2][2] = [ _
 	[-1453.60, 24938.46], _
 	[-4334.29, 26859.33] _
 ]
@@ -17,7 +17,7 @@ Func GoOutScoundrelsRise()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> ScoundrelsRise (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aScoundrelsRiseOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQScoundrelsRise()
 		If GetMapID() <> $ScoundrelsRise_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need ScoundrelsRise (" & $ScoundrelsRise_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $ScoundrelsRise_Map Then

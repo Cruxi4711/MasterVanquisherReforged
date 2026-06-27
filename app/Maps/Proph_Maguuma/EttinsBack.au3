@@ -1,9 +1,8 @@
 #include <Array.au3>
-; Map update by Crux
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aEttinsBackOutpostPath[2][2] = [ _
+Local $aEttinsBackOutpostPath[2][2] = [ _
 	[-14497.57, 835.94], _
 	[-15074.91, 437.85] _
 ]
@@ -18,7 +17,7 @@ Func GoOutEttinsBack()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> EttinsBack (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aEttinsBackOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -38,7 +37,7 @@ Func VQEttinsBack()
 		If GetMapID() <> $EttinsBack_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need EttinsBack (" & $EttinsBack_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $EttinsBack_Map Then
@@ -273,6 +272,4 @@ Func VQEttinsBack()
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
-
-
 

@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQRaisuPalace()
-    If GetMapID() <> $RaisuPalace_Map And GetMapID() <> $RaisuPalace_Outpost  Then TravelTo($RaisuPalace_Outpost)   
-    If GetMapID() = $RaisuPalace_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $RaisuPalace_Map And GetMapID() <> $RaisuPalace_Outpost Then
+		CurrentAction("Traveling to outpost for Raisu Palace.")
+		TravelTo($RaisuPalace_Outpost)
+	EndIf
 
-	If GetMapID() = $RaisuPalace_Map Then    
+	If GetMapID() = $RaisuPalace_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[67][4] = [ [24090, 1284, " ", $vqrange] _
+	If GetMapID() <> $RaisuPalace_Map Then
+		CurrentAction("Raisu Palace route waiting - on map " & GetMapID() & ", need " & $RaisuPalace_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Raisu Palace vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[67][4] = [ [24090, 1284, " ", $vqrange] _
 		, [24090, 5505, " ", $vqrange] _
 		, [19992, 7624, " ", $vqrange] _
 		, [16662, 8435, " ", $vqrange] _
@@ -78,9 +89,6 @@ Func VQRaisuPalace()
 		, [11279, 3915, " ", $vqrange] _
 		, [9539, 1886, " ", $vqrange] _
 		, [10530, -1051, " ", $vqrange] ]
-		
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

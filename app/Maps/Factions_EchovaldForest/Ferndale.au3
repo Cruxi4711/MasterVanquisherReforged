@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQFerndale()
-    If GetMapID() <> $Ferndale_Map And GetMapID() <> $Ferndale_Outpost  Then TravelTo($Ferndale_Outpost)   
-    If GetMapID() = $Ferndale_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $Ferndale_Map And GetMapID() <> $Ferndale_Outpost Then
+		CurrentAction("Traveling to outpost for Ferndale.")
+		TravelTo($Ferndale_Outpost)
+	EndIf
 
-	If GetMapID() = $Ferndale_Map Then    
+	If GetMapID() = $Ferndale_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[165][4] = [ [-10166, 9355, " ", $vqrange] _
+	If GetMapID() <> $Ferndale_Map Then
+		CurrentAction("Ferndale route waiting - on map " & GetMapID() & ", need " & $Ferndale_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Ferndale vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[165][4] = [ [-10166, 9355, " ", $vqrange] _
 		, [-8861, 10761, " ", $vqrange] _
 		, [-9327, 14264, " ", $vqrange] _
 		, [-10560, 17028, " ", $vqrange] _
@@ -177,25 +188,25 @@ Func VQFerndale()
 		, [-5662, -17885, " ", $vqrange] _
 		, [-6836, -18019, " ", $vqrange] ]
 
+	If Not _Vanquisher_ShouldSkipMapEntrySetup() Then
 		GoNearestNPCToCoords(-12909, 15616)
-	If GetKurzickFaction() > GetLuxonFaction() Then
-                Dialog(0x81)
-                Sleep(1000)
-                Dialog(0x2)
-                Sleep(1000)
-                Dialog(0x84)
-	        Sleep(1000)
-	        Dialog(0x86)
-	        Sleep(1000)
-        Else
-                Dialog(0x85)
-                Sleep(1000)
-                Dialog(0x86)
-                Sleep(1000)
-        EndIf
+		If GetKurzickFaction() > GetLuxonFaction() Then
+			Dialog(0x81)
+			Sleep(1000)
+			Dialog(0x2)
+			Sleep(1000)
+			Dialog(0x84)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		Else
+			Dialog(0x85)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		EndIf
+	EndIf
 
-		MoveandAggroVQ($aWaypoints)
-		MoveAndAggroVQReverse($aWaypoints)
-
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

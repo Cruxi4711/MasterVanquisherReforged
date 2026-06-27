@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQSunjiangDistrict()
-    If GetMapID() <> $SunjiangDistrict_Map And GetMapID() <> $SunjiangDistrict_Outpost  Then TravelTo($SunjiangDistrict_Outpost)   
-    If GetMapID() = $SunjiangDistrict_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $SunjiangDistrict_Map And GetMapID() <> $SunjiangDistrict_Outpost Then
+		CurrentAction("Traveling to outpost for Sunjiang District.")
+		TravelTo($SunjiangDistrict_Outpost)
+	EndIf
 
-	If GetMapID() = $SunjiangDistrict_Map Then    
+	If GetMapID() = $SunjiangDistrict_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[62][4] = [ [6836, 13075, " ", $vqrange] _
+	If GetMapID() <> $SunjiangDistrict_Map Then
+		CurrentAction("Sunjiang District route waiting - on map " & GetMapID() & ", need " & $SunjiangDistrict_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Sunjiang District vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[62][4] = [ [6836, 13075, " ", $vqrange] _
 		, [7551, 10917, " ", $vqrange] _
 		, [11442, 10230, " ", $vqrange] _
 		, [12847, 8114, " ", $vqrange] _
@@ -72,9 +83,6 @@ Func VQSunjiangDistrict()
 		, [-3619, 2411, " ", $vqrange] _
 		, [-4536, 792, " ", $vqrange] _
 		, [-4413, -173, " ", $vqrange] ]
-
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

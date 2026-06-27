@@ -2,6 +2,11 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
+Local $aSnakeDanceOutpostPath[2][2] = [ _
+	[1683, -1594], _
+	[4600, -27863] _
+]
+
 Func GoOutSnakeDance()
 	Local $l_i_Map = GetMapID()
 
@@ -12,7 +17,7 @@ Func GoOutSnakeDance()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> SnakeDance (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aSnakeDanceOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -32,7 +37,7 @@ Func VQSnakeDance()
 		If GetMapID() <> $SnakeDance_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need SnakeDance (" & $SnakeDance_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $SnakeDance_Map Then
@@ -42,7 +47,7 @@ Func VQSnakeDance()
 
 	CurrentAction("Starting SnakeDance vanquish route.")
 
-	Local $aWaypoints[213][4] = [ _
+	Local $aWaypoints[219][4] = [ _
 		[3510, -40363, " ", $vqrange], _
 		[2748, -39571, " ", $vqrange], _
 		[501, -40100, " ", $vqrange], _
@@ -120,14 +125,20 @@ Func VQSnakeDance()
 		[6306, -11851, " ", $vqrange], _
 		[6684, -12533, " ", $vqrange], _
 		[4742, -14036, " ", $vqrange], _
+		[-4445, -13697, " ", $vqrange], _
+		[-5753, -13082, " ", $vqrange], _
 		[6238, -13370, " ", $vqrange], _
 		[7527, -9971, " ", $vqrange], _
+		[6967, -9888, " ", $vqrange], _
+		[7870, -9467, " ", $vqrange], _
 		[6638, -9347, " ", $vqrange], _
 		[6061, -9592, " ", $vqrange], _
 		[4372, -10285, " ", $vqrange], _
 		[3823, -8878, " ", $vqrange], _
+		[7542, -7003, " ", $vqrange], _
 		[3514, -7220, " ", $vqrange], _
 		[4843, -5556, " ", $vqrange], _
+		[5568, -4108, " ", $vqrange], _
 		[5952, -8228, " ", $vqrange], _
 		[3875, -11764, " ", $vqrange], _
 		[290, -12495, " ", $vqrange], _

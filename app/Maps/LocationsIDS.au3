@@ -1,4 +1,4 @@
-;Ascalon IDs
+﻿;Ascalon IDs
 Global $AscalonFoothills_Map = 103
 Global $AscalonFoothills_Outpost = 134         ;Yak's Bend to have a 6 man party
 Global $AscalonFoothills_Transit = 99          ;Traveler's Vale
@@ -29,61 +29,75 @@ Global $AnvilRock_Outpost = 132                ;Ice Tooth Cave
 Global $DeldrimorBowl_Map = 100
 Global $DeldrimorBowl_Outpost = 133            ;Beacons Perch
 Global $GriffonsMouth_Map = 27
-Global $GriffonsMouth_Outpost = 133            ;Beacons Perch
+Global $GriffonsMouth_Outpost = $GC_I_MAP_ID_GATES_OF_KRYTA_OUTPOST ; 14 — Gates of Kryta
+Global $GriffonsMouth_Transit = $GC_I_MAP_ID_SCOUNDRELS_RISE        ; 54 — Scoundrel's Rise
 Global $IronHorseMine_Map = 88
 Global $IronHorseMine_Outpost = 134            ;Yak's Bend
+Global $IronHorseMine_Transit = 99             ;Traveler's Vale
 Global $TravelersVale_Map = 99
-Global $TravelersVale_Outpost = 134            ;Yak's Bend
+Global $TravelersVale_Outpost = $GC_I_MAP_ID_YAKS_BEND ; 134 — Yak's Bend
 ;Maguuma IDs
-Global $DryTop_Map
-Global $DryTop_Outpost
-Global $EttinsBack_Map = 44
-Global $EttinsBack_Outpost = 142               ;Quarrel Falls
-Global $MamnoonLagoon_Map = 42
-Global $MamnoonLagoon_Outpost = 142            ;Quarrel Falls
-Global $MamnoonLagoon_Transit = 43             ;Silverwood
-Global $ReedBog_Map
-Global $ReedBog_Outpost
+Global $DryTop_Map = $GC_I_MAP_ID_DRY_TOP                   ; 47
+Global $DryTop_Outpost = $GC_I_MAP_ID_MAGUUMA_STADE         ; 141 — Maguuma Stade
+Global $DryTop_Transit = $GC_I_MAP_ID_TANGLE_ROOT           ; 48 — Tangle Root
+Global $EttinsBack_Map = $GC_I_MAP_ID_ETTINS_BACK              ; 44
+Global $EttinsBack_Outpost = $GC_I_MAP_ID_VENTARIS_REFUGE     ; 139 — Ventari's Refuge
+Global $MamnoonLagoon_Map = $GC_I_MAP_ID_MAMNOON_LAGOON                   ; 42
+Global $MamnoonLagoon_Outpost = $GC_I_MAP_ID_QUARREL_FALLS                  ; 142 — Quarrel Falls
+Global $MamnoonLagoon_Transit = $GC_I_MAP_ID_SILVERWOOD                   ; 43 — Silverwood
+Global $ReedBog_Map = $GC_I_MAP_ID_REED_BOG                   ; 45
+Global $ReedBog_Outpost = $GC_I_MAP_ID_VENTARIS_REFUGE        ; 139 — Ventari's Refuge
+Global $ReedBog_Transit = $GC_I_MAP_ID_ETTINS_BACK            ; 44 — Ettin's Back
 Global $SageLands_Map = 41
 Global $SageLands_Outpost = 140                ;Druid Overlook
 Global $Silverwood_Map = 43
 Global $Silverwood_Outpost = 142               ;Quarrel Falls
 Global $TangleRoot_Map = 48
 Global $TangleRoot_Outpost = 49                ;Henge of Denravi
-Global $TheFalls_Map
-Global $TheFalls_Outpost
+Global $TheFalls_Map = $GC_I_MAP_ID_THE_FALLS                   ; 46
+Global $TheFalls_Outpost = $GC_I_MAP_ID_VENTARIS_REFUGE         ; 139 — Ventari's Refuge
+Global $TheFalls_Transit = $GC_I_MAP_ID_ETTINS_BACK            ; 44 — Ettin's Back
+Global $TheFalls_Transit2 = $GC_I_MAP_ID_REED_BOG              ; 45 — Reed Bog
 ;CrystalDesert IDs
-Global $DivinersAscent_Map
-Global $DivinersAscent_Outpost
+Global $DivinersAscent_Map = 110
+Global $DivinersAscent_Outpost = 118
 Global $ProphetsPath_Map = 113
 Global $ProphetsPath_Outpost = 152
-Global $SaltFlats_Map
-Global $SaltFlats_Outpost
+Global $SaltFlats_Map = 114
+Global $SaltFlats_Outpost = 153
 Global $SkywardReach_Map = 115
 Global $SkywardReach_Outpost = 38             ;Augury Rock
-Global $TheAridSea_Map = 112
-Global $TheAridSea_Outpost = 38               ;Augury Rock
-Global $TheScar_Map
-Global $TheScar_Outpost
+Global $TheAridSea_Map = $GC_I_MAP_ID_THE_ARID_SEA                         ; 112
+Global $TheAridSea_Outpost = 38                                            ; Augury Rock
+Global $TheAridSea_Transit = $GC_I_MAP_ID_PROPHETS_PATH                    ; 113 — Prophet's Path
+Global $TheScar_Map = 108
+Global $TheScar_Outpost = 117
 Global $VultureDrifts_Map
 Global $VultureDrifts_Outpost
 ;Kryta IDs
-Global $CursedLands_Map
-Global $CursedLands_Outpost
-Global $KessexPeak_Map
-Global $KessexPeak_Outpost
-Global $MajestysRest_Map
-Global $MajestysRest_Outpost
-Global $NeboTerrace_Map
-Global $NeboTerrace_Outpost
-Global $NorthKrytaProvince_Map
-Global $NorthKrytaProvince_Outpost
-Global $ScoundrelsRise_Map
-Global $ScoundrelsRise_Outpost
+Global $CursedLands_Map = $GC_I_MAP_ID_CURSED_LANDS                         ; 56
+Global $CursedLands_Outpost = $GC_I_MAP_ID_TEMPLE_OF_THE_AGES             ; 138 — Temple of the Ages
+Global $CursedLands_Transit = $GC_I_MAP_ID_THE_BLACK_CURTAIN              ; 18 — The Black Curtain
+Global $KessexPeak_Map = $GC_I_MAP_ID_KESSEX_PEAK                           ; 64
+Global $KessexPeak_Outpost = $GC_I_MAP_ID_TEMPLE_OF_THE_AGES                ; 138 — Temple of the Ages
+Global $KessexPeak_Transit = $GC_I_MAP_ID_THE_BLACK_CURTAIN                 ; 18 — The Black Curtain
+Global $MajestysRest_Map = $GC_I_MAP_ID_MAJESTYS_REST                     ; 60
+Global $MajestysRest_Outpost = $GC_I_MAP_ID_TEMPLE_OF_THE_AGES            ; 138 — Temple of the Ages
+Global $MajestysRest_Transit = $GC_I_MAP_ID_THE_BLACK_CURTAIN             ; 18 — The Black Curtain
+Global $MajestysRest_Transit2 = $GC_I_MAP_ID_TALMARK_WILDERNESS           ; 17 — Talmark Wilderness (middle leg)
+Global $NeboTerrace_Map = $GC_I_MAP_ID_NEBO_TERRACE                        ; 59
+Global $NeboTerrace_Outpost = $GC_I_MAP_ID_TEMPLE_OF_THE_AGES             ; 138 — Temple of the Ages
+Global $NeboTerrace_Transit = $GC_I_MAP_ID_THE_BLACK_CURTAIN              ; 18 — The Black Curtain
+Global $NeboTerrace_Transit2 = $GC_I_MAP_ID_CURSED_LANDS                    ; 56 — Cursed Lands (transit leg, not farm)
+Global $NorthKrytaProvince_Map = 58
+Global $NorthKrytaProvince_Outpost = 55
+Global $ScoundrelsRise_Map = 54
+Global $ScoundrelsRise_Outpost = 14
 Global $StingrayStrand_Map = 63
 Global $StingrayStrand_Outpost = $GC_I_MAP_ID_RIVERSIDE_PROVINCE_OUTPOST ; 73 — Riverside Province
-Global $TalmarkWilderness_Map
-Global $TalmarkWilderness_Outpost
+Global $TalmarkWilderness_Map = $GC_I_MAP_ID_TALMARK_WILDERNESS           ; 17
+Global $TalmarkWilderness_Outpost = $GC_I_MAP_ID_TEMPLE_OF_THE_AGES       ; 138 — Temple of the Ages
+Global $TalmarkWilderness_Transit = $GC_I_MAP_ID_THE_BLACK_CURTAIN         ; 18 — The Black Curtain
 Global $TearsoftheFallen_Map = 53
 Global $TearsoftheFallen_Outpost = $GC_I_MAP_ID_FISHERMENS_HAVEN ; 137 — Fisherman's Haven
 Global $TearsoftheFallen_Transit = 63 ; Stingray Strand (first portal from haven)
@@ -91,33 +105,36 @@ Global $TheBlackCurtain_Map = 18
 Global $TheBlackCurtain_Outpost = 138
 Global $TwinSerpentLakes_Map = 61
 Global $TwinSerpentLakes_Outpost = 73         ;Riverside Province
-Global $WatchtowerCoast_Map
-Global $WatchtowerCoast_Outpost
+Global $WatchtowerCoast_Map = 62
+Global $WatchtowerCoast_Outpost = 136
 ;SouthernShiverpeaks IDs
-Global $DreadnoughtsDrift_Map
-Global $DreadnoughtsDrift_Outpost
-Global $FrozenForest_Map
-Global $FrozenForest_Outpost
-Global $GrenthsFootprint_Map
-Global $GrenthsFootprint_Outpost
-Global $IceFloe_Map
-Global $IceFloe_Outpost
-Global $Icedome_Map
-Global $Icedome_Outpost =2
-Global $LornarsPass_Map = 90
-Global $LornarsPass_Outpost = 133              ;Beacon's Perch
-Global $LornarsPass_Transit = 88               ;Iron Horse Mine
-Global $LornarsPass_Transit2 = 91              ;Snake Dance
-Global $MineralSprings_Map
-Global $MineralSprings_Outpost
-Global $SnakeDance_Map
-Global $SnakeDance_Outpost
-Global $SpearheadPeak_Map
-Global $SpearheadPeak_Outpost
+Global $DreadnoughtsDrift_Map = $GC_I_MAP_ID_DREADNOUGHTS_DRIFT            ; 97
+Global $DreadnoughtsDrift_Outpost = $GC_I_MAP_ID_CAMP_RANKOR                 ; 155 — Camp Rankor
+Global $DreadnoughtsDrift_Transit = $GC_I_MAP_ID_SNAKE_DANCE                   ; 91 — Snake Dance
+Global $FrozenForest_Map = 98
+Global $FrozenForest_Outpost = 24
+Global $GrenthsFootprint_Map = 191
+Global $GrenthsFootprint_Outpost = 206
+Global $IceFloe_Map = 94
+Global $IceFloe_Outpost = 23
+Global $Icedome_Map = $GC_I_MAP_ID_ICEDOME                                  ; 87
+Global $Icedome_Outpost = $GC_I_MAP_ID_COPPERHAMMER_MINES                  ; 159 — Copperhammer Mines
+Global $Icedome_Transit = $GC_I_MAP_ID_FROZEN_FOREST                        ; 98 — Frozen Forest
+Global $LornarsPass_Map = $GC_I_MAP_ID_LORNARS_PASS                         ; 90
+Global $LornarsPass_Outpost = $GC_I_MAP_ID_CAMP_RANKOR                     ; 155 — Camp Rankor
+Global $LornarsPass_Transit = $GC_I_MAP_ID_SNAKE_DANCE                     ; 91 — Snake Dance
+Global $LornarsPass_Transit2 = $GC_I_MAP_ID_DREADNOUGHTS_DRIFT             ; 97 — Dreadnought's Drift
+Global $MineralSprings_Map = $GC_I_MAP_ID_MINERAL_SPRINGS                 ; 96
+Global $MineralSprings_Outpost = $GC_I_MAP_ID_THE_GRANITE_CITADEL         ; 156 — Granite Citadel
+Global $MineralSprings_Transit = $GC_I_MAP_ID_TASCAS_DEMISE               ; 92 — Tasca's Demise
+Global $SnakeDance_Map = $GC_I_MAP_ID_SNAKE_DANCE
+Global $SnakeDance_Outpost = $GC_I_MAP_ID_CAMP_RANKOR
+Global $SpearheadPeak_Map = 93
+Global $SpearheadPeak_Outpost = 159
 Global $TalusChute_Map = 26
 Global $TalusChute_Outpost = 20
-Global $TascasDemise_Map = 92; Granite Citadel
-Global $TascasDemise_Outpost =156
+Global $TascasDemise_Map = $GC_I_MAP_ID_TASCAS_DEMISE ; 92
+Global $TascasDemise_Outpost = $GC_I_MAP_ID_THE_GRANITE_CITADEL ; 156 — Granite Citadel
 Global $WitmansFolly_Map = 95
 Global $WitmansFolly_Outpost = 20
 ;RingOfFireIsland IDs
@@ -252,41 +269,42 @@ Global $WildernessOfBahdza_Outpost = 433			;Dzagonur Bastion
 Global $YatendiCanyons_Map = 392
 Global $YatendiCanyons_Outpost = 378 					;Wehhan Terraces
 ;TheDesolation IDs
-Global $CrystalOverlook_Map
-Global $CrystalOverlook_Outpost
+Global $CrystalOverlook_Map = 448
+Global $CrystalOverlook_Outpost = 440
+Global $CrystalOverlook_Transit = 439			;The Ruptured Heart
 Global $JokosDomain_Map =437
-Global $JokosDomain_Outpost = 438              ;Bone Palace
+Global $JokosDomain_Outpost =438
 Global $PoisonedOutcrops_Map = 443
-Global $PoisonedOutcrops_Outpost = 442         ;Lair of the Forgotten
+Global $PoisonedOutcrops_Outpost = 442
 Global $TheAlkaliPan_Map = 446
-Global $TheAlkaliPan_Outpost = 480             ;Ruins of Morah
+Global $TheAlkaliPan_Outpost = 480
 Global $TheRupturedHeart_Map = 439
-Global $TheRupturedHeart_Outpost = 440         ;The Mouth of Torment
+Global $TheRupturedHeart_Outpost = 440			;The Mouth of Torment
 Global $TheShatteredRavines_Map = 441
-Global $TheShatteredRavines_Outpost = 442      ;Lair of the Forgotten
+Global $TheShatteredRavines_Outpost = 442
 Global $TheSulfurousWastes_Map = 444
 Global $TheSulfurousWastes_Outpost = 478 			;Gate of Desolation
 ;CharrHomelands IDs
 Global $DaladaUplands_Map = 647
-Global $DaladaUplands_Outpost = 648            ;Doomlore Shrine
+Global $DaladaUplands_Outpost = 648
 Global $GrothmarWardowns_Map = 649
-Global $GrothmarWardowns_Outpost = 650         ;Longeye's Ledge
+Global $GrothmarWardowns_Outpost = 650
 Global $SacnothValley_Map = 651
-Global $SacnothValley_Outpost = 648            ;Doomlore Shrine
-Global $SacnothValley_Transit = 647            ;Dalada Uplands
+Global $SacnothValley_Outpost = 648
+Global $SacnothValley_Transit = 647
 ;FarShiverpeaks IDs
-Global $BjoraMarches_Map
-Global $BjoraMarches_Outpost
+Global $BjoraMarches_Map = 482
+Global $BjoraMarches_Outpost = 650
 Global $DrakkarLake_Map = 513
-Global $DrakkarLake_Outpost = 644              ;Gunnar's Hold
+Global $DrakkarLake_Outpost = 643
 Global $IceCliffChasms_Map
 Global $IceCliffChasms_Outpost
 Global $JagaMoraine_Map = 546
-Global $JagaMoraine_Outpost = 645              ;Olafstead
-Global $NorrhartDomains_Map
-Global $NorrhartDomains_Outpost
+Global $JagaMoraine_Outpost = 643
+Global $NorrhartDomains_Map = 548
+Global $NorrhartDomains_Outpost = 644
 Global $VarajarFells_Map = 553
-Global $VarajarFells_Outpost = 650             ;Longeye's Ledge
+Global $VarajarFells_Outpost = 645
 ;TarnishedCoast IDs
 Global $ArborBay_Map = 485
 Global $ArborBay_Outpost = 624
@@ -297,6 +315,6 @@ Global $MagusStones_Outpost = 640
 Global $RivenEarth_Map = 501
 Global $RivenEarth_Outpost = 640
 Global $SparkflySwamp_Map = 558
-Global $SparkflySwamp_Outpost = 638            ;Gadd's Encampment
+Global $SparkflySwamp_Outpost = 638
 Global $VerdantCascades_Map = 566
-Global $VerdantCascades_Outpost = 642         ;Eye of the North
+Global $VerdantCascades_Outpost = 639

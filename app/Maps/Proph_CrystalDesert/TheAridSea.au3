@@ -2,12 +2,12 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aTheAridSeaOutpostPath[2][2] = [ _
+Local $aTheAridSeaOutpostPath[2][2] = [ _
 	[10795, 6556], _
 	[10556, 5908] _
 ]
 
-Global $aTheAridSeaTransitPath[11][2] = [ _
+Local $aTheAridSeaTransitPath[11][2] = [ _
 	[-4667, -13772], _
 	[-2247, -14229], _
 	[1025, -8357], _
@@ -27,23 +27,23 @@ Func GoOutTheAridSea()
 	If $l_i_Map = $TheAridSea_Map Then Return
 
 	If $l_i_Map = $TheAridSea_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_TheAridSeaRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> TheAridSea (portal 1)")
+		CurrentAction("Outpost -> The Arid Sea (portal 1).")
 		_Vanquisher_RunAggroPortalPath($aTheAridSeaOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_TheAridSeaRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $TheAridSea_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> TheAridSea (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aTheAridSeaTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
-		Return
+		If $g_i_TheAridSeaRoute_LastMapHandled = $l_i_Map Then Return
+		CurrentAction("Prophet's Path (transit) -> The Arid Sea (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitPortalPath($aTheAridSeaTransitPath, $vqrange, "prophetspath ") Then
+			CurrentAction("Transit map not ready yet — retrying The Arid Sea portal path.")
+			Return
+		EndIf
+		If GetMapID() = $TheAridSea_Map Then $g_i_TheAridSeaRoute_LastMapHandled = $l_i_Map
 	EndIf
 
 EndFunc
@@ -61,7 +61,7 @@ Func VQTheAridSea()
 		If GetMapID() <> $TheAridSea_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need TheAridSea (" & $TheAridSea_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $TheAridSea_Map Then

@@ -2,12 +2,12 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aDragonsGulletOutpostPath[2][2] = [ _
+Local $aDragonsGulletOutpostPath[2][2] = [ _
 	[945, 14173], _
 	[2341, 13416] _
 ]
 
-Global $aDragonsGulletTransitPath[13][2] = [ _
+Local $aDragonsGulletTransitPath[13][2] = [ _
 	[3071, 13038], _
 	[4060, 14711], _
 	[5827, 15815], _
@@ -23,7 +23,7 @@ Global $aDragonsGulletTransitPath[13][2] = [ _
 	[21431, 17396] _
 ]
 
-Global $aDragonsGulletTransit2Path[19][2] = [ _
+Local $aDragonsGulletTransit2Path[19][2] = [ _
 	[-18448, -11278], _
 	[-19523, -8452], _
 	[-17298, -5976], _
@@ -51,33 +51,34 @@ Func GoOutDragonsGullet()
 	If $l_i_Map = $DragonsGullet_Map Then Return
 
 	If $l_i_Map = $DragonsGullet_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_DragonsGulletRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> DragonsGullet (portal 1)")
+		CurrentAction("Outpost -> Dragon's Gullet (portal 1).")
 		_Vanquisher_RunAggroPortalPath($aDragonsGulletOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_DragonsGulletRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $DragonsGullet_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> DragonsGullet (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aDragonsGulletTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
+		If $g_i_DragonsGulletRoute_LastMapHandled = $l_i_Map Then Return
+		CurrentAction("Diessa Lowlands (transit) -> Flame Temple Corridor (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitPortalPath($aDragonsGulletTransitPath, $vqrange, "diessa ") Then
+			CurrentAction("Transit map not ready yet — retrying Dragon's Gullet portal path.")
+			Return
+		EndIf
+		If GetMapID() = $DragonsGullet_Transit2 Then $g_i_DragonsGulletRoute_LastMapHandled = $l_i_Map
 		Return
 	EndIf
 
 	If $l_i_Map = $DragonsGullet_Transit2 Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> DragonsGullet (portal 3)")
-		_Vanquisher_RunAggroPortalPath($aDragonsGulletTransit2Path, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
-		Return
+		If $g_i_DragonsGulletRoute_LastMapHandled = $l_i_Map Then Return
+		CurrentAction("Flame Temple Corridor (transit) -> Dragon's Gullet (portal 3).")
+		If Not _Vanquisher_RunExplorableTransitPortalPath($aDragonsGulletTransit2Path, $vqrange, "flametemple ") Then
+			CurrentAction("Transit map not ready yet — retrying Dragon's Gullet portal path.")
+			Return
+		EndIf
+		If GetMapID() = $DragonsGullet_Map Then $g_i_DragonsGulletRoute_LastMapHandled = $l_i_Map
 	EndIf
 
 EndFunc
@@ -95,7 +96,7 @@ Func VQDragonsGullet()
 		If GetMapID() <> $DragonsGullet_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need DragonsGullet (" & $DragonsGullet_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $DragonsGullet_Map Then

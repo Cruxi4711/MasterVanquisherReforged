@@ -25,7 +25,7 @@ Func GoOut()
 	;Ascalon
 	Do
 		If _Vanquisher_ShouldStop() Then Return
-		If $Bool_AddHeroes Then
+		If $Bool_AddHeroes And Not Map_GetInstanceInfo("IsExplorable") Then
 			KickAllHeroes()
 			_Vanquisher_CooperativeSleep(1000)
 
@@ -79,17 +79,13 @@ Func GoOut()
 				Case "DiessaLowlands"
 					GoOutDiessaLowlands()
 				Case "DragonsGullet"
-					MoveTo(945, 14173)
-					Move(2341, 13416)
-					WaitForLoad()
+					GoOutDragonsGullet()
 				Case "EasternFrontier"
 					MoveTo(-2300, -13836)
 					Move(-1593, -13669)
 					WaitForLoad()
 				Case "FlameTempleCorridor"
-					MoveTo(945, 14173)
-					Move(2341, 13416)
-					WaitForLoad()
+					GoOutFlameTempleCorridor()
 				Case "OldAscalon"
 					MoveTo(625, 1883)
 					Move(-426, 1874)
@@ -120,30 +116,20 @@ Func GoOut()
 					Move(4600, -27863)
 					WaitForLoad()
 				Case "GriffonsMouth"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutGriffonsMouth()
 				Case "IronHorseMine"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutIronHorseMine()
 				Case "TravelersVale"
-					MoveTo(9303, 4208)
-					Move(9275, 4000)
-					WaitForLoad()
+					GoOutTravelersVale()
 			;Maguuma
 				Case "DryTop"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutDryTop()
 				Case "EttinsBack"
 					GoOutEttinsBack()
 				Case "MamnoonLagoon"
 					GoOutMamnoonLagoon()
 				Case "ReedBog"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutReedBog()
 				Case "SageLands"
 					MoveTo(3592, -9535)
 					Move(3000, -9480)
@@ -160,9 +146,7 @@ Func GoOut()
 					Move(6212.98, -10712.02)
 					WaitForLoad()
 				Case "TheFalls"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutTheFalls()
 			;CrystalDesert
 				Case "DivinersAscent"
 					MoveTo(1683, -1594)
@@ -181,9 +165,7 @@ Func GoOut()
 					Move(-15233.08, 2352.49)
 					WaitForLoad()
 				Case "TheAridSea"
-					MoveTo(-15225.14, 1966.78)
-					Move(-15233.08, 2352.49)
-					WaitForLoad()
+					GoOutTheAridSea()
 				Case "TheScar"
 					MoveTo(1683, -1594)
 					Move(4600, -27863)
@@ -194,25 +176,17 @@ Func GoOut()
 					WaitForLoad()
 			;Kryta
 				Case "CursedLands"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutCursedLands()
 				Case "KessexPeak"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutKessexPeak()
 				Case "LionsGate"
 					MoveTo(1683, -1594)
 					Move(4600, -27863)
 					WaitForLoad()
 				Case "MajestysRest"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutMajestysRest()
 				Case "NeboTerrace"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutNeboTerrace()
 				Case "NorthKrytaProvince"
 					MoveTo(1683, -1594)
 					Move(4600, -27863)
@@ -224,9 +198,7 @@ Func GoOut()
 				Case "StingrayStrand"
 					GoOutStingrayStrand()
 				Case "TalmarkWilderness"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutTalmarkWilderness()
 				Case "TearsoftheFallen"
 					GoOutTearsoftheFallen()
 				Case "TheBlackCurtain"
@@ -245,9 +217,7 @@ Func GoOut()
 					WaitForLoad()
 			;SouthernShiverpeaks
 				Case "DreadnoughtsDrift"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutDreadnoughtsDrift()
 				Case "FrozenForest"
 					MoveTo(1683, -1594)
 					Move(4600, -27863)
@@ -261,15 +231,11 @@ Func GoOut()
 					Move(4600, -27863)
 					WaitForLoad()
 				Case "Icedome"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutIcedome()
 				Case "LornarsPass"
 					GoOutLornarsPass()
 				Case "MineralSprings"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutMineralSprings()
 				Case "SnakeDance"
 					MoveTo(1683, -1594)
 					Move(4600, -27863)
@@ -620,25 +586,22 @@ Func GoOut()
 
 			;TheDesolation
 				Case "CrystalOverlook"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutCrystalOverlook()
 				Case "JokosDomain"
 					MoveTo(-644.45 1389.03)
 					Move(1170.35, 4705.75)
 					WaitForLoad()
 				Case "PoisonedOutcrops"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
+					; Bone Palace (442) → Poisoned Outcrops portal. Verify coordinates in-game.
+					MoveTo(-1500, -2000)
+					Move(-1800, -2500)
 					WaitForLoad()
 				Case "TheAlkaliPan"
 					MoveTo(1683, -1594)
 					Move(4600, -27863)
 					WaitForLoad()
 				Case "TheRupturedHeart"
-					MoveTo(1683, -1594)
-					Move(4600, -27863)
-					WaitForLoad()
+					GoOutTheRupturedHeart()
 				Case "TheShatteredRavines"
 					MoveTo(1683, -1594)
 					Move(4600, -27863)
@@ -714,7 +677,7 @@ Func GoOut()
 					WaitForLoad()
 			EndSwitch
 			RndSleep(2000)
-		Until GetMapID() = $Map_To_Farm Or _Vanquisher_ShouldStop()
+		Until GetMapID() = $Map_To_Farm Or (Map_GetInstanceInfo("IsExplorable") And Not _Vanquisher_IsOnTransitToFarm()) Or _Vanquisher_ShouldStop()
 	EndFunc
 
 	Func InitSave()

@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQBoreasSeabed()
-    If GetMapID() <> $BoreasSeabed_Map And GetMapID() <> $BoreasSeabed_Outpost  Then TravelTo($BoreasSeabed_Outpost)   
-    If GetMapID() = $BoreasSeabed_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $BoreasSeabed_Map And GetMapID() <> $BoreasSeabed_Outpost Then
+		CurrentAction("Traveling to outpost for Boreas Seabed.")
+		TravelTo($BoreasSeabed_Outpost)
+	EndIf
 
-	If GetMapID() = $BoreasSeabed_Map Then    
+	If GetMapID() = $BoreasSeabed_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[45][4] = [ [15139 ,-7063, " ", $vqrange] _
+	If GetMapID() <> $BoreasSeabed_Map Then
+		CurrentAction("Boreas Seabed route waiting - on map " & GetMapID() & ", need " & $BoreasSeabed_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Boreas Seabed vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[45][4] = [ [15139 ,-7063, " ", $vqrange] _
 		, [18288 ,-9106, " ", $vqrange] _
 		, [19930 ,-6525, " ", $vqrange] _
 		, [21821 ,-8140, " ", $vqrange] _
@@ -57,25 +68,25 @@ Func VQBoreasSeabed()
 		, [24070 ,8805, " ", $vqrange] _
 		, [25243 ,10408, " ", $vqrange] ]
 
+	If Not _Vanquisher_ShouldSkipMapEntrySetup() Then
 		GoNearestNPCToCoords(13861, -9986)
-	If GetKurzickFaction() > GetLuxonFaction() Then
-                Dialog(0x81)
-                Sleep(1000)
-                Dialog(0x2)
-                Sleep(1000)
-                Dialog(0x84)
-	        Sleep(1000)
-	        Dialog(0x86)
-	        Sleep(1000)
-        Else
-                Dialog(0x85)
-                Sleep(1000)
-                Dialog(0x86)
-                Sleep(1000)
-        EndIf
+		If GetKurzickFaction() > GetLuxonFaction() Then
+			Dialog(0x81)
+			Sleep(1000)
+			Dialog(0x2)
+			Sleep(1000)
+			Dialog(0x84)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		Else
+			Dialog(0x85)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		EndIf
+	EndIf
 
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

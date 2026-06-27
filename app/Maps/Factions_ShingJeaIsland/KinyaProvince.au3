@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQKinyaProvince()
-    If GetMapID() <> $KinyaProvince_Map And GetMapID() <> $KinyaProvince_Outpost  Then TravelTo($KinyaProvince_Outpost)   
-    If GetMapID() = $KinyaProvince_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $KinyaProvince_Map And GetMapID() <> $KinyaProvince_Outpost Then
+		CurrentAction("Traveling to outpost for Kinya Province.")
+		TravelTo($KinyaProvince_Outpost)
+	EndIf
 
-	If GetMapID() = $KinyaProvince_Map Then    
+	If GetMapID() = $KinyaProvince_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[73][4] = [ [11642, 15073, " ", $vqrange] _		
+	If GetMapID() <> $KinyaProvince_Map Then
+		CurrentAction("Kinya Province route waiting - on map " & GetMapID() & ", need " & $KinyaProvince_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Kinya Province vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[73][4] = [ [11642, 15073, " ", $vqrange] _		
 		, [10725, 16723, " ", $vqrange] _
 		, [9393, 16755, " ", $vqrange] _
 		, [9010, 15122, " ", $vqrange] _
@@ -85,8 +96,6 @@ Func VQKinyaProvince()
 		, [10466, 10582, " ", $vqrange] _
 		, [11139, 13322, " ", $vqrange] ]
 
-		MoveandAggroVQ($aWaypoints)
-		MoveAndAggroVQReverse($aWaypoints)
-        
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

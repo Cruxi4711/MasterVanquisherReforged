@@ -1,15 +1,18 @@
-;Mapped by Crux
 #include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-
-
+; Camp Rankor (155) -> Snake Dance (91).
 Local $aLornarsPassOutpostPath[2][2] = [ _
 	[-10030, 18833], _
-	[-9797, 19027]]
+	[-9797, 19027] _
+]
 
-Local $aLornarsPassTransitPath[38][2] = [ _
+; Snake Dance (91) -> Dreadnought's Drift (97). Last path point is approach; portal is separate.
+Local Const $LORNARSPASS_SNAKEDANCE_PORTAL_X = -7418
+Local Const $LORNARSPASS_SNAKEDANCE_PORTAL_Y = 45039
+
+Local $aLornarsPassSnakeDanceTransitPath[38][2] = [ _
 	[4361, -40986], _
 	[2911, -39264], _
 	[2133, -33852], _
@@ -47,11 +50,14 @@ Local $aLornarsPassTransitPath[38][2] = [ _
 	[-2023, 40926], _
 	[-5916, 41977], _
 	[-7311, 44525], _
-	[-7091, 45561]]
+	[-7091, 45561] _
+]
 
+; Dreadnought's Drift (97) -> Lornar's Pass (90). Last path point is approach; portal is separate.
+Local Const $LORNARSPASS_DREADNOUGHT_PORTAL_X = -5518
+Local Const $LORNARSPASS_DREADNOUGHT_PORTAL_Y = 8346
 
-
-Local $aLornarsPassTransit2Path[12][2] = [ _
+Local $aLornarsPassDreadnoughtTransitPath[12][2] = [ _
 	[-7259, -6921], _
 	[-5124, -5438], _
 	[-4629, -2903], _
@@ -63,129 +69,104 @@ Local $aLornarsPassTransit2Path[12][2] = [ _
 	[-3474, 843], _
 	[-5840, 1989], _
 	[-6887, 4313], _
-	[-5679, 6641]]
+	[-5679, 6641] _
+]
 
+Func _Vanquisher_ResetLornarsPassRouteProgress()
+	$g_i_LornarsPassRoute_LastMapHandled = -1
+EndFunc
 
-
+; Camp Rankor (155) -> Snake Dance (91) -> Dreadnought's Drift (97) -> Lornar's Pass farm (90).
 Func GoOutLornarsPass()
-
 	Local $l_i_Map = GetMapID()
-
-
 
 	If $l_i_Map = $LornarsPass_Map Then Return
 
-
-
 	If $l_i_Map = $LornarsPass_Outpost Then
-
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-
+		If $g_i_LornarsPassRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-
-		CurrentAction("Camp Rankor -> Snake Dance (portal 1)")
-
+		CurrentAction("Camp Rankor -> Snake Dance (portal 1).")
 		_Vanquisher_RunAggroPortalPath($aLornarsPassOutpostPath, $vqrange, "outpost ")
-
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-
+		If GetMapID() <> $l_i_Map Then $g_i_LornarsPassRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
-
 		Return
-
 	EndIf
-
-
 
 	If $l_i_Map = $LornarsPass_Transit Then
-
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-
+		If $g_i_LornarsPassRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-
-		CurrentAction("Snake Dance -> Dreadnought's Drift (portal 2)")
-
-		_Vanquisher_RunAggroPortalPath($aLornarsPassTransitPath, $vqrange, "transit ")
-
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-
+		CurrentAction("Snake Dance (transit) -> Dreadnought's Drift (portal 2).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying Dreadnought's Drift portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		Local $l_i_MapBefore = GetMapID()
+		_Vanquisher_RunAggroApproachPath($aLornarsPassSnakeDanceTransitPath, $vqrange, "snakedance ")
+		If GetMapID() = $LornarsPass_Transit2 Then
+			$g_i_LornarsPassRoute_LastMapHandled = $LornarsPass_Transit
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		If GetMapID() = $l_i_MapBefore Then
+			_Vanquisher_RunPortalStep($LORNARSPASS_SNAKEDANCE_PORTAL_X, $LORNARSPASS_SNAKEDANCE_PORTAL_Y, $vqrange, "snakedance portal")
+		EndIf
+		If GetMapID() = $LornarsPass_Transit2 Then $g_i_LornarsPassRoute_LastMapHandled = $LornarsPass_Transit
 		$g_b_Vanquisher_TransitOnly = False
-
 		Return
-
 	EndIf
-
-
 
 	If $l_i_Map = $LornarsPass_Transit2 Then
-
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-
+		If $g_i_LornarsPassRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-
-		CurrentAction("Dreadnought's Drift -> Lornar's Pass (portal 3)")
-
-		_Vanquisher_RunAggroPortalPath($aLornarsPassTransit2Path, $vqrange, "transit ")
-
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-
+		CurrentAction("Dreadnought's Drift (transit) -> Lornar's Pass (portal 3).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying Lornar's Pass portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		Local $l_i_MapBefore = GetMapID()
+		_Vanquisher_RunAggroApproachPath($aLornarsPassDreadnoughtTransitPath, $vqrange, "dreadnought ")
+		If GetMapID() = $LornarsPass_Map Then
+			$g_i_LornarsPassRoute_LastMapHandled = $LornarsPass_Transit2
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		If GetMapID() = $l_i_MapBefore Then
+			_Vanquisher_RunPortalStep($LORNARSPASS_DREADNOUGHT_PORTAL_X, $LORNARSPASS_DREADNOUGHT_PORTAL_Y, $vqrange, "dreadnought portal")
+		EndIf
+		If GetMapID() = $LornarsPass_Map Then $g_i_LornarsPassRoute_LastMapHandled = $LornarsPass_Transit2
 		$g_b_Vanquisher_TransitOnly = False
-
-		Return
-
 	EndIf
-
-
 
 EndFunc
 
-
-
 Func VQLornarsPass()
-
 	If GetMapID() <> $LornarsPass_Map And GetMapID() <> $LornarsPass_Outpost And GetMapID() <> $LornarsPass_Transit And GetMapID() <> $LornarsPass_Transit2 Then
-
-		_Vanquisher_ResetGoOutRouteProgress()
-
+		_Vanquisher_ResetLornarsPassRouteProgress()
 		CurrentAction("Traveling to Camp Rankor for Lornar's Pass.")
-
 		TravelTo($LornarsPass_Outpost)
-
 	EndIf
-
-
 
 	If GetMapID() = $LornarsPass_Outpost Or GetMapID() = $LornarsPass_Transit Or GetMapID() = $LornarsPass_Transit2 Then
-
 		_Vanquisher_ApplyDifficulty()
-
 		GoOutLornarsPass()
-
 		If GetMapID() <> $LornarsPass_Map Then
-
 			CurrentAction("Routing - on map " & GetMapID() & ", need LornarsPass (" & $LornarsPass_Map & ").")
-
 			Return
-
+		EndIf
 	EndIf
-
-	EndIf
-
-
 
 	If GetMapID() <> $LornarsPass_Map Then
-
 		CurrentAction("LornarsPass route waiting - on map " & GetMapID() & ", need " & $LornarsPass_Map & ".")
-
 		Return
-
 	EndIf
 
-
-
 	CurrentAction("Starting LornarsPass vanquish route.")
-
-
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
 
 	Local $aWaypoints[162][4] = [ _
 		[-8678, -34615, " ", $vqrange], _
@@ -349,10 +330,7 @@ Func VQLornarsPass()
 		[-1247, 34833, " ", $vqrange], _
 		[-3767, 34937, " ", $vqrange], _
 		[-5849, 33395, " ", $vqrange], _
-		[-8258, 32467, " ", $vqrange]]
-
-
+		[-8258, 32467, " ", $vqrange] ]
 
 	MoveandAggroVQFullRoute($aWaypoints)
-
 EndFunc

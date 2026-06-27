@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aOldAscalonOutpostPath[2][2] = [ _
+Local $aOldAscalonOutpostPath[2][2] = [ _
 	[625, 1883], _
 	[-426, 1874] _
 ]
@@ -17,7 +17,7 @@ Func GoOutOldAscalon()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> OldAscalon (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aOldAscalonOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQOldAscalon()
 		If GetMapID() <> $OldAscalon_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need OldAscalon (" & $OldAscalon_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $OldAscalon_Map Then
@@ -47,7 +47,7 @@ Func VQOldAscalon()
 
 	CurrentAction("Starting OldAscalon vanquish route.")
 
-	Local $aWaypoints[107][4] = [ _
+	Local $aWaypoints[109][4] = [ _
 		[16450, 10402, " ", $vqrange], _
 		[12678, 15158, " ", $vqrange], _
 		[13497, 17507, " ", $vqrange], _
@@ -60,6 +60,7 @@ Func VQOldAscalon()
 		[3553, 18931, " ", $vqrange], _
 		[2832, 14636, " ", $vqrange], _
 		[3585, 11189, " ", $vqrange], _
+		[5507, 12840, " ", $vqrange], _
 		[7016, 10481, " ", $vqrange], _
 		[3491, 5105, " ", $vqrange], _
 		[518, 4808, " ", $vqrange], _
@@ -134,6 +135,7 @@ Func VQOldAscalon()
 		[5518, -2116, " ", $vqrange], _
 		[6764, 870, " ", $vqrange], _
 		[1531, -951, " ", $vqrange], _
+		[72, -558, " ", $vqrange], _
 		[1547, -936, " ", $vqrange], _
 		[7230, 1269, " ", $vqrange], _
 		[9551, 5684, " ", $vqrange], _

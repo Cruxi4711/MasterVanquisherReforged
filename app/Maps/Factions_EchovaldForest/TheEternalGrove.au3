@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQTheEternalGrove()
-    If GetMapID() <> $TheEternalGrove_Map And GetMapID() <> $TheEternalGrove_Outpost  Then TravelTo($TheEternalGrove_Outpost)   
-    If GetMapID() = $TheEternalGrove_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $TheEternalGrove_Map And GetMapID() <> $TheEternalGrove_Outpost Then
+		CurrentAction("Traveling to outpost for The Eternal Grove.")
+		TravelTo($TheEternalGrove_Outpost)
+	EndIf
 
-	If GetMapID() = $TheEternalGrove_Map Then    
+	If GetMapID() = $TheEternalGrove_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
 
-		Local $aWaypoints[42][4] = [ [14380.2 ,-674.562, " ", $vqrange] _
+	If GetMapID() <> $TheEternalGrove_Map Then
+		CurrentAction("The Eternal Grove route waiting - on map " & GetMapID() & ", need " & $TheEternalGrove_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting The Eternal Grove vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[42][4] = [ [14380.2 ,-674.562, " ", $vqrange] _
 		, [12437.5 ,-1727.91, " ", $vqrange] _
 		, [9123.92 ,729.996, " ", $vqrange] _
 		, [4736.91 ,5926.64, " ", $vqrange] _
@@ -53,26 +64,26 @@ Func VQTheEternalGrove()
 		, [16640.2 ,-2953.63, " ", $vqrange] _
 		, [20062.1 ,-4508.37, " ", $vqrange] _
 		, [20392.4 ,-2128.2, " ", $vqrange] ]
-		
-		GoNearestNPCToCoords(14859.7 ,1397.25)
-	If GetKurzickFaction() > GetLuxonFaction() Then
-                Dialog(0x81)
-                Sleep(1000)
-                Dialog(0x2)
-                Sleep(1000)
-                Dialog(0x84)
-	        Sleep(1000)
-	        Dialog(0x86)
-	        Sleep(1000)
-        Else
-                Dialog(0x85)
-                Sleep(1000)
-                Dialog(0x86)
-                Sleep(1000)
-        EndIf
 
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	If Not _Vanquisher_ShouldSkipMapEntrySetup() Then
+		GoNearestNPCToCoords(14859.7 ,1397.25)
+		If GetKurzickFaction() > GetLuxonFaction() Then
+			Dialog(0x81)
+			Sleep(1000)
+			Dialog(0x2)
+			Sleep(1000)
+			Dialog(0x84)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		Else
+			Dialog(0x85)
+			Sleep(1000)
+			Dialog(0x86)
+			Sleep(1000)
+		EndIf
+	EndIf
+
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

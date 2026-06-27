@@ -1,11 +1,9 @@
-;Mapped by Crux
 #include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQVerdantCascades()
 	If GetMapID() <> $VerdantCascades_Map And GetMapID() <> $VerdantCascades_Outpost Then
-		_Vanquisher_ResetGoOutRouteProgress()
 		CurrentAction("Traveling to outpost for Verdant Cascades.")
 		TravelTo($VerdantCascades_Outpost)
 	EndIf
@@ -25,6 +23,8 @@ Func VQVerdantCascades()
 	EndIf
 
 	CurrentAction("Starting Verdant Cascades vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
 
 	Local $aWaypoints[190][4] = [ _
 		[-22145, 6138, " ", $vqrange], _
@@ -216,7 +216,7 @@ Func VQVerdantCascades()
 		[-14101, 9285, " ", $vqrange], _
 		[-16134, 7695, " ", $vqrange], _
 		[-18561, 6779, " ", $vqrange], _
-		[-21038, 6138, " ", $vqrange] ]
+		[-21038, 6138, " ", $vqrange]]
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc

@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aTheBreachOutpostPath[3][2] = [ _
+Local $aTheBreachOutpostPath[3][2] = [ _
 	[20252, 8439], _
 	[20242, 7929], _
 	[20246, 7491] _
@@ -18,7 +18,7 @@ Func GoOutTheBreach()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> TheBreach (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aTheBreachOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -38,7 +38,7 @@ Func VQTheBreach()
 		If GetMapID() <> $TheBreach_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need TheBreach (" & $TheBreach_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $TheBreach_Map Then

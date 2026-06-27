@@ -2,12 +2,12 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aFlameTempleCorridorOutpostPath[2][2] = [ _
+Local $aFlameTempleCorridorOutpostPath[2][2] = [ _
 	[945, 14173], _
 	[2341, 13416] _
 ]
 
-Global $aFlameTempleCorridorTransitPath[13][2] = [ _
+Local $aFlameTempleCorridorTransitPath[13][2] = [ _
 	[3071, 13038], _
 	[4060, 14711], _
 	[5827, 15815], _
@@ -29,23 +29,23 @@ Func GoOutFlameTempleCorridor()
 	If $l_i_Map = $FlameTempleCorridor_Map Then Return
 
 	If $l_i_Map = $FlameTempleCorridor_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_FlameTempleCorridorRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> FlameTempleCorridor (portal 1)")
+		CurrentAction("Outpost -> Flame Temple Corridor (portal 1).")
 		_Vanquisher_RunAggroPortalPath($aFlameTempleCorridorOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_FlameTempleCorridorRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $FlameTempleCorridor_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> FlameTempleCorridor (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aFlameTempleCorridorTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
-		Return
+		If $g_i_FlameTempleCorridorRoute_LastMapHandled = $l_i_Map Then Return
+		CurrentAction("Diessa Lowlands (transit) -> Flame Temple Corridor (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitPortalPath($aFlameTempleCorridorTransitPath, $vqrange, "diessa ") Then
+			CurrentAction("Transit map not ready yet — retrying Flame Temple Corridor portal path.")
+			Return
+		EndIf
+		If GetMapID() = $FlameTempleCorridor_Map Then $g_i_FlameTempleCorridorRoute_LastMapHandled = $l_i_Map
 	EndIf
 
 EndFunc
@@ -63,7 +63,7 @@ Func VQFlameTempleCorridor()
 		If GetMapID() <> $FlameTempleCorridor_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need FlameTempleCorridor (" & $FlameTempleCorridor_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $FlameTempleCorridor_Map Then

@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aSpearheadPeakOutpostPath[2][2] = [ _
+Local $aSpearheadPeakOutpostPath[2][2] = [ _
 	[-21052.03, 13106.16], _
 	[-22899, 13360] _
 ]
@@ -17,7 +17,7 @@ Func GoOutSpearheadPeak()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> SpearheadPeak (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aSpearheadPeakOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQSpearheadPeak()
 		If GetMapID() <> $SpearheadPeak_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need SpearheadPeak (" & $SpearheadPeak_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $SpearheadPeak_Map Then
@@ -46,6 +46,8 @@ Func VQSpearheadPeak()
 	EndIf
 
 	CurrentAction("Starting SpearheadPeak vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
 
 	Local $aWaypoints[123][4] = [ _
 		[7547, -25881, " ", $vqrange], _

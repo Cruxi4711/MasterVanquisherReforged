@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aTalusChuteOutpostPath[2][2] = [ _
+Local $aTalusChuteOutpostPath[2][2] = [ _
 	[-22877, -5419], _
 	[-23133, -5519] _
 ]
@@ -17,7 +17,7 @@ Func GoOutTalusChute()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> TalusChute (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aTalusChuteOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQTalusChute()
 		If GetMapID() <> $TalusChute_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need TalusChute (" & $TalusChute_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $TalusChute_Map Then

@@ -2,27 +2,41 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aIcedomeOutpostPath[2][2] = [ _
-	[-22815, -5378], _
-	[-23091, -5492] _
+; Copperhammer Mines (159) -> Frozen Forest (98).
+Local Const $ICEDOME_COPPERHAMMER_PORTAL_X = -17971
+Local Const $ICEDOME_COPPERHAMMER_PORTAL_Y = 9397
+
+; Frozen Forest (98) -> Ice Dome (87). Last path point is approach; portal is separate.
+Local Const $ICEDOME_FROZENFOREST_PORTAL_X = -24993
+Local Const $ICEDOME_FROZENFOREST_PORTAL_Y = -10537
+
+; FrozenForestToIcedome — map 159 approach (TransitZoneWaypoints.txt #1).
+Local $aIcedomeOutpostPath[1][2] = [ _
+	[-17953, 9671] _
 ]
 
-Global $aIcedomeTransitPath[15][2] = [ _
-	[20104, -13167], _
-	[19138, -10938], _
-	[18469, -8424], _
-	[13995, -8343], _
-	[15599, -6604], _
-	[18342, -837], _
-	[20857, -494], _
-	[21224, 2843], _
-	[21705, 4661], _
-	[22376, 7119], _
-	[23184, 9199], _
-	[23218, 11371], _
-	[22197, 16324], _
-	[23438, 16609], _
-	[24083, 16716] _
+; FrozenForestToIcedome — map 98 approach only (TransitZoneWaypoints.txt #2–#21).
+Local $aIcedomeTransitPath[20][2] = [ _
+	[-15817, 8498], _
+	[-15175, 5849], _
+	[-12365, 2997], _
+	[-9826, 1424], _
+	[-6725, 889], _
+	[-3321, -104], _
+	[-2544, -1578], _
+	[-2715, -3575], _
+	[-4192, -5400], _
+	[-5630, -6232], _
+	[-9738, -5483], _
+	[-11651, -5574], _
+	[-15257, -7766], _
+	[-16877, -8380], _
+	[-18343, -9790], _
+	[-20792, -12612], _
+	[-22301, -14003], _
+	[-23668, -14287], _
+	[-24689, -12650], _
+	[-24884, -11301] _
 ]
 
 Func GoOutIcedome()
@@ -31,23 +45,24 @@ Func GoOutIcedome()
 	If $l_i_Map = $IceDome_Map Then Return
 
 	If $l_i_Map = $IceDome_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_IcedomeRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> Icedome (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aIcedomeOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Copperhammer Mines -> Frozen Forest (portal 1).")
+		_Vanquisher_RunAggroApproachPath($aIcedomeOutpostPath, $vqrange, "copperhammer ")
+		_Vanquisher_RunPortalStep($ICEDOME_COPPERHAMMER_PORTAL_X, $ICEDOME_COPPERHAMMER_PORTAL_Y, $vqrange, "copperhammer portal")
+		If GetMapID() <> $l_i_Map Then $g_i_IcedomeRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $IceDome_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
-		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> Icedome (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aIcedomeTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
-		$g_b_Vanquisher_TransitOnly = False
-		Return
+		If $g_i_IcedomeRoute_LastMapHandled = $l_i_Map Then Return
+		CurrentAction("Frozen Forest (transit) -> Ice Dome (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitLeg($aIcedomeTransitPath, $ICEDOME_FROZENFOREST_PORTAL_X, $ICEDOME_FROZENFOREST_PORTAL_Y, $vqrange, "frozenforest ") Then
+			CurrentAction("Transit map not ready yet — retrying Ice Dome portal path.")
+			Return
+		EndIf
+		If GetMapID() = $IceDome_Map Then $g_i_IcedomeRoute_LastMapHandled = $l_i_Map
 	EndIf
 
 EndFunc
@@ -55,7 +70,7 @@ EndFunc
 Func VQIcedome()
 	If GetMapID() <> $IceDome_Map And GetMapID() <> $IceDome_Outpost And GetMapID() <> $IceDome_Transit Then
 		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for Icedome.")
+		CurrentAction("Traveling to Copperhammer Mines for Icedome.")
 		TravelTo($IceDome_Outpost)
 	EndIf
 
@@ -65,7 +80,7 @@ Func VQIcedome()
 		If GetMapID() <> $IceDome_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need Icedome (" & $IceDome_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $IceDome_Map Then
@@ -98,4 +113,3 @@ Func VQIcedome()
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
-

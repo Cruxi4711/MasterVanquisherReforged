@@ -3,15 +3,26 @@ Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQTahnnakiTemple()
-    If GetMapID() <> $TahnnakiTemple_Map And GetMapID() <> $TahnnakiTemple_Outpost  Then TravelTo($TahnnakiTemple_Outpost)   
-    If GetMapID() = $TahnnakiTemple_Outpost then
-       GoOut() 
-      
-    EndIf
+	If GetMapID() <> $TahnnakiTemple_Map And GetMapID() <> $TahnnakiTemple_Outpost Then
+		CurrentAction("Traveling to outpost for Tahnnaki Temple.")
+		TravelTo($TahnnakiTemple_Outpost)
+	EndIf
 
-	If GetMapID() = $TahnnakiTemple_Map Then
-   
-		Local $aWaypoints[43][4] = [ [2884.86, -12387.98, " ", $vqrange] _
+	If GetMapID() = $TahnnakiTemple_Outpost Then
+		_Vanquisher_ApplyDifficulty()
+		Return
+	EndIf
+
+	If GetMapID() <> $TahnnakiTemple_Map Then
+		CurrentAction("Tahnnaki Temple route waiting - on map " & GetMapID() & ", need " & $TahnnakiTemple_Map & ".")
+		Return
+	EndIf
+
+	CurrentAction("Starting Tahnnaki Temple vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
+
+	Local $aWaypoints[43][4] = [ [2884.86, -12387.98, " ", $vqrange] _
 		, [227.31, -7360.89, " ", $vqrange] _
 		, [2259.09, -3369.35, " ", $vqrange] _
 		, [3171.27, 2108.69, " ", $vqrange] _
@@ -54,9 +65,6 @@ Func VQTahnnakiTemple()
 		, [-7033.71, 6410.47, " ", $vqrange] _
 		, [-7398.63, 1914.15, " ", $vqrange] _
 		, [-10296.21, -2138.44, " ", $vqrange] ]
-
-		MoveandAggroVQ($aWaypoints)
-      		MoveAndAggroVQReverse($aWaypoints)
-		
-    EndIf
+	MoveandAggroVQ($aWaypoints)
+	MoveAndAggroVQReverse($aWaypoints)
 EndFunc

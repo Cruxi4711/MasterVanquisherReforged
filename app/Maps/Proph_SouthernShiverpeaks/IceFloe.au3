@@ -2,6 +2,11 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
+Local $aIceFloeOutpostPath[2][2] = [ _
+	[1683, -1594], _
+	[4600, -27863] _
+]
+
 Func GoOutIceFloe()
 	Local $l_i_Map = GetMapID()
 
@@ -12,7 +17,7 @@ Func GoOutIceFloe()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> IceFloe (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aIceFloeOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -32,7 +37,7 @@ Func VQIceFloe()
 		If GetMapID() <> $IceFloe_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need IceFloe (" & $IceFloe_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $IceFloe_Map Then
@@ -42,7 +47,7 @@ Func VQIceFloe()
 
 	CurrentAction("Starting IceFloe vanquish route.")
 
-	Local $aWaypoints[142][4] = [ _
+	Local $aWaypoints[147][4] = [ _
 		[20782, 13552, " ", $vqrange], _
 		[19976, 13364, " ", $vqrange], _
 		[19666, 13266, " ", $vqrange], _
@@ -172,8 +177,13 @@ Func VQIceFloe()
 		[10988, 2374, " ", $vqrange], _
 		[9713, -391, " ", $vqrange], _
 		[8482, -1888, " ", $vqrange], _
+		[4230, -1551, " ", $vqrange], _
 		[5013, -3266, " ", $vqrange], _
+		[1801, -2499, " ", $vqrange], _
 		[2288, -5363, " ", $vqrange], _
+		[-623, -3946, " ", $vqrange], _
+		[-2779, -5074, " ", $vqrange], _
+		[-4274, -6222, " ", $vqrange], _
 		[-545, -6672, " ", $vqrange], _
 		[-3142, -7486, " ", $vqrange], _
 		[-5088, -8925, " ", $vqrange], _

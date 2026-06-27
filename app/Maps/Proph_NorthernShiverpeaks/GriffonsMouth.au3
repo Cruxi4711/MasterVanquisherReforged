@@ -2,21 +2,31 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aGriffonsMouthOutpostPath[2][2] = [ _
-	[-1453.60, 24938.46], _
-	[-4334.29, 26859.33] _
+; Gates of Kryta (14) -> Scoundrel's Rise (54).
+Local $aGriffonsMouthOutpostPath[2][2] = [ _
+	[-4818, 27326], _
+	[-4334, 26859] _
 ]
 
-Global $aGriffonsMouthTransitPath[8][2] = [ _
-	[-2324, -5061], _
-	[98, -2686], _
-	[4808, -1046], _
-	[6085, 3327], _
-	[7698, 5400], _
-	[7355, 6838], _
-	[7504, 7406], _
-	[7660, 8001] _
+; Scoundrel's Rise (54) -> Griffon's Mouth (27). Last path point is approach; portal is separate.
+Local Const $GRIFFONSMOUTH_TRANSIT_PORTAL_X = 7663
+Local Const $GRIFFONSMOUTH_TRANSIT_PORTAL_Y = 8129
+
+Local $aGriffonsMouthTransitPath[9][2] = [ _
+	[-1719, -6028], _
+	[-1415, -4056], _
+	[205, -2686], _
+	[1890, -2265], _
+	[3660, -1680], _
+	[5065, 1032], _
+	[6608, 3784], _
+	[7512, 6112], _
+	[7542, 7201] _
 ]
+
+Func _Vanquisher_ResetGriffonsMouthRouteProgress()
+	$g_i_GriffonsMouthRoute_LastMapHandled = -1
+EndFunc
 
 Func GoOutGriffonsMouth()
 	Local $l_i_Map = GetMapID()
@@ -24,31 +34,36 @@ Func GoOutGriffonsMouth()
 	If $l_i_Map = $GriffonsMouth_Map Then Return
 
 	If $l_i_Map = $GriffonsMouth_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_GriffonsMouthRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> GriffonsMouth (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aGriffonsMouthOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Gates of Kryta -> Scoundrel's Rise (portal 1).")
+		_Vanquisher_RunAggroPortalPath($aGriffonsMouthOutpostPath, $vqrange, "gates ")
+		If GetMapID() <> $l_i_Map Then $g_i_GriffonsMouthRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $GriffonsMouth_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_GriffonsMouthRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> GriffonsMouth (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aGriffonsMouthTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Scoundrel's Rise (transit) -> Griffon's Mouth (portal 2).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying Griffon's Mouth portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		_Vanquisher_RunAggroApproachPath($aGriffonsMouthTransitPath, $vqrange, "scoundrel ")
+		_Vanquisher_RunPortalStep($GRIFFONSMOUTH_TRANSIT_PORTAL_X, $GRIFFONSMOUTH_TRANSIT_PORTAL_Y, $vqrange, "scoundrel portal")
+		If GetMapID() = $GriffonsMouth_Map Then $g_i_GriffonsMouthRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
-		Return
 	EndIf
-
 EndFunc
 
 Func VQGriffonsMouth()
 	If GetMapID() <> $GriffonsMouth_Map And GetMapID() <> $GriffonsMouth_Outpost And GetMapID() <> $GriffonsMouth_Transit Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for GriffonsMouth.")
+		_Vanquisher_ResetGriffonsMouthRouteProgress()
+		CurrentAction("Traveling to Gates of Kryta for Griffon's Mouth.")
 		TravelTo($GriffonsMouth_Outpost)
 	EndIf
 
@@ -56,17 +71,17 @@ Func VQGriffonsMouth()
 		_Vanquisher_ApplyDifficulty()
 		GoOutGriffonsMouth()
 		If GetMapID() <> $GriffonsMouth_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need GriffonsMouth (" & $GriffonsMouth_Map & ").")
+			CurrentAction("Routing - on map " & GetMapID() & ", need Griffon's Mouth (" & $GriffonsMouth_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $GriffonsMouth_Map Then
-		CurrentAction("GriffonsMouth route waiting - on map " & GetMapID() & ", need " & $GriffonsMouth_Map & ".")
+		CurrentAction("Griffon's Mouth route waiting - on map " & GetMapID() & ", need " & $GriffonsMouth_Map & ".")
 		Return
 	EndIf
 
-	CurrentAction("Starting GriffonsMouth vanquish route.")
+	CurrentAction("Starting Griffon's Mouth vanquish route.")
 
 	Local $aWaypoints[29][4] = [ _
 		[-2913, -7105, " ", $vqrange], _
@@ -101,4 +116,3 @@ Func VQGriffonsMouth()
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
-

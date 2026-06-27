@@ -2,7 +2,21 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aTalmarkWildernessTransitPath[9][2] = [ _
+Local $aTalmarkWildernessOutpostPath[1][2] = [ _
+	[-5199, 16327] _
+]
+
+; Temple of the Ages (138) -> The Black Curtain (18).
+Local Const $TALMARK_TEMPLE_PORTAL_X = -5243
+Local Const $TALMARK_TEMPLE_PORTAL_Y = 15961
+
+; The Black Curtain (18) -> Talmark Wilderness (17 or WiK 837). Last path point is approach; portal is separate.
+Local Const $TALMARK_BLACKCURTAIN_PORTAL_X = -20304
+Local Const $TALMARK_BLACKCURTAIN_PORTAL_Y = 1824
+
+Global Const $TALMARK_TRANSIT_WIK = $GC_I_MAP_ID_WAR_IN_KRYTA_TALMARK_WILDERNESS
+
+Local $aTalmarkWildernessTransitPath[8][2] = [ _
 	[-6302, 14890], _
 	[-12310, 14349], _
 	[-15074, 13794], _
@@ -10,61 +24,76 @@ Global $aTalmarkWildernessTransitPath[9][2] = [ _
 	[-17215, 12961], _
 	[-17978, 10435], _
 	[-18374, 7235], _
-	[-20108, 2457], _
-	[-20274, 1812] _
+	[-20108, 2457] _
 ]
 
+Func _Vanquisher_ResetTalmarkWildernessRouteProgress()
+	$g_i_TalmarkWildernessRoute_LastMapHandled = -1
+EndFunc
+
+; Temple of the Ages (138) -> The Black Curtain (18) -> Talmark Wilderness farm (17 or WiK 837).
 Func GoOutTalmarkWilderness()
 	Local $l_i_Map = GetMapID()
 
-	If $l_i_Map = $TalmarkWilderness_Map Then Return
+	If _Vanquisher_IsOnTalmarkWildernessMap() Then Return
 
 	If $l_i_Map = $TalmarkWilderness_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_TalmarkWildernessRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> TalmarkWilderness (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aTalmarkWildernessOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Temple of the Ages -> The Black Curtain (portal 1).")
+		_Vanquisher_RunAggroApproachPath($aTalmarkWildernessOutpostPath, $vqrange, "temple ")
+		_Vanquisher_RunPortalStep($TALMARK_TEMPLE_PORTAL_X, $TALMARK_TEMPLE_PORTAL_Y, $vqrange, "temple portal")
+		If GetMapID() <> $l_i_Map Then $g_i_TalmarkWildernessRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $TalmarkWilderness_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_TalmarkWildernessRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> TalmarkWilderness (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aTalmarkWildernessTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("The Black Curtain (transit) -> Talmark Wilderness (portal 2).")
+		If Not _Vanquisher_WaitForPlayerReadyAfterLoad(12000) Then
+			CurrentAction("Transit map not ready yet — retrying Talmark Wilderness portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		_Vanquisher_InitCombatAI()
+		Local $l_i_BlackCurtain = $TalmarkWilderness_Transit
+		_Vanquisher_RunAggroApproachPath($aTalmarkWildernessTransitPath, $vqrange, "blackcurtain ")
+		If GetMapID() = $l_i_BlackCurtain Then
+			_Vanquisher_RunPortalStep($TALMARK_BLACKCURTAIN_PORTAL_X, $TALMARK_BLACKCURTAIN_PORTAL_Y, $vqrange, "blackcurtain portal")
+		EndIf
+		If GetMapID() = $TalmarkWilderness_Map Or GetMapID() = $TALMARK_TRANSIT_WIK Then
+			$g_i_TalmarkWildernessRoute_LastMapHandled = $l_i_BlackCurtain
+		EndIf
 		$g_b_Vanquisher_TransitOnly = False
-		Return
 	EndIf
-
 EndFunc
 
 Func VQTalmarkWilderness()
-	If GetMapID() <> $TalmarkWilderness_Map And GetMapID() <> $TalmarkWilderness_Outpost And GetMapID() <> $TalmarkWilderness_Transit Then
-		_Vanquisher_ResetGoOutRouteProgress()
-		CurrentAction("Traveling to outpost for TalmarkWilderness.")
+	If Not _Vanquisher_IsOnTalmarkWildernessMap() And GetMapID() <> $TalmarkWilderness_Outpost And GetMapID() <> $TalmarkWilderness_Transit Then
+		_Vanquisher_ResetTalmarkWildernessRouteProgress()
+		CurrentAction("Traveling to Temple of the Ages for Talmark Wilderness.")
 		TravelTo($TalmarkWilderness_Outpost)
 	EndIf
 
 	If GetMapID() = $TalmarkWilderness_Outpost Or GetMapID() = $TalmarkWilderness_Transit Then
 		_Vanquisher_ApplyDifficulty()
 		GoOutTalmarkWilderness()
-		If GetMapID() <> $TalmarkWilderness_Map Then
-			CurrentAction("Routing - on map " & GetMapID() & ", need TalmarkWilderness (" & $TalmarkWilderness_Map & ").")
+		If Not _Vanquisher_IsOnTalmarkWildernessMap() Then
+			CurrentAction("Routing — on map " & GetMapID() & ", need Talmark Wilderness (" & $TalmarkWilderness_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
-	If GetMapID() <> $TalmarkWilderness_Map Then
-		CurrentAction("TalmarkWilderness route waiting - on map " & GetMapID() & ", need " & $TalmarkWilderness_Map & ".")
+	If Not _Vanquisher_IsOnTalmarkWildernessMap() Then
+		CurrentAction("Talmark Wilderness route waiting — on map " & GetMapID() & ", need " & $TalmarkWilderness_Map & ".")
 		Return
 	EndIf
 
-	CurrentAction("Starting TalmarkWilderness vanquish route.")
+	CurrentAction("Starting Talmark Wilderness vanquish route.")
 
-	Local $aWaypoints[70][4] = [ _
+	Local $aWaypoints[73][4] = [ _
 		[16888, 2685, " ", $vqrange], _
 		[10801, 8084, " ", $vqrange], _
 		[8472, 8084, " ", $vqrange], _
@@ -75,6 +104,7 @@ Func VQTalmarkWilderness()
 		[-4021, 9672, " ", $vqrange], _
 		[-7038, 10678, " ", $vqrange], _
 		[-4127, 16024, " ", $vqrange], _
+		[3371, 16248, " ", $vqrange], _
 		[-421, 12583, " ", $vqrange], _
 		[4872, 14489, " ", $vqrange], _
 		[-377, 12410, " ", $vqrange], _
@@ -93,6 +123,7 @@ Func VQTalmarkWilderness()
 		[-9591, 8514, " ", $vqrange], _
 		[-10438, 3466, " ", $vqrange], _
 		[-12225, 188, " ", $vqrange], _
+		[-13793, -1332, " ", $vqrange], _
 		[-10828, -2522, " ", $vqrange], _
 		[-6974, -5401, " ", $vqrange], _
 		[-4264, -4089, " ", $vqrange], _
@@ -117,6 +148,7 @@ Func VQTalmarkWilderness()
 		[6407, -3792, " ", $vqrange], _
 		[4713, -6714, " ", $vqrange], _
 		[8059, -8662, " ", $vqrange], _
+		[9163, -7314, " ", $vqrange], _
 		[10049, -9086, " ", $vqrange], _
 		[10388, -9170, " ", $vqrange], _
 		[13691, -10102, " ", $vqrange], _
@@ -138,4 +170,3 @@ Func VQTalmarkWilderness()
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
-

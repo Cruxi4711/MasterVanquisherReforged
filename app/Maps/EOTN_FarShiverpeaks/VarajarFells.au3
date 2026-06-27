@@ -1,11 +1,10 @@
-;Mapped by Crux
+; Mapped by Crux
 #include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
 Func VQVarajarFells()
 	If GetMapID() <> $VarajarFells_Map And GetMapID() <> $VarajarFells_Outpost Then
-		_Vanquisher_ResetGoOutRouteProgress()
 		CurrentAction("Traveling to outpost for Varajar Fells.")
 		TravelTo($VarajarFells_Outpost)
 	EndIf
@@ -25,6 +24,8 @@ Func VQVarajarFells()
 	EndIf
 
 	CurrentAction("Starting Varajar Fells vanquish route.")
+	$g_b_Vanquisher_TransitOnly = False
+	_Vanquisher_InitCombatAI()
 
 	Local $aWaypoints[203][4] = [ _
 		[-2252, 831, " ", $vqrange], _

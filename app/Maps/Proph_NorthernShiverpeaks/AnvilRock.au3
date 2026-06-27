@@ -2,7 +2,7 @@
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aAnvilRockOutpostPath[2][2] = [ _
+Local $aAnvilRockOutpostPath[2][2] = [ _
 	[-11688, 11666], _
 	[-12281, 11654] _
 ]
@@ -17,7 +17,7 @@ Func GoOutAnvilRock()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> AnvilRock (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aAnvilRockOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQAnvilRock()
 		If GetMapID() <> $AnvilRock_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need AnvilRock (" & $AnvilRock_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $AnvilRock_Map Then

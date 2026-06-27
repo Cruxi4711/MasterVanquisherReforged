@@ -1,13 +1,24 @@
-#include <Array.au3>
+﻿#include <Array.au3>
 Global $vqrange = 1450
 Global $ActionCounter = 1
 
-Global $aNeboTerraceOutpostPath[2][2] = [ _
-	[-5199, 16327], _
-	[-5252, 15997] _
+Local $aNeboTerraceOutpostPath[1][2] = [ _
+	[-5199, 16327] _
 ]
 
-Global $aNeboTerraceTransitPath[14][2] = [ _
+; Temple of the Ages (138) -> The Black Curtain (18).
+Local Const $NEBOTERRACE_TEMPLE_PORTAL_X = -5243
+Local Const $NEBOTERRACE_TEMPLE_PORTAL_Y = 15961
+
+; The Black Curtain (18) -> Cursed Lands (56). Last path point is approach; portal is separate.
+Local Const $NEBOTERRACE_BLACKCURTAIN_PORTAL_X = 20332
+Local Const $NEBOTERRACE_BLACKCURTAIN_PORTAL_Y = 5324
+
+; Cursed Lands (56) -> Nebo Terrace (59). Last path point is approach; portal is separate.
+Local Const $NEBOTERRACE_CURSEDLANDS_PORTAL_X = -3651
+Local Const $NEBOTERRACE_CURSEDLANDS_PORTAL_Y = -11715
+
+Local $aNeboTerraceTransitPath[14][2] = [ _
 	[-5219, 15079], _
 	[-1627, 14112], _
 	[3680, 18302], _
@@ -24,7 +35,7 @@ Global $aNeboTerraceTransitPath[14][2] = [ _
 	[20398, 5311] _
 ]
 
-Global $aNeboTerraceTransit2Path[11][2] = [ _
+Local $aNeboTerraceTransit2Path[11][2] = [ _
 	[-18325, -2148], _
 	[-14836, -4068], _
 	[-12293, -4014], _
@@ -38,41 +49,53 @@ Global $aNeboTerraceTransit2Path[11][2] = [ _
 	[-3911, -11679] _
 ]
 
+Func _Vanquisher_ResetNeboTerraceRouteProgress()
+	$g_i_NeboTerraceRoute_LastMapHandled = -1
+EndFunc
+
+; Temple of the Ages (138) -> The Black Curtain (18) -> Cursed Lands (56) -> Nebo Terrace farm (59).
 Func GoOutNeboTerrace()
 	Local $l_i_Map = GetMapID()
 
 	If $l_i_Map = $NeboTerrace_Map Then Return
 
 	If $l_i_Map = $NeboTerrace_Outpost Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_NeboTerraceRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Outpost -> NeboTerrace (portal 1)")
-		_Vanquisher_RunAggroPortalPath($aNeboTerraceOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Temple of the Ages -> The Black Curtain (portal 1).")
+		_Vanquisher_RunAggroApproachPath($aNeboTerraceOutpostPath, $vqrange, "temple ")
+		_Vanquisher_RunPortalStep($NEBOTERRACE_TEMPLE_PORTAL_X, $NEBOTERRACE_TEMPLE_PORTAL_Y, $vqrange, "temple portal")
+		If GetMapID() <> $l_i_Map Then $g_i_NeboTerraceRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $NeboTerrace_Transit Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_NeboTerraceRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> NeboTerrace (portal 2)")
-		_Vanquisher_RunAggroPortalPath($aNeboTerraceTransitPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("The Black Curtain (transit) -> Cursed Lands (portal 2).")
+		If Not _Vanquisher_RunExplorableTransitLeg($aNeboTerraceTransitPath, $NEBOTERRACE_BLACKCURTAIN_PORTAL_X, $NEBOTERRACE_BLACKCURTAIN_PORTAL_Y, $vqrange, "blackcurtain ") Then
+			CurrentAction("Transit map not ready yet — retrying Nebo Terrace portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		If GetMapID() = $NeboTerrace_Transit2 Then $g_i_NeboTerraceRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
 
 	If $l_i_Map = $NeboTerrace_Transit2 Then
-		If $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map Then Return
+		If $g_i_NeboTerraceRoute_LastMapHandled = $l_i_Map Then Return
 		$g_b_Vanquisher_TransitOnly = True
-		CurrentAction("Transit -> NeboTerrace (portal 3)")
-		_Vanquisher_RunAggroPortalPath($aNeboTerraceTransit2Path, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		CurrentAction("Cursed Lands (transit) -> Nebo Terrace (portal 3).")
+		If Not _Vanquisher_RunExplorableTransitLeg($aNeboTerraceTransit2Path, $NEBOTERRACE_CURSEDLANDS_PORTAL_X, $NEBOTERRACE_CURSEDLANDS_PORTAL_Y, $vqrange, "cursedlands ") Then
+			CurrentAction("Transit map not ready yet — retrying Nebo Terrace portal path.")
+			$g_b_Vanquisher_TransitOnly = False
+			Return
+		EndIf
+		If GetMapID() = $NeboTerrace_Map Then $g_i_NeboTerraceRoute_LastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
-		Return
 	EndIf
-
 EndFunc
 
 Func VQNeboTerrace()
@@ -88,7 +111,7 @@ Func VQNeboTerrace()
 		If GetMapID() <> $NeboTerrace_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need NeboTerrace (" & $NeboTerrace_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $NeboTerrace_Map Then
@@ -162,4 +185,3 @@ Func VQNeboTerrace()
 
 	MoveandAggroVQFullRoute($aWaypoints)
 EndFunc
-

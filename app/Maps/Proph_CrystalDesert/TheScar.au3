@@ -1,8 +1,8 @@
 #include <Array.au3>
-Global $vqrange = 1450
+Global $vqrange = 1000
 Global $ActionCounter = 1
 
-Global $aTheScarOutpostPath[2][2] = [ _
+Local $aTheScarOutpostPath[2][2] = [ _
 	[12727, 12865], _
 	[12985, 13488] _
 ]
@@ -17,7 +17,7 @@ Func GoOutTheScar()
 		$g_b_Vanquisher_TransitOnly = True
 		CurrentAction("Outpost -> TheScar (portal 1)")
 		_Vanquisher_RunAggroPortalPath($aTheScarOutpostPath, $vqrange, "outpost ")
-		$g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
+		If GetMapID() <> $l_i_Map Then $g_i_Vanquisher_GoOutLastMapHandled = $l_i_Map
 		$g_b_Vanquisher_TransitOnly = False
 		Return
 	EndIf
@@ -37,7 +37,7 @@ Func VQTheScar()
 		If GetMapID() <> $TheScar_Map Then
 			CurrentAction("Routing - on map " & GetMapID() & ", need TheScar (" & $TheScar_Map & ").")
 			Return
-	EndIf
+		EndIf
 	EndIf
 
 	If GetMapID() <> $TheScar_Map Then
