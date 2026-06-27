@@ -39,17 +39,7 @@ Originally based on the work of the GWA2 community, many maps and systems have b
 * GWToolbox++ (Optional)
 
 ## Linux
-
-**Actively developed and tested under Linux.**
-
-Recommended environment:
-
-* Linux Kernel 6.12+
-* Wine 10+
-* Guild Wars
-* AutoIt3 running under Wine
-* GWAu3 Library
-* GWToolbox++ (Optional)
+[Master Vanquisher Reforged - Linux/Wine Edition](https://github.com/incognito-ghroot/MasterVanquisherReforged-Lin)
 
 Linux Operation:
 * Launch: ./run_vanquisher.sh
