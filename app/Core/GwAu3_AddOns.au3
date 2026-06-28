@@ -423,9 +423,11 @@ Func AggroMoveSmartFilter($aX, $aY, $AggroRange = 1320, $maxdistance = 3500, $fi
                 Else
                     _Vanquisher_InitCombatAI()
                     If Not $g_b_Vanquisher_CombatAIReady Then Return
+                    $g_b_Vanquisher_CombatStateActive = True
                     $g_h_Vanquisher_FightTimer = TimerInit()
                     UAI_UpdateCache($AggroRange)
                     UAI_Fight($CurX, $CurY, $AggroRange, $maxdistance, $g_i_FinisherMode, True, 0, False, "_Vanquisher_FightExitCallback")
+                    $g_b_Vanquisher_CombatStateActive = False
                 EndIf
 
                 If SurvivorMode() Then Return
@@ -548,6 +550,7 @@ Func FightExFilter($AggroRange, $filterFunc = "EnemyFilter")
         Local $l_i_PlayerNumber = Agent_GetAgentInfo($l_i_Target, "PlayerNumber")
 
         $g_h_Vanquisher_FightTimer = TimerInit()
+        $g_b_Vanquisher_CombatStateActive = True
         UAI_UpdateCache($AggroRange)
 
         If $l_i_PlayerNumber > 0 Then
@@ -555,6 +558,7 @@ Func FightExFilter($AggroRange, $filterFunc = "EnemyFilter")
         Else
             UAI_Fight($l_f_AnchorX, $l_f_AnchorY, $AggroRange, 3500, $g_i_FinisherMode, True, 0, False, "_Vanquisher_FightExitCallback")
         EndIf
+        $g_b_Vanquisher_CombatStateActive = False
 
         Other_RndSleep(150)
     Until GetNumberOfFoesInRangeOfAgent(-2, 1700, $GC_I_AGENT_TYPE_LIVING, 1, $filterFunc) = 0 Or GetPartyDead() Or TimerDiff($TimerToKill) > 180000

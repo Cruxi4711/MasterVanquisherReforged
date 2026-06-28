@@ -908,7 +908,7 @@ Func _Vanquisher_InitCombatAI()
     If $g_b_Vanquisher_CombatAIReady Then Return
     If Not Map_GetInstanceInfo("IsExplorable") Then Return
     If Map_GetInstanceInfo("IsLoading") Then Return
-    $g_b_CacheWeaponSet = False
+    $g_b_CacheWeaponSet = True
     Cache_SkillBar()
     $g_b_Vanquisher_CombatAIReady = True
     CurrentAction("Utility AI skill bar cached.")
